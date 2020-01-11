@@ -108,4 +108,5 @@ venv.bak/
 .DS_Store
 
 devel/*
+
 templates/dcgun/fields/*
