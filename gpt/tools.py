@@ -16,7 +16,6 @@ def full_path(path):
 
 
 
-
 class NumpyEncoder(json.JSONEncoder):
     """
     See: https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
@@ -25,6 +24,7 @@ class NumpyEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+
 def fingerprint(keyed_data, digest_size=16):
     """
     Creates a cryptographic fingerprint from keyed data. 
