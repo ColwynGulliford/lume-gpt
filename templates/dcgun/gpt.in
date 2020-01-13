@@ -78,8 +78,6 @@ ZSLA02 = 1.160;
 Zdcgun = 0.15;
 Maxdcgun  = 500.0;
 Edcgun    = gun_voltage / Maxdcgun;
-
-Zdcgun = 0.150;
 Map2D_E("wcs", "z", Zdcgun, "fields/dcgun_GHV.gdf", "R", "Z", "Er", "Ez", Edcgun);
 
 # SOL1

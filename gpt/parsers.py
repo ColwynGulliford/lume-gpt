@@ -43,6 +43,9 @@ def parse_gpt_input_file(filePath, condense=False):
             
             if(name not in variables.keys()):
                 variables[name]={"value":value,"index":ii}
+                #print(name,value)
+            else:
+                print("Warning: multiple definitions of variable "+name+" on line "+str(ii)+".")
 
     finput['lines']=clean_lines
     finput['variables']=variables
@@ -52,6 +55,7 @@ def parse_gpt_input_file(filePath, condense=False):
 
 def write_gpt_input_file(finput,inputFile):
 
+    #print(inputFile)
     for var in finput["variables"].keys():
 
         value=finput["variables"][var]["value"]
