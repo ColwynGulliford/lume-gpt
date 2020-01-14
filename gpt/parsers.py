@@ -18,8 +18,13 @@ def parse_gpt_input_file(filePath, condense=False):
     with open(filePath, 'r') as f:
 
         filestr=f.read()
-        filestr=filestr.replace(' ','')
-        lines = filestr.split('\n')
+
+        expressions = filestr.split(';')
+        lines = []
+        for ii,expression in enumerate(expressions):
+            nlines = expression.strip().split('\n')
+            for nline in nlines:
+                lines.append(nline.strip())
 
         clean_lines=[]
     
@@ -29,20 +34,26 @@ def parse_gpt_input_file(filePath, condense=False):
             if(line!=''):
                 tokens = line.split('#')
                 if(tokens[0]!=''):
-                    clean_lines.append(tokens[0])
+                    nline = tokens[0]
+                    if(not (nline[-1]=='{' or nline[-1]=='}')):
+                        nline = nline+';'
+
+                    clean_lines.append(nline)
+        #print(clean_lines)
 
     variables={}
 
     for ii,line in enumerate(clean_lines):
       
         tokens = line.split("=")
-        if(len(tokens)==2 and isfloat(tokens[1][:-1])):
+
+        if(len(tokens)==2 and isfloat(tokens[1][:-1].strip())):
  
-            name = tokens[0]
-            value = float(tokens[1][:-1])
+            name = tokens[0].strip()
+            value = float(tokens[1][:-1].strip())
             
             if(name not in variables.keys()):
-                variables[name]={"value":value,"index":ii}
+                variables[name]=value #{"value":value,"index":ii}
                 #print(name,value)
             else:
                 print("Warning: multiple definitions of variable "+name+" on line "+str(ii)+".")
@@ -55,13 +66,15 @@ def parse_gpt_input_file(filePath, condense=False):
 
 def write_gpt_input_file(finput,inputFile):
 
-    #print(inputFile)
+    print(inputFile)
     for var in finput["variables"].keys():
 
-        value=finput["variables"][var]["value"]
-        index=finput["variables"][var]["index"]
-      
-        finput["lines"][index]=var+"="+str(value)+";"
+        value=finput["variables"][var]
+        for index,line in enumerate(finput["lines"]):
+            tokens = line.split("=")
+            if(len(tokens)==2 and tokens[0].strip()==var):
+                finput["lines"][index]=var+"="+str(value)+";"
+                break
 
     with open(inputFile,'w') as f:
 
