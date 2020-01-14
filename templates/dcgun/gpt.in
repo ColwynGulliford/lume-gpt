@@ -1,9 +1,6 @@
 #--------------------------------------------------------------------------
 # Gun + 1st Solenoid
 #--------------------------------------------------------------------------
-
-GPTLICENSE =1251405651;
-
 #--------------------------------------------------------------------------
 # MACHINE SETTINGS:
 #--------------------------------------------------------------------------
@@ -37,8 +34,8 @@ yoffset=0;
 if (use_gpt_dist) {
 
 	setparticles("beam", 10, me, qe, 0);
-	setxoffset("beam",xoffset);
-	setyoffset("beam",yoffset);
+	#setxoffset("beam",xoffset);
+	#setyoffset("beam",yoffset);
 
 	mc2 = m*c*c/abs(qe);
 	KE = 1;
@@ -75,7 +72,7 @@ ZCTB01 = 0.746;
 ZSLA02 = 1.160;
 
 # DC GUN
-Zdcgun = 0.15;
+Zdcgun = 0.0; #0.15;
 Maxdcgun  = 500.0;
 Edcgun    = gun_voltage / Maxdcgun;
 Map2D_E("wcs", "z", Zdcgun, "fields/dcgun_GHV.gdf", "R", "Z", "Er", "Ez", Edcgun);
