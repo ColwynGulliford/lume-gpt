@@ -1,4 +1,7 @@
 import copy
+import easygdf
+import time
+import numpy as np
 
 # ------ Number parsing ------
 def isfloat(value):
@@ -66,7 +69,7 @@ def parse_gpt_input_file(filePath, condense=False):
 
 def write_gpt_input_file(finput,inputFile):
 
-    print(inputFile)
+    #print(inputFile)
     for var in finput["variables"].keys():
 
         value=finput["variables"][var]
@@ -80,5 +83,112 @@ def write_gpt_input_file(finput,inputFile):
 
         for line in finput["lines"]:
             f.write(line+"\n")
+
+
+def read_gdf_file(gdffile,verbose=0):
+      
+    # Read in file:
+    #self.vprint("Reading data from files: ",0,True)
+  
+    #self.vprint("Current file: '"+data_file+"'",1,True)
+    #self.vprint("Reading data...",1,False)
+    t1 = time.time()
+    with open(gdffile, 'rb') as f:
+        touts, screens = easygdf.load(f, extra_screen_keys=['q','nmacro',"ID","m"], extra_tout_keys=['q','nmacro',"ID","m"])
+    t2 = time.time()
+    #self.vprint("done. Time ellapsed: "+self.ptime(t1,t2)+".",0,True)
+            
+    #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
+
+    tdata=[]
+    pdata=[]
+
+    t1 = time.time()
+    count=0
+    for data in touts:
+        n=len(data[0,:])
+        if(n>0):
+
+            q = data[7,:]       # elemental charge/macroparticle
+            nmacro = data[8,:]  # number of elemental charges/macroparticle
+                    
+            if(np.sum(q)==0 or np.sum(nmacro)==0):
+                weights = data[10,:]/np.sum(data[10,:])  # Use the mass if no charge is specified
+            else:
+                weights = np.abs(data[7,:]*data[8,:])/np.sum(np.abs(data[7,:]*data[8,:]))
+
+            tout = {"x":data[0,:],"GBx":data[1,:],
+                    "y":data[2,:],"GBy":data[3,:],
+                    "z":data[4,:],"GBz":data[5,:],
+                    "t":data[6,:],
+                    "q":data[7,:],
+                    "nmacro":data[8,:],
+                    "ID":data[9,:],
+                    "m":data[10,:],
+                    "w":weights,
+                    "G":np.sqrt(data[1,:]*data[1,:]+data[3,:]*data[3,:]+data[5,:]*data[5,:]+1)}
+            #tout["Bx"]=tout["GBx"]/tout["G"]
+            #tout["By"]=tout["GBy"]/tout["G"]
+            #tout["Bz"]=tout["GBz"]/tout["G"]
+            tout["time"]=np.sum(tout["w"]*tout["t"])
+            tout["n"]=len(tout["x"])
+            tout["number"]=count
+
+            count=count+1
+            tdata.append(tout)
+         
+    count=0
+    for data in screens:
+        n = len(data[0,:])
+        if(n>0):
+
+            q = data[7,:]          # elemental charge/macroparticle
+            nmacro = data[8,:]     # number of elemental charges/macroparticle
+                   
+            if(np.sum(q)==0 or np.sum(nmacro)==0):
+                weights = data[10,:]/np.sum(data[10,:])  # Use the mass if no charge is specified
+            else:
+                weights = np.abs(data[7,:]*data[8,:])/np.sum(np.abs(data[7,:]*data[8,:]))
+
+            screen = {"x":data[0,:],"GBx":data[1,:],
+                      "y":data[2,:],"GBy":data[3,:],
+                      "z":data[4,:],"GBz":data[5,:],
+                      "t":data[6,:],
+                      "q":data[7,:],
+                      "nmacro":data[8,:],
+                      "ID":data[9,:],
+                      "m":data[10,:],
+                      "w":weights,
+                      "G":np.sqrt(data[1,:]*data[1,:]+data[3,:]*data[3,:]+data[5,:]*data[5,:]+1)}
+                
+                    #screen["Bx"]=screen["GBx"]/screen["G"]
+                    #screen["By"]=screen["GBy"]/screen["G"]
+                    #screen["Bz"]=screen["GBz"]/screen["G"]
+            screen["time"]=np.sum(screen["w"]*screen["t"])
+            screen["n"]=n
+            screen["number"]=count
+
+            count=count+1
+            pdata.append(screen)
+                    
+    t2 = time.time()
+    #self.vprint("done. Time ellapsed: "+self.ptime(t1,t2)+".",0,True)
+
+
+    ts=[screen['time'] for screen in pdata]
+    inds={}
+
+    ts_sorted = sorted(ts)
+    pdata_temp=[]
+
+    for t in ts_sorted:
+        for screen in pdata:
+            if(t == screen["time"]):
+                pdata_temp.append(screen)
+               
+    pdata=pdata_temp
+    #self.vprint("done.",0,True)
+
+    return(tdata,pdata)
 
 

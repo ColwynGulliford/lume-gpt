@@ -1,25 +1,29 @@
 #--------------------------------------------------------------------------
-# Gun + 1st Solenoid
+# L0E Gun + 1st Solenoid
+# 
 #--------------------------------------------------------------------------
+
+GPTLICENSE =1345606442;
+
 #--------------------------------------------------------------------------
 # MACHINE SETTINGS:
 #--------------------------------------------------------------------------
 data_dump = 0;
 Master_RF = 1.3e9;
-
-gun_voltage=300;
-sol_1_current=-3.15;
+MTE = 120.0;  
+gun_voltage = 300.0;  
+sol_1_current = 3.32107;  
 #--------------------------------------------------------------------------
 
 
 #--------------------------------------------------------------------------
 # SWITCHES:
 #--------------------------------------------------------------------------
-auto_phase = 0;
-use_gpt_dist = 1;
-space_charge =1;
+auto_phase=0;
+single_particle = 0;
+space_charge=1.0;
 space_charge_type = 1;
-viewscreens_on =1;
+viewscreens_on=1.0;
 kill_backwards_particles =1;
 optimize_on =0;
 #--------------------------------------------------------------------------
@@ -31,15 +35,15 @@ optimize_on =0;
 xoffset=0;
 yoffset=0;
 
-if (use_gpt_dist) {
+if (auto_phase == 1 || single_particle == 1) {
 
 	setparticles("beam", 10, me, qe, 0);
-	#setxoffset("beam",xoffset);
-	#setyoffset("beam",yoffset);
+#	setxoffset("beam",xoffset);
+#	setyoffset("beam",yoffset);
 
 	mc2 = m*c*c/abs(qe);
-	KE = 1;
-
+	KE = MTE/2000.0;
+        #pp(KE);
 	G  = 1+KE/mc2 ;
 
 	setGdist( "beam", "u", G, 0) ;
@@ -72,10 +76,10 @@ ZCTB01 = 0.746;
 ZSLA02 = 1.160;
 
 # DC GUN
-Zdcgun = 0.0; #0.15;
+Zdcgun = 0.15;
 Maxdcgun  = 500.0;
 Edcgun    = gun_voltage / Maxdcgun;
-Map2D_E("wcs", "z", Zdcgun, "fields/dcgun_GHV.gdf", "R", "Z", "Er", "Ez", Edcgun);
+Map2D_E("wcs", "z", Zdcgun, "fields/gun_0mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
 
 # SOL1
 SLAPolarity = -1;
@@ -124,10 +128,15 @@ if (space_charge == 1) {
 #--------------------------------------------------------------------------
 # OUTPUT PARAMETERS
 #--------------------------------------------------------------------------
-tmax = 10e-8; 
+Ntout = 50.0;  
+tmax = 4.998584512685961e-8;  
 
 ZSTART = -0.005;
 zminmax("wcs","I",ZSTART,ZSTOP);
+
+if(!auto_phase && !single_particle) {
+   tout(0,tmax,tmax/Ntout);
+}
 
 #if (kill_backwards_particles == 1) {
 #  GBzmin("wcs", "I", 5.0e-10, 0.0); # kill particles going backwards (gamma*beta < 0.0) after t=5e-10 s
