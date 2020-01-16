@@ -21,7 +21,7 @@ sol_1_current = 3.32107;
 #--------------------------------------------------------------------------
 auto_phase=0;
 single_particle = 0;
-space_charge=1.0;
+space_charge=0.0;
 space_charge_type = 1;
 viewscreens_on=1.0;
 kill_backwards_particles =1;
@@ -129,7 +129,7 @@ if (space_charge == 1) {
 # OUTPUT PARAMETERS
 #--------------------------------------------------------------------------
 Ntout = 50.0;  
-tmax = 4.998584512685961e-8;  
+tmax = 10e-9;  
 
 ZSTART = -0.005;
 zminmax("wcs","I",ZSTART,ZSTOP);
