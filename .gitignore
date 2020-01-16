@@ -109,4 +109,4 @@ venv.bak/
 
 devel/*
 
-templates/dcgun/fields/*
+#templates/dcgun/fields/*
