@@ -107,6 +107,7 @@ def read_gdf_file(gdffile,verbose=0):
     count=0
     for data in touts:
         n=len(data[0,:])
+        
         if(n>0):
 
             q = data[7,:]       # elemental charge/macroparticle
@@ -127,6 +128,7 @@ def read_gdf_file(gdffile,verbose=0):
                     "m":data[10,:],
                     "w":weights,
                     "G":np.sqrt(data[1,:]*data[1,:]+data[3,:]*data[3,:]+data[5,:]*data[5,:]+1)}
+
             #tout["Bx"]=tout["GBx"]/tout["G"]
             #tout["By"]=tout["GBy"]/tout["G"]
             #tout["Bz"]=tout["GBz"]/tout["G"]
