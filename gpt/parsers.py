@@ -2,6 +2,10 @@ import copy
 from . import easygdf
 import time
 import numpy as np
+import re
+import os
+
+import shutil
 
 # ------ Number parsing ------
 def isfloat(value):
@@ -10,6 +14,37 @@ def isfloat(value):
             return True
       except ValueError:
             return False
+
+def find_path(line, pattern=r'"([^"]+\.gdf)"'):
+
+    matches=re.findall(pattern,line)
+    return matches
+ 
+def set_support_files(lines, original_path, target_path='', copy_files=False, pattern=r'"([^"]+\.gdf)"', verbose=False):
+
+    for ii, line in enumerate(lines):
+
+        #print(line)
+        support_files = find_path(line,pattern=pattern)
+
+        for support_file in support_files:
+
+            abs_original_path = os.path.join(original_path, support_file)
+
+            if(copy_files):
+            
+                abs_target_path = os.path.join(target_path, support_file) 
+                shutil.copyfile(abs_original_path, abs_target_path, follow_symlinks=True)            
+
+                if(verbose):
+                    print("Copying file: ",abs_original_path,'->',abs_target_path)   
+
+            else:
+
+                if(os.path.isfile(abs_original_path)):
+                    lines[ii] = line.replace(support_file, abs_original_path)
+                    if(verbose):
+                        print("Set path to file: ",lines[ii])        
 
 def parse_gpt_input_file(filePath, condense=False):
     """
@@ -60,6 +95,9 @@ def parse_gpt_input_file(filePath, condense=False):
                 #print(name,value)
             else:
                 print("Warning: multiple definitions of variable "+name+" on line "+str(ii)+".")
+
+    for line in clean_lines:
+        find_path(line)
 
     finput['lines']=clean_lines
     finput['variables']=variables
