@@ -132,6 +132,7 @@ def read_gdf_file(gdffile,verbose=0):
             #tout["Bx"]=tout["GBx"]/tout["G"]
             #tout["By"]=tout["GBy"]/tout["G"]
             #tout["Bz"]=tout["GBz"]/tout["G"]
+
             tout["time"]=np.sum(tout["w"]*tout["t"])
             tout["n"]=len(tout["x"])
             tout["number"]=count
@@ -166,6 +167,7 @@ def read_gdf_file(gdffile,verbose=0):
                     #screen["Bx"]=screen["GBx"]/screen["G"]
                     #screen["By"]=screen["GBy"]/screen["G"]
                     #screen["Bz"]=screen["GBz"]/screen["G"]
+
             screen["time"]=np.sum(screen["w"]*screen["t"])
             screen["n"]=n
             screen["number"]=count
@@ -192,5 +194,19 @@ def read_gdf_file(gdffile,verbose=0):
     #self.vprint("done.",0,True)
 
     return(tdata,pdata)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
