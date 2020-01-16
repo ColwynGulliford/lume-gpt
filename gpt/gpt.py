@@ -78,7 +78,16 @@ class GPT:
             # Work in place
             self.path = self.original_path            
 
-        self.input_file = os.path.join(self.path, self.original_input_file)                
+        self.input_file = os.path.join(self.path, self.original_input_file) 
+
+        # If there is a fields folder in the original path, soft link to it:
+        if(os.path.isdir(self.original_path+'/fields') and not os.path.isdir('fields')):
+            os.symlink(self.original_path+'/fields', 'fields')
+        
+        # If there is a gpt_particles.gdf in original path, soft link to it:
+        if(os.path.isfile(self.original_path+'/gpt_particles.gdf') and not os.path.isfile('gpt_particles.gdf')):
+            os.symlink(self.original_path+'/gpt_particles.gdf', 'gpt_particles.gdf')
+               
         self.configured = True
 
     def load_input(self, input_filePath, absolute_paths=True):
@@ -144,14 +153,6 @@ class GPT:
 
         # Write input file from internal dict
         self.write_input_file()
-        
-        # If there is a fields folder in the original path, soft link to it:
-        if(os.path.isdir(self.original_path+'/fields') and not os.path.isdir('fields')):
-            os.symlink(self.original_path+'/fields', 'fields')
-        
-        # If there is a gpt_particles.gdf in original path, soft link to it:
-        if(os.path.isfile(self.original_path+'/gpt_particles.gdf') and not os.path.isfile('gpt_particles.gdf')):
-            os.symlink(self.original_path+'/gpt_particles.gdf', 'gpt_particles.gdf')
             
         runscript = self.get_run_script()
 

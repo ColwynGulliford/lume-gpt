@@ -1,5 +1,5 @@
 import copy
-import easygdf
+from . import easygdf
 import time
 import numpy as np
 
