@@ -81,7 +81,8 @@ class GPT:
         self.input_file = os.path.join(self.path, self.original_input_file) 
         
         parsers.set_support_files(self.input['lines'],self.original_path)              
-
+        
+        self.vprint(f'Configured to run in {self.path}')
         self.configured = True
 
     def load_input(self, input_filePath, absolute_paths=True):
