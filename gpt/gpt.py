@@ -3,6 +3,9 @@ import tempfile
 from time import time
 
 from gpt import tools, parsers
+from gpt.particles import touts_to_particlegroups, particle_stats
+
+from pmd_beamphysics.units import pg_units
 
 class GPT:
     """ 
@@ -81,7 +84,8 @@ class GPT:
         self.input_file = os.path.join(self.path, self.original_input_file) 
         
         parsers.set_support_files(self.input['lines'],self.original_path)              
-
+        
+        self.vprint(f'Configured to run in {self.path}')
         self.configured = True
 
     def load_input(self, input_filePath, absolute_paths=True):
@@ -95,12 +99,16 @@ class GPT:
                 #print(var,variables[var])
                 self.input["variables"][var]=variables[var]
     
-    def load_output(self):
-        touts,screens=parsers.read_gdf_file('gpt.out.gdf')
+    def load_output(self, file='gpt.out.gdf'):
+        touts, screens=parsers.read_gdf_file(file)
         
+        # Raw GPT 
         self.screen = screens
         self.tout = touts
-
+        
+        # particles as ParticleGroup objects
+        self.output['particles'] = touts_to_particlegroups(touts)
+        
 
     def run(self):
         if not self.configured:
@@ -202,6 +210,18 @@ class GPT:
         # Verbose print
         if self.verbose:
             print(*args, **kwargs)    
+    
+    def stat(self, key):
+        """
+        Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
+        """
+        particle_groups = self.output['particles']
+        return particle_stats(particle_groups, key)
+    
+    def stat_units(self, key):
+        """Returns a str decribing the physical units of a stat key."""
+        return pg_units(key)
+    
     
     def write_input_file(self):
         parsers.write_gpt_input_file(self.input, self.input_file)
