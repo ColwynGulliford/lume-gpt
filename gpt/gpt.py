@@ -93,11 +93,19 @@ class GPT:
         self.original_path, self.original_input_file = os.path.split(f) # Get original path, filename
         self.input = parsers.parse_gpt_input_file(f)            
             
+    def set_variable(self,variable,value):
+        if(var in self.input["variables"]):
+            self.input['variables'][var]=value
+            return True
+        else:
+            return False
+
     def set_variables(self, variables):
-        for var in variables:
-            if(var in self.input["variables"]):
-                #print(var,variables[var])
-                self.input["variables"][var]=variables[var]
+        return [self.set_variable(variable) for variable in variables]
+        #for var in variables:
+        #    if(var in self.input["variables"]):
+        #        #print(var,variables[var])
+        #        self.input["variables"][var]=variables[var]
     
     def load_output(self, file='gpt.out.gdf'):
         touts, screens=parsers.read_gdf_file(file)
@@ -228,7 +236,7 @@ class GPT:
 
     def __str__(self):
 
-        outstr = "GPT object:"
+        outstr = 'GPT object:'
         outstr = outstr+ "\n   Original input file: "+self.original_input_file
         outstr = outstr+f"\n   Use temp directory: {self.use_tempdir}"
         outstr = outstr+f"\n   Work directory: {self.workdir}"
@@ -237,14 +245,46 @@ class GPT:
         outstr = outstr+"\n\nRun Control"
         outstr = outstr+f"\n   Run configured: {self.configured}"
         outstr = outstr+f"\n   Using temp directory: {self.using_tempdir}"
-        outstr = outstr+f"\n   Finished: {self.finished}"
+        outstr = outstr+f"\n   Timeout: {self.timeout} (sec)"
 
         # Results
         outstr = outstr+"\n\nResults"
-        outstr = outstr+f"\n   Timeout occured: {self.timeout}"
+        outstr = outstr+f"\n   Finished: {self.finished}"
         outstr = outstr+f"\n   Error occured: {self.error}"
-        outstr = outstr+f"\n   Log: {self.log}\n"
+        rtime = self.output['run_time']
+        outstr = outstr+f'\n   Run time: {rtime} (sec)'
+        #outstr = outstr+f"\n
+        #outstr = outstr+f'\n   Log: {self.log}\n'
         return outstr
 
 
+def run_gpt(settings=None, 
+            gpt_input_file=None, 
+            workdir=None, 
+            gpt_bin='$GPT_BIN', 
+            timeout=2500, 
+            verbose=False):
+    """
+    Run GPT. 
+    
+        settings: dict with keys that can appear in a GPT input file. 
+    """
+    if verbose:
+        print('run_gpt') 
+
+    # Make GPT object
+    G =GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir)
+    
+    G.timeout=timeout
+    G.verbose = verbose
+      
+    # Set inputs
+    if settings:
+        G.set_variables(settings)
+        #set_astra(A.input, {}, settings, verbose=verbose)
+            
+    # Run
+    G.run()
+    
+    return G  
 
