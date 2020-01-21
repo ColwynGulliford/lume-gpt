@@ -94,18 +94,14 @@ class GPT:
         self.input = parsers.parse_gpt_input_file(f)            
             
     def set_variable(self,variable,value):
-        if(var in self.input["variables"]):
-            self.input['variables'][var]=value
+        if(variable in self.input["variables"]):
+            self.input['variables'][variable]=value
             return True
         else:
             return False
 
     def set_variables(self, variables):
-        return [self.set_variable(variable) for variable in variables]
-        #for var in variables:
-        #    if(var in self.input["variables"]):
-        #        #print(var,variables[var])
-        #        self.input["variables"][var]=variables[var]
+        return [self.set_variable(var,variables[var]) for var in variables.keys()]
     
     def load_output(self, file='gpt.out.gdf'):
         touts, screens=parsers.read_gdf_file(file)

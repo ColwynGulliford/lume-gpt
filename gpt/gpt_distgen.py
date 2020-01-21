@@ -1,6 +1,6 @@
 from gpt import GPT
 from gpt.tools import full_path
-#from .astra import recommended_spacecharge_mesh
+from gpt.gpt import run_gpt
 
 from distgen import Generator   
 from distgen.writers import write_gpt
@@ -38,7 +38,7 @@ def run_gpt_with_distgen(settings=None,
         settings: dict with keys that can appear in an gpt or distgen Generator input file. 
         
     Example usage:
-        A = run_gpt_with_distgen({'lspch':False},
+        G = run_gpt_with_distgen({'lspch':False},
                        gpt_input_file='$LCLS_LATTICE/gpt/models/gunb_eic/gpt.in',
                        distgen_input_file='$LCLS_LATTICE/distgen/models/gunb_gaussian/gunb_gaussian.json',
                        verbose=True,
@@ -50,11 +50,11 @@ def run_gpt_with_distgen(settings=None,
     # Call simpler evaluation if there is no generator:
     if not distgen_input_file:
         return run_gpt(settings=settings, 
-                         gpt_input_file=gpt_input_file, 
-                         workdir=workdir,
-                         gpt_bin=gpt_bin, 
-                         timeout=timeout, 
-                         verbose=verbose)
+                       gpt_input_file=gpt_input_file, 
+                       workdir=workdir,
+                       gpt_bin=gpt_bin, 
+                       timeout=timeout, 
+                       verbose=verbose)
         
     
     if verbose:
@@ -72,10 +72,7 @@ def run_gpt_with_distgen(settings=None,
     
     
     # Link particle files
-    particle_file = 'distgen_gpt_particles.gdf'
-    #G.input['newrun']['distribution'] = particle_file
-    #G.input['newrun']['l_rm_back'] = True # Remove backwards particles
-    
+    particle_file = 'distgen_gpt_particles.txt'
     print(particle_file )
     
     # Set inputs
@@ -89,33 +86,33 @@ def run_gpt_with_distgen(settings=None,
     # Run
     beam = gen.beam()
     particle_file = os.path.join(G.path, particle_file)
-    write_gpt(beam, particle_file, verbose=verbose)
+    write_gpt(beam, particle_file, verbose=verbose, asci2gdf_bin='$ASCI2GDF_BIN')
     
     G.run()
     
     return G
 
 
-def evaluate_astra_with_distgen(settings, archive_path=None, merit_f=None, **run_astra_with_distgen_params):
+def evaluate_gpt_with_distgen(settings, archive_path=None, merit_f=None, **run_gpt_with_distgen_params):
     """
-    Simple evaluate astra.
+    Simple evaluate GPT.
     
     Similar to run_astra_with_distgen, but returns a flat dict of outputs. 
     
     Will raise an exception if there is an error. 
     
     """
-    A = run_astra_with_distgen(settings, **run_astra_with_distgen_params)
+    G = run_gpt_with_distgen(settings, **run_gpt_with_distgen_params)
         
     if merit_f:
-        output = merit_f(A)
+        output = merit_f(G)
     else:
-        output = default_astra_merit(A)
+        output = default_gpt_merit(G)
     
     if output['error']:
         raise
     
-    fingerprint = A.fingerprint()
+    fingerprint = G.fingerprint()
     
     output['fingerprint'] = fingerprint
     
@@ -123,7 +120,9 @@ def evaluate_astra_with_distgen(settings, archive_path=None, merit_f=None, **run
         path = full_path(archive_path)
         assert os.path.exists(path), f'archive path does not exist: {path}'
         archive_file = os.path.join(path, fingerprint+'.h5')
-        A.archive(archive_file)
+        G.archive(archive_file)
         output['archive'] = archive_file
         
     return output
+
+
