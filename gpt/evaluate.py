@@ -1,9 +1,27 @@
-from .gpt import run_gpt, run_gpt_with_distgen
+from .gpt import run_gpt
+from .gpt_distgen import run_gpt_with_distgen
 from .tools import full_path
 import numpy as np
 import json
 from inspect import getfullargspec
 import os
+
+
+def end_output_data(output):
+    """
+    Some outputs are lists. Get the last item. 
+    """
+    o = {}
+    for k in output:
+        val = output[k]
+        if isinstance(val, str): # Encode strings
+            o[k] = val.encode()
+        elif np.isscalar(val):
+            o[k]=val
+        else:
+            o['end_'+k]=val[-1]
+           
+    return o
 
 
 def default_gpt_merit(G):
@@ -22,12 +40,7 @@ def default_gpt_merit(G):
     m.update(end_output_data(G.output))
     
     # Load final screen for calc
-    G.load_screens(end_only=True)
     screen = G.screen[-1]        
-    
-    # Lost particles have status < -6
-    nlost = len(np.where(screen['status'] < -6)[0])    
-    m['end_n_particle_loss'] = nlost
     
     # Remove annoying strings
     if 'why_error' in m:
@@ -72,7 +85,7 @@ def evaluate(settings, simulation='gpt', archive_path=None, merit_f=None, **para
     if output['error']:
         raise
     
-    fingerprint = A.fingerprint()
+    fingerprint = G.fingerprint()
     
     output['fingerprint'] = fingerprint
     
