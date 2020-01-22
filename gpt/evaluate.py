@@ -36,9 +36,6 @@ def default_gpt_merit(G):
     else:
         m= {'error':False}
     
-    # Gather output
-    m.update(end_output_data(G.output))
-    
     # Load final screen for calc
     screen = G.screen[-1]        
     
