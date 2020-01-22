@@ -74,12 +74,10 @@ def run_gpt_with_distgen(settings=None,
     
     # Link particle files
     particle_file = 'distgen_gpt_particles.txt'
-    print(particle_file )
     
     # Set inputs
     if settings:
         G, distgen_params = set_gpt_and_distgen(G, distgen_params, settings, verbose=verbose)
-
     
     # Configure distgen
     gen.parse_input(distgen_params)       

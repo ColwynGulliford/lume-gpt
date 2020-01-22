@@ -122,6 +122,37 @@ def write_gpt_input_file(finput,inputFile):
         for line in finput["lines"]:
             f.write(line+"\n")
 
+def read_particle_gdf_file(gdffile,verbose=0):
+
+    with open(gdffile, 'rb') as f:
+      data = easygdf.load_initial_distribution(f,extra_screen_keys=['q','nmacro'])
+
+    screen = {}
+    n = len(data[0,:])
+    if(n>0):
+
+        q = data[7,:]          # elemental charge/macroparticle
+        nmacro = data[8,:]     # number of elemental charges/macroparticle
+                   
+        weights = np.abs(data[7,:]*data[8,:])/np.sum(np.abs(data[7,:]*data[8,:]))
+
+        screen = {"x":data[0,:],"GBx":data[1,:],
+                  "y":data[2,:],"GBy":data[3,:],
+                  "z":data[4,:],"GBz":data[5,:],
+                  "t":data[6,:],
+                  "q":data[7,:],
+                  "nmacro":data[8,:],
+                  "w":weights,
+                  "G":np.sqrt(data[1,:]*data[1,:]+data[3,:]*data[3,:]+data[5,:]*data[5,:]+1)}
+                
+                    #screen["Bx"]=screen["GBx"]/screen["G"]
+                    #screen["By"]=screen["GBy"]/screen["G"]
+                    #screen["Bz"]=screen["GBz"]/screen["G"]
+
+        screen["time"]=np.sum(screen["w"]*screen["t"])
+        screen["n"]=n          
+
+    return screen
 
 def read_gdf_file(gdffile,verbose=0):
       
@@ -138,11 +169,15 @@ def read_gdf_file(gdffile,verbose=0):
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 
-    tdata=[]
-    pdata=[]
+    tdata = make_tout_dict(touts)
+    pdata = make_screen_dict(screens)
 
-    t1 = time.time()
-    count=0
+    return(tdata,pdata)
+
+def make_tout_dict(touts):
+
+    tdata=[]
+    count = 0
     for data in touts:
         n=len(data[0,:])
         
@@ -177,6 +212,12 @@ def read_gdf_file(gdffile,verbose=0):
 
             count=count+1
             tdata.append(tout)
+
+    return tdata
+
+def make_screen_dict(screens):
+
+    pdata=[]
          
     count=0
     for data in screens:
@@ -216,7 +257,6 @@ def read_gdf_file(gdffile,verbose=0):
     t2 = time.time()
     #self.vprint("done. Time ellapsed: "+self.ptime(t1,t2)+".",0,True)
 
-
     ts=[screen['time'] for screen in pdata]
     inds={}
 
@@ -229,22 +269,6 @@ def read_gdf_file(gdffile,verbose=0):
                 pdata_temp.append(screen)
                
     pdata=pdata_temp
-    #self.vprint("done.",0,True)
-
-    return(tdata,pdata)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return pdata
 
 
