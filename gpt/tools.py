@@ -96,7 +96,7 @@ def execute3(cmd,kill_msgs=[],verbose=False,timeout=1e6):
   
     run_time=tstop-tstart
 
-    print("done")
+    #print("done")
     return run_time,exception,log
 
 

@@ -164,7 +164,7 @@ class GPT:
 
         try:
             if timeout:
-                print("Running with timeout")
+                #print("Running with timeout")
                 kill_msgs = ["gpt: Spacecharge3Dmesh:", 
                              'Error:','gpt: No valid GPT license']
                 
