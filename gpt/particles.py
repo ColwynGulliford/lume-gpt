@@ -1,5 +1,5 @@
 from pmd_beamphysics import ParticleGroup
-
+from pmd_beamphysics.units import c_light, e_charge
 
 import numpy as np
 
@@ -34,16 +34,21 @@ def tout_to_particle_data(tout):
     
     """
     data = {}
+    
+    n_particle = len(tout['x'])
+    
     data['x'] = tout['x']
     data['y'] = tout['y']
     data['z'] = tout['z']
-    factor = 299792458.**2 /1.60217662e-19 # kg -> eV
+    factor = c_light**2 /e_charge # kg -> eV
     data['px'] = tout['GBx']*tout['m']*factor
     data['py'] = tout['GBy']*tout['m']*factor
     data['pz'] = tout['GBz']*tout['m']*factor
     data['t'] = tout['t']
-    data['status'] = 1
+    data['status'] = np.full(n_particle, 1)
     data['weight'] = abs(tout['q']*tout['nmacro'])
+    
+    
     
     masses = np.unique(tout['m'])
     charges = np.unique(tout['q'])
@@ -55,7 +60,7 @@ def tout_to_particle_data(tout):
     species = identify_species(mass, charge)
     
     data['species'] = species
-    data['n_particle'] = len(data['x'])
+    data['n_particle'] = n_particle
     return data
 
 

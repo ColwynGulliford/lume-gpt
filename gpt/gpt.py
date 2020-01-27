@@ -1,11 +1,15 @@
+from gpt import tools, parsers
+from gpt.particles import touts_to_particlegroups, particle_stats
+import gpt.archive 
+
+from pmd_beamphysics.units import pg_units
+
+import h5py
 import os
 import tempfile
 from time import time
 
-from gpt import tools, parsers
-from gpt.particles import touts_to_particlegroups, particle_stats
 
-from pmd_beamphysics.units import pg_units
 
 class GPT:
     """ 
@@ -238,7 +242,52 @@ class GPT:
     
     def write_input_file(self):
         parsers.write_gpt_input_file(self.input, self.input_file)
+   
+    
+    def load_archive(self, h5=None):
+        """
+        Loads input and output from archived h5 file.
+        
+        See: GPT.archive
+        """
+        if isinstance(h5, str):
+            g = h5py.File(h5, 'r')
+            self.vprint(f'Reading archive file {h5}')
+        else:
+            g = h5
+        
+        self.input = gpt.archive.read_input_h5(g['input'])
+        self.output = gpt.archive.read_output_h5(g['output'])
+        
+        self.vprint('Loaded from archive. Note: Must reconfigure to run again.')
+        self.configured = False
+        
+    
+    def archive(self, h5=None):
+        """
+        Archive all data to an h5 handle or filename.
+        
+        If no file is given, a file based on the fingerprint will be created.
+        
+        """
+        if not h5:
+            h5 = 'gpt_'+self.fingerprint()+'.h5'
+         
+        if isinstance(h5, str):
+            g = h5py.File(h5, 'w')
+            self.vprint(f'Archiving to file {h5}')
+        else:
+            g = h5
+        
+        # All input
+        gpt.archive.write_input_h5(g, self.input, name='input')
 
+        # All output
+        gpt.archive.write_output_h5(g, self.output, name='output')
+
+        return h5        
+        
+        
     def __str__(self):
 
         outstr = 'GPT object:'
