@@ -18,7 +18,7 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
         if verbose and found:
             print(k, 'is in gpt')
         
-        if not found:
+        if not found and ':' in k:
             distgen_input = update_nested_dict(distgen_input, {k:v}, verbose=verbose)
             #set_nested_dict(distgen_input, k, v)    
     
@@ -65,7 +65,7 @@ def run_gpt_with_distgen(settings=None,
     G = GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir)
     G.timeout=timeout
     G.verbose = verbose
-    
+
     # Distgen generator
     gen = Generator(verbose=verbose)
     f = full_path(distgen_input_file)
@@ -74,7 +74,7 @@ def run_gpt_with_distgen(settings=None,
     
     # Link particle files
     particle_file = 'distgen_gpt_particles.txt'
-    
+
     # Set inputs
     if settings:
         G, distgen_params = set_gpt_and_distgen(G, distgen_params, settings, verbose=verbose)

@@ -130,17 +130,26 @@ class GPT:
         
         tokens = infile.split('.')
         if(len(tokens)>1):
-            outfile = ''.join(tokens[:-1])+'.out.gdf'
+            outfile = '.'.join(tokens[:-1])+'.out.gdf'
         else:
             outfile = tokens[0]+'.out.gdf'
         
-        runscript = [self.gpt_bin, '-v -o', outfile, infile]
+        runscript = [self.gpt_bin, '-v -o', self.get_gpt_output_file(), infile]
             
         if write_to_path:
             with open(os.path.join(self.path, 'run'), 'w') as f:
                 f.write(' '.join(runscript))
             
         return runscript
+
+    def get_gpt_output_file(self):
+        _, infile = os.path.split(self.input_file)
+        tokens = infile.split('.')
+        if(len(tokens)>1):
+            outfile = '.'.join(tokens[:-1])+'.out.gdf'
+        else:
+            outfile = tokens[0]+'.out.gdf'
+        return outfile
 
     def run_gpt(self, verbose=False, parse_output=True, timeout=None):
         
@@ -184,7 +193,7 @@ class GPT:
             self.log = log
                     
             if parse_output:
-                self.load_output()
+                self.load_output(file=self.get_gpt_output_file())
                 
         except Exception as ex:
             
