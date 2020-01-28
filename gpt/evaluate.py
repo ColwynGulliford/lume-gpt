@@ -7,21 +7,31 @@ from inspect import getfullargspec
 import os
 
 
-def end_output_data(output):
-    """
-    Some outputs are lists. Get the last item. 
-    """
-    o = {}
-    for k in output:
-        val = output[k]
-        if isinstance(val, str): # Encode strings
-            o[k] = val.encode()
-        elif np.isscalar(val):
-            o[k]=val
-        else:
-            o['end_'+k]=val[-1]
-           
-    return o
+#def end_output_data(output):
+#    """
+#    Some outputs are lists. Get the last item. 
+#    """
+#    o = {}
+#    for k in output:
+#        val = output[k]
+#        if isinstance(val, str): # Encode strings
+#            o[k] = val.encode()
+#        elif np.isscalar(val):
+#            o[k]=val
+#        else:
+#            o['end_'+k]=val[-1]
+#           
+
+def get_norm_emitt(x,p):
+
+    x0 = x.mean()
+    p0 = p.mean()
+    stdx = x.std()
+    stdp = p.std()
+    xp = np.mean((x-x0)*(p-p0))
+
+    return np.sqrt( stdx**2 * stdp**2 - xp**2 )
+    
 
 
 def default_gpt_merit(G):
@@ -37,8 +47,15 @@ def default_gpt_merit(G):
         m= {'error':False}
     
     # Load final screen for calc
-    screen = G.screen[-1]        
-    
+    if(len(G.screen)>0):
+        screen = G.screen[-1]    
+        m['end_std_x'] = screen['x'].std()
+        m['end_std_y'] = screen['y'].std()
+        m['end_qbunch'] = np.abs(np.sum(screen['q']*screen['nmacro']))
+        m['end_norm_emitt_x'] = get_norm_emitt(screen['x'],screen['GBx'])
+        m['end_norm_emitt_y'] = get_norm_emitt(screen['y'],screen['GBy'])
+        m['end_std_t']=screen['t'].std()
+
     # Remove annoying strings
     if 'why_error' in m:
         m.pop('why_error')
