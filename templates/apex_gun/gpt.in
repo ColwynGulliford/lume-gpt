@@ -35,9 +35,9 @@ setfile("beam", "gpt_particles.gdf");
 
 
 #--------------------------------------------------------------------------
-# ACCURACY AND INTEGRATION PARAMETERS
+# ACCURACY AND INTEGRATION PARAMETERS AND RMAX BOUNDARY
 #--------------------------------------------------------------------------
-RadiusMax = 0.04;
+RadiusMax = 0.01;
 GBacc =5.5;
 xacc  =6.5;
 accuracy(GBacc, xacc);
@@ -57,11 +57,21 @@ if(use_gun_peak_field==1) {
 
     Escale   = gun_peak_field;
 
-else:
+} else {
 
     Escale   = gun_voltage / voltage_scale;
 
-Map25D_TM("wcs", XGUN,YGUN,ZGUN,  1,0,0, 0,1,0, "fields/apex_gun.gdf", "R", "Z", "Er", "Ez", "Bphi", Escale, 0, gun_phase, 2*pi*Master_RF);
+}
+
+Map25D_TM("wcs", XGUN,YGUN,ZGUN,  1,0,0, 0,1,0, "fields/apex_gun.gdf", "R", "Z", "Er", "Ez", "Bphi", Escale, 0, gun_phase*(pi/180), 2*pi*Master_RF);
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# PIPE BOUNDARY
+#--------------------------------------------------------------------------
+forwardscatter("wcs", "I", "remove", 0.0);
+scatterpipe("wcs","I", -1, 1, RadiusMax) scatter="remove";
 #--------------------------------------------------------------------------
 
 
@@ -88,6 +98,7 @@ if (space_charge == 1) {
 #--------------------------------------------------------------------------
 
 ZSTART = -0.000001;
+ZSTOP = 0.2;
 zminmax("wcs","I",ZSTART,ZSTOP);
 
 tout(0,tmax,tmax/Ntout);
