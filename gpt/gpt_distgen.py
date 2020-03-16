@@ -6,7 +6,7 @@ from distgen import Generator
 from distgen.writers import write_gpt
 from distgen.tools import update_nested_dict
 
-import json
+import yaml
 import os
 
 def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
@@ -18,7 +18,7 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
         if verbose and found:
             print(k, 'is in gpt')
         
-        if not found and ':' in k:
+        if not found:
             distgen_input = update_nested_dict(distgen_input, {k:v}, verbose=verbose)
             #set_nested_dict(distgen_input, k, v)    
     
@@ -69,7 +69,7 @@ def run_gpt_with_distgen(settings=None,
     # Distgen generator
     gen = Generator(verbose=verbose)
     f = full_path(distgen_input_file)
-    distgen_params = json.load(open(f))
+    distgen_params = yaml.safe_load(open(f))
     
     
     # Link particle files
