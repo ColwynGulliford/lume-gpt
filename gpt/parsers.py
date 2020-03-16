@@ -24,7 +24,6 @@ def set_support_files(lines, original_path, target_path='', copy_files=False, pa
 
     for ii, line in enumerate(lines):
 
-        #print(line)
         support_files = find_path(line,pattern=pattern)
 
         for support_file in support_files:
@@ -55,28 +54,27 @@ def parse_gpt_input_file(filePath, condense=False):
 
     with open(filePath, 'r') as f:
 
-        filestr=f.read()
+        clean_lines = []
 
-        expressions = filestr.split(';')
-        lines = []
-        for ii,expression in enumerate(expressions):
-            nlines = expression.strip().split('\n')
-            for nline in nlines:
-                lines.append(nline.strip())
+        # Get lines without comments
+        for line in f:
+            tokens = line.split('#')
+            if(len(tokens[0])>0):
+                clean_line = line.strip().replace('\n','')
+                clean_lines.append(clean_line)
 
-        clean_lines=[]
+        #clean_lines=[]
     
-        for line in lines:
-            line = line.strip()
-            line.replace('\n','')
-            if(line!=''):
-                tokens = line.split('#')
-                if(tokens[0]!=''):
-                    nline = tokens[0]
-                    if(not (nline[-1]=='{' or nline[-1]=='}')):
-                        nline = nline+';'
+        #for line in lines:
+        #    line.replace('\n','')
+        #    if(line!=''):
+        #        tokens = line.split('#')
+        #        if(tokens[0]!=''):
+        #            nline = tokens[0]
+                    #if(not (nline[-1]=='{' or nline[-1]=='}') and nline[-1]!=';'):
+                    #    nline = nline+';'
 
-                    clean_lines.append(nline)
+                   # clean_lines.append(nline)
         #print(clean_lines)
 
     variables={}
