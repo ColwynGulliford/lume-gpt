@@ -31,6 +31,7 @@ class GPT:
     
     def __init__(self,
                  input_file=None,
+                 initial_particles = None,
                  gpt_bin='$GPT_BIN',      
                  use_tempdir=True,
                  workdir=None,
@@ -38,6 +39,7 @@ class GPT:
 
         # Save init
         self.original_input_file = input_file
+        self.initial_particles = initial_particles
         self.use_tempdir = use_tempdir
         self.workdir = workdir
         if workdir:
@@ -161,6 +163,10 @@ class GPT:
         run_info = {}
         t1 = time()
         run_info['start_time'] = t1
+
+        if self.initial_particles:
+            fname = self.write_initial_particles()
+            #	self.input['newrun']['distribution'] = fname  
         
         # Move to local directory
         # Save init dir
@@ -244,6 +250,18 @@ class GPT:
     def write_input_file(self):
         parsers.write_gpt_input_file(self.input, self.input_file)
    
+    def write_initial_particles(self, fname=None):
+        if not fname:
+            fname = os.path.join(self.path, 'gpt.particles')
+        self.initial_particles.write_gpt(fname,asci2gdf_bin='$ASCI2GDF_BIN', verbose=self.verbose)
+        self.vprint(f'Initial particles written to {fname}')
+        return fname 
+
+    def load_initial_particles(self, h5):
+        """Loads a openPMD-beamphysics particle h5 handle or file"""
+        P = ParticleGroup(h5=h5)
+        self.initial_particles = P
+
     
     def load_archive(self, h5=None):
         """
@@ -263,6 +281,7 @@ class GPT:
         self.vprint('Loaded from archive. Note: Must reconfigure to run again.')
         self.configured = False
         
+
     
     def archive(self, h5=None):
         """
@@ -326,6 +345,8 @@ def run_gpt(settings=None,
     """
     if verbose:
         print('run_gpt') 
+
+    
 
     # Make GPT object
     G =GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir)
