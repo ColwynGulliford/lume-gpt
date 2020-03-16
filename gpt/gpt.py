@@ -108,6 +108,7 @@ class GPT:
         return [self.set_variable(var,variables[var]) for var in variables.keys()]
     
     def load_output(self, file='gpt.out.gdf'):
+
         touts, screens=parsers.read_gdf_file(file)
         
         # Raw GPT 
@@ -147,13 +148,13 @@ class GPT:
         return runscript
 
     def get_gpt_output_file(self):
-        _, infile = os.path.split(self.input_file)
+        path, infile = os.path.split(self.input_file)
         tokens = infile.split('.')
         if(len(tokens)>1):
             outfile = '.'.join(tokens[:-1])+'.out.gdf'
         else:
             outfile = tokens[0]+'.out.gdf'
-        return outfile
+        return os.path.join(path, outfile)
 
     def run_gpt(self, verbose=False, parse_output=True, timeout=None):
         
