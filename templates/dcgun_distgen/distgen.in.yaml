@@ -1,0 +1,27 @@
+n_particle: 2000
+random_type: hammersley
+start:
+    MTE:
+        units: meV
+        value: 150
+    type: cathode
+total_charge:
+    units: pC
+    value: 130
+r_dist: 
+    max_r:
+        units: mm
+        value: 2
+    type: radial_uniform
+t_dist:
+    max_t:
+        units: ps
+        value: 5
+    min_t: 
+        units: ps
+        value: -5
+    type: uniform
+output: 
+    file: gpt_particles.txt
+    type: gpt
+
