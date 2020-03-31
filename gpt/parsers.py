@@ -58,9 +58,9 @@ def parse_gpt_input_file(filePath, condense=False):
 
         # Get lines without comments
         for line in f:
-            tokens = line.split('#')
+            tokens = line.strip().split('#')
             if(len(tokens[0])>0):
-                clean_line = line.strip().replace('\n','')
+                clean_line = tokens[0].strip().replace('\n','')
                 clean_lines.append(clean_line)
 
         #clean_lines=[]
@@ -89,8 +89,7 @@ def parse_gpt_input_file(filePath, condense=False):
             value = float(tokens[1][:-1].strip())
             
             if(name not in variables.keys()):
-                variables[name]=value #{"value":value,"index":ii}
-                #print(name,value)
+                variables[name]=value 
             else:
                 print("Warning: multiple definitions of variable "+name+" on line "+str(ii)+".")
 
@@ -269,4 +268,12 @@ def make_screen_dict(screens):
     pdata=pdata_temp
     return pdata
 
+def parse_gpt_string(line):
+    return re.findall(r'\"(.+?)\"',line) 
+
+def replace_gpt_string(line,oldstr,newstr):
+
+    strs = parse_gpt_string(line)
+    assert oldstr in strs, 'Could not find string '+oldstr+' for string replacement.'
+    line.replace(oldstr,newstr)
 

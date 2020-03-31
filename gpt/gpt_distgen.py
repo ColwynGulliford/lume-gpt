@@ -6,6 +6,8 @@ from distgen import Generator
 from distgen.writers import write_gpt
 from distgen.tools import update_nested_dict
 
+from gpt.gpt_phasing import gpt_phasing
+
 import yaml
 import os
 
@@ -15,6 +17,7 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
     """
     for k, v in settings.items():
         found=gpt.set_variable(k,v)
+        #print(k,v,found)
         if verbose and found:
             print(k, 'is in gpt')
         
@@ -28,8 +31,10 @@ def run_gpt_with_distgen(settings=None,
                          gpt_input_file=None,
                          distgen_input_file=None,
                          workdir=None, 
+                         use_tempdir=True,
                          gpt_bin='$GPT_BIN',
                          timeout=2500,
+                         auto_phase=False,
                          verbose=False,
                          asci2gdf_bin='$ASCI2GDF_BIN'
                          ):
@@ -53,16 +58,17 @@ def run_gpt_with_distgen(settings=None,
         return run_gpt(settings=settings, 
                        gpt_input_file=gpt_input_file, 
                        workdir=workdir,
+                       use_tempdir=use_tempdir,
                        gpt_bin=gpt_bin, 
                        timeout=timeout, 
                        verbose=verbose)
         
     
     if verbose:
-        print('run_gpt_with_generator') 
+        print('run_gpt_with_distgen') 
 
     # Make gpt and generator objects
-    G = GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir)
+    G = GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir, use_tempdir=use_tempdir)
     G.timeout=timeout
     G.verbose = verbose
 
@@ -70,23 +76,48 @@ def run_gpt_with_distgen(settings=None,
     gen = Generator(verbose=verbose)
     f = full_path(distgen_input_file)
     distgen_params = yaml.safe_load(open(f))
-    
-    
-    # Link particle files
-    particle_file = 'distgen_gpt_particles.txt'
 
     # Set inputs
     if settings:
         G, distgen_params = set_gpt_and_distgen(G, distgen_params, settings, verbose=verbose)
     
+    # Link particle files
+    particle_file = os.join(G.path , os.path.basename(G.get_dist_file()))
+    
+    
+
+    if(verbose):
+        print('Linking particle files, distgen output -> "'+particle_file+'".')
+
+    if('output' in distgen_params and verbose):
+        print('Replacing Distgen output params')
+
+    distgen_params['output'] = {'type':'gpt','file':particle_file}
+
+    if(verbose):
+        print('\nDistgen >------')
     # Configure distgen
     gen.parse_input(distgen_params)       
-    
+
     # Run
     beam = gen.beam()
     particle_file = os.path.join(G.path, particle_file)
     write_gpt(beam, particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
+    if(verbose):
+        print('------< Distgen\n')
+
+    if(auto_phase): 
+        if(verbose):
+            print('\nAuto Phasing >------')
+
+        G.write_input_file()   # Write the unphased input file
+        phased_file_name, phased_settings = gpt_phasing(G.input_file, path_to_gpt_bin=G.gpt_bin[:-3], verbose=verbose)
+        G.set_variables(phased_settings)
+
+        if(verbose):
+            print('------< Auto Phasing\n')
+
     G.run()
     
     return G

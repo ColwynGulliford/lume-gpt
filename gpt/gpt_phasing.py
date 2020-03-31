@@ -1,0 +1,509 @@
+
+# Script to phase a GPT input file as produced by the GUI
+# USAGE:  (last two arguments are optional)
+# python gpt_phasing input_file.in /path/to/gpt_exe/ /path/to/fields/
+
+import sys
+import math
+import re
+import os
+import subprocess
+import numpy
+import scipy
+import scipy.optimize as sp
+from optparse import OptionParser
+
+def main():
+
+    # Default setting
+    parser = OptionParser()
+    parser.add_option("-i", "--infile", dest="infilename", default="", 
+                      help="write report to FILE", metavar="FILE")
+    parser.add_option("-f", "--file", dest="filename", default="", 
+                      help="write report to FILE", metavar="FILE")
+    parser.add_option("-q", "--quiet",
+                      action="store_false", dest="verbose", default=True,
+                      help="don't print status messages to stdout")
+    parser.add_option("-d", "--debug",
+                      action="store_true", dest="debug_flag", default=False,
+                      help="show GPT execution output on failure")
+
+    (options, args) = parser.parse_args()
+
+    path_to_gpt_bin = options.filename
+
+    verbose = options.verbose
+    debug_flag = options.debug_flag
+
+    # Interpret input arguments
+    path_to_input_file = options.infilename
+    path_to_gpt_bin = options.filename
+
+    gpt_phasing(path_to_input_file,path_to_gpt_bin="", verbose=True, debug_flag=False)
+
+def gpt_phasing2(gpt_input_file, gpt_bin, settings, verbose=False):
+
+    cwd = os.getcwd()
+    print(cwd)
+
+    temp_gpt_input_file = gpt_input_file.replace('.in','.temp.in')
+    #phased_gpt_input_file = gpt_input_file.replace('.in','.phased.in')
+ 
+def gpt_phasing(path_to_input_file, path_to_gpt_bin="", verbose=False, debug_flag=False):
+
+    settings = {}
+
+    if (verbose == True):
+        print("")
+        print("Phasing: " + path_to_input_file )
+
+    # Interpret input arguments
+    split_input_file_path = path_to_input_file.split('/')
+    gpt_input_filename = split_input_file_path[-1]
+
+    phase_input_filename = gpt_input_filename.replace('.in', '.temp.in')
+    finished_phase_input_filename = gpt_input_filename.replace('.in', '.phased.in')
+
+    path_to_input_file = ''
+    for x in range(len(split_input_file_path)-1):
+        path_to_input_file = path_to_input_file + split_input_file_path[x] + '/'
+
+    gpt_input_text = readinfile(path_to_input_file + gpt_input_filename)
+
+    # Find all lines marked for phasing
+    amplitude_flag_indices = find_lines_containing(gpt_input_text, "phasing_amplitude_")
+    amplitude_flag_indices = sort_lines_by_first_integer(gpt_input_text, amplitude_flag_indices)
+    
+    amplitude_indices = []
+    desired_amplitude = []
+    for index in amplitude_flag_indices:
+        variable_name = get_variable_with_string_value(gpt_input_text[index])
+        
+        amp_index = find_line_with_variable_name(gpt_input_text, variable_name)
+        amplitude_indices.append(amp_index)
+        desired_amplitude.append(get_variable_on_line(gpt_input_text, amp_index))
+        settings[variable_name]=desired_amplitude[-1]
+
+    oncrest_flag_indices = find_lines_containing(gpt_input_text, "phasing_on_crest_")
+    oncrest_flag_indices = sort_lines_by_first_integer(gpt_input_text, oncrest_flag_indices)
+
+    oncrest_indices = []
+    oncrest_names = []
+    for index in oncrest_flag_indices:
+        variable_name = get_variable_with_string_value(gpt_input_text[index])
+        oncrest_names.append(variable_name)
+        oncrest_index = find_line_with_variable_name(gpt_input_text, variable_name)
+        oncrest_indices.append(oncrest_index)
+        settings[variable_name]=0
+
+    relative_flag_indices = find_lines_containing(gpt_input_text, "phasing_relative_")
+    relative_flag_indices = sort_lines_by_first_integer(gpt_input_text, relative_flag_indices)
+
+    relative_indices = []
+    desired_relative_phase = []
+    for index in relative_flag_indices:
+        variable_name = get_variable_with_string_value(gpt_input_text[index])
+        rel_index = find_line_with_variable_name(gpt_input_text, variable_name)
+        relative_indices.append(rel_index)
+        desired_relative_phase.append(get_variable_on_line(gpt_input_text, rel_index))
+        settings[variable_name]=desired_relative_phase[-1]
+
+    gamma_flag_indices = find_lines_containing(gpt_input_text, "phasing_gamma_")
+    gamma_flag_indices = sort_lines_by_first_integer(gpt_input_text, gamma_flag_indices)
+
+    gamma_indices = []
+    gamma_names = []
+    for index in gamma_flag_indices:
+        variable_name = get_variable_with_string_value(gpt_input_text[index])
+        gamma_names.append(variable_name)
+        gamma_index = find_line_with_variable_name(gpt_input_text, variable_name)
+        gamma_indices.append(gamma_index)
+        settings[variable_name]=1
+
+    # Set up phasing input file
+    phase_input_text = gpt_input_text
+
+    initial_space_charge = get_variable_by_name(phase_input_text, 'space_charge')
+    initial_couplers_on = get_variable_by_name(phase_input_text, 'couplers_on')
+    initial_viewscreens_on = get_variable_by_name(phase_input_text, 'viewscreens_on')
+
+    phase_input_text = set_variable_by_name(phase_input_text, 'auto_phase', 1, True)
+    phase_input_text = set_variable_by_name(phase_input_text, 'space_charge', 0, False)
+    phase_input_text = set_variable_by_name(phase_input_text, 'couplers_on', 0, False)
+    phase_input_text = set_variable_by_name(phase_input_text, 'viewscreens_on', 0, False)
+
+    #print(gamma_names,oncrest_names)
+
+    # turn off all cavities
+    for index in amplitude_indices:
+        phase_input_text = set_variable_on_line(phase_input_text, index, 0.0)
+
+    # set relative phases to zero
+    for index in relative_indices:
+        phase_input_text = set_variable_on_line(phase_input_text, index, 0.0)
+
+    # set gammas to one
+    for index in gamma_indices:
+        phase_input_text = set_variable_on_line(phase_input_text, index, 1.0)
+
+    # phase the cavities
+
+    phase_step = 20
+    phase_test = numpy.arange(0, 360, phase_step)
+
+    if (verbose == True):
+        print(" ")
+
+    for cav_ii in range(len(amplitude_indices)):
+
+        if desired_amplitude[cav_ii] > 0:
+
+            # Tell script which cavity we are phasing
+
+            phase_input_text = set_variable_by_name(phase_input_text, 'cavity_phasing_index', cav_ii, False)
+
+            # turn on the cavity
+            phase_input_text = set_variable_on_line(phase_input_text, amplitude_indices[cav_ii], desired_amplitude[cav_ii])
+
+            gamma_test = []
+            for phase in phase_test:
+
+                gamma = run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag)
+
+                gamma_test.append(gamma)
+
+            gamma_test_indices = numpy.argsort(gamma_test)
+
+            best_phase = phase_test[gamma_test_indices[-1]]
+            left_bound = best_phase - phase_step
+            right_bound = best_phase + phase_step
+
+            bracket = [left_bound, best_phase, right_bound]
+
+            if (verbose == True):
+                print("Cavity " + str(cav_ii) + ": Bracketed between " + str(left_bound) + " and " + str(right_bound))
+        
+            if (numpy.std(gamma_test) == 0):
+                if (gamma_test[0] == 1.0):
+                    sys.exit("ERROR: No particles reached a screen for any attempted phase.")
+                else:
+                    sys.exit("ERROR: Gamma did not depend on cavity " + str(cav_ii) + " phase, gamma = " + str(gamma_test[0]))
+
+            brent_output = sp.brent(func=neg_run_gpt_phase, args=(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag), brack=bracket, tol=1.0e-5, full_output=1, maxiter=1000)
+
+            best_phase = brent_output[0]
+            best_gamma = -brent_output[1]
+
+            phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
+            phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
+
+            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag)
+
+            if (len(gamma_indices) > 0):
+                phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
+
+            if (verbose == True):
+                print("Cavity " + str(cav_ii) + ": Best phase = " + str(best_phase) + ", final gamma = " + str(final_gamma))
+                print(" ")
+
+        else:
+            
+            best_phase = 0.0
+            phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
+            phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
+
+            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag)
+            if (len(gamma_indices) > 0):
+                phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
+
+            if (verbose == True):
+                print("Skipping: Cavity " + str(cav_ii) + ": Best phase = " + str(best_phase) + ", final gamma = " + str(final_gamma))
+                print(" ")
+
+        settings[oncrest_names[cav_ii]]=best_phase
+        settings[gamma_names[cav_ii]]=final_gamma
+
+    # Put back in the original settings, turn off phasing flags, set reference gamma
+    phase_input_text = set_variable_by_name(phase_input_text, 'auto_phase', 0, True)
+    phase_input_text = set_variable_by_name(phase_input_text, 'space_charge', initial_space_charge, False)
+    phase_input_text = set_variable_by_name(phase_input_text, 'couplers_on', initial_couplers_on, False)
+    phase_input_text = set_variable_by_name(phase_input_text, 'viewscreens_on', initial_viewscreens_on, False)
+
+    # Write phased input file
+    writeinfile(phase_input_text, path_to_input_file + finished_phase_input_filename)
+
+    # Delete temporary input file
+    trashclean(path_to_input_file + phase_input_filename, True)
+
+    return (finished_phase_input_filename,settings)
+                
+# ---------------------------------------------------------------------------- #
+# Run GPT with a given phase for a cavity, returns value of (NEGATIVE) gamma
+# ---------------------------------------------------------------------------- #
+def neg_run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag):
+
+    gamma = run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag)
+    
+    return -gamma
+
+# ---------------------------------------------------------------------------- #
+# Run GPT with a given phase for a cavity, returns value of gamma
+# ---------------------------------------------------------------------------- #
+def run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag):
+
+    phase_input_text = set_variable_on_line(phase_input_text, oncrest_index, phase)
+    
+    return run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag)
+
+# ---------------------------------------------------------------------------- #
+# Just run GPT, given an input file to write
+# ---------------------------------------------------------------------------- #
+def run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag):
+
+    writeinfile(phase_input_text, filename)
+
+    output_filename = filename.replace(".in", ".gdf")
+    output_text_filename = output_filename.replace(".gdf", ".txt")
+
+    command = path_to_gpt_bin + "gpt -o " + output_filename + " " + filename
+    call_os_no_output(command.split())
+    
+    command = path_to_gpt_bin + "gdf2a -w16 -o " + output_text_filename + " " + output_filename
+    call_os_no_output(command.split())
+
+    gamma = get_gamma_from_file(path_to_gpt_bin, output_text_filename, debug_flag)
+
+    trashclean(output_filename, True)
+    trashclean(output_text_filename, True)
+
+    return gamma
+
+# ---------------------------------------------------------------------------- #
+# Run a command, suppressing all output
+# ---------------------------------------------------------------------------- #
+def call_os_no_output(command):
+
+    with open(os.devnull, "w") as fnull:
+        result = subprocess.call(command, stdout = fnull, stderr = fnull)
+
+# ---------------------------------------------------------------------------- #
+# Get gamma from a GPT output file. Assumes last screen is output first in text file
+# ---------------------------------------------------------------------------- #
+def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag):
+
+    hand = open(filename, 'r')
+    lines = hand.readlines()
+    hand.close()
+
+    position_lines = find_lines_containing(lines, "position")
+
+    gamma = 1.0
+
+    if (len(position_lines) > 0):
+        last_screen = position_lines[0] # Here is the assumption
+
+        var_names = lines[position_lines[0] + 1].split()
+        var_values = lines[position_lines[0] + 2].split()
+
+        for ii in range(len(var_names)):
+            name = var_names[ii]
+            if (name == 'G' and len(var_values) > ii):
+                gamma = float(var_values[ii])
+    else:
+        if (debug_flag == True):
+            output_filename = filename.replace(".in", ".gdf")
+            output_text_filename = output_filename.replace(".gdf", ".txt")
+
+            command = path_to_gpt_bin + "gpt -v -o " + output_filename + " " + filename
+            subprocess.call(command.split())
+        sys.exit("ERROR: No screen output found. GPT crashed?")
+    return gamma
+
+# ---------------------------------------------------------------------------- #
+# sets the value of a variable with a given name, returns the entire string array
+# ---------------------------------------------------------------------------- #
+def set_variable_by_name(gpt_input_text, name, value, crash_on_error):
+
+    gpt_input_text_new = gpt_input_text
+
+    index = find_line_with_variable_name(gpt_input_text_new, name)
+
+    if (index > -1):
+        gpt_input_text_new = set_variable_on_line(gpt_input_text_new, index, value)
+    else:
+        if (crash_on_error == True):
+            sys.exit("ERROR: variable " + name + " not found.")
+
+    return gpt_input_text_new
+
+# ---------------------------------------------------------------------------- #
+# find line with variable name
+# ---------------------------------------------------------------------------- #
+def find_line_with_variable_name(gpt_input_text, name):
+
+    if (len(name.strip()) == 0):
+        sys.exit("ERROR: attempting to find variable with name = empty string.")
+
+    gpt_input_text_new = gpt_input_text
+
+    indices = []
+    for ii in range(len(gpt_input_text_new)):
+        line = gpt_input_text_new[ii]
+        match = re.search(name + "[ ]*=[^=]", line)
+        if (match):
+                indices.append(ii)
+
+    if len(indices) == 0:
+        return -1
+        #sys.exit("ERROR: variable " + name + " not found.")
+
+    if len(indices) > 1:
+        sys.exit("ERROR: variable " + name + " found on more than one line.")
+
+    return indices[0]
+
+# ---------------------------------------------------------------------------- #
+# gets the value of a variable with a given name, returns the value
+# ---------------------------------------------------------------------------- #
+def get_variable_by_name(gpt_input_text, name):
+
+    index = find_line_with_variable_name(gpt_input_text, name)
+
+    if (index < 0):
+        return 0;
+
+    gpt_input_text_new = gpt_input_text
+
+    value = get_variable_on_line(gpt_input_text_new, index)
+
+    return value
+
+# ---------------------------------------------------------------------------- #
+# Gets the value of a variable on a line, returns the value
+# ---------------------------------------------------------------------------- #
+def get_variable_on_line(gpt_input_text, index):
+
+    line = gpt_input_text[index]
+    
+    split_on_comments = line.split('#')
+    line_bare = split_on_comments[0].replace(';','').replace(' ', '')
+    
+    split_on_equals = line_bare.split('=')
+    value_string = split_on_equals[-1]
+    
+    return float(value_string)
+        
+
+
+# ---------------------------------------------------------------------------- #
+# sets the value of a variable on a line, returns the entire string array
+# ---------------------------------------------------------------------------- #
+def set_variable_on_line(gpt_input_text, index, value):
+
+    line = gpt_input_text[index]
+    
+    split_on_comments = line.split('#')
+
+    original_comment = '\n'
+    if (len(split_on_comments) > 1):
+            original_comment = ' #' + split_on_comments[-1]
+    line_bare = split_on_comments[0].replace(';','').replace(' ', '')
+    
+    split_on_equals = line_bare.split('=')
+    
+    variable_name = split_on_equals[0]
+
+    new_line = variable_name + '=' + str(value) + ';' + original_comment
+
+    gpt_input_text_new = gpt_input_text
+    gpt_input_text_new[index] = new_line
+
+    return gpt_input_text_new
+
+
+# ---------------------------------------------------------------------------- #
+# Returns indices of lines that have been sorted by an integer that appears at the end of the line
+# ---------------------------------------------------------------------------- #
+def sort_lines_by_first_integer(lines, indices):
+
+    numbers = []        
+    
+    for ii in indices:
+        line = lines[ii]
+        m = re.search("\d+", line)
+        integer_string = m.group(0)
+        numbers.append(float(integer_string))
+   
+    sorted_numbers_indices = numpy.argsort(numbers)
+
+    sorted_indices = []
+    for ii in sorted_numbers_indices:
+        sorted_indices.append(indices[ii])
+    
+    return sorted_indices
+
+# ---------------------------------------------------------------------------- #
+# Returns the value of a variable that is a string
+# ---------------------------------------------------------------------------- #
+def get_variable_with_string_value(line):
+    
+    split_on_comments = line.split('#')
+    line_bare = split_on_comments[0].replace(';','').replace(' ', '')
+    
+    split_on_equals = line_bare.split('=')
+    value_string = split_on_equals[-1]
+    
+    return value_string.strip()
+
+# ---------------------------------------------------------------------------- #
+# Find lines containing a string, returns their indices, case insensitive
+# ---------------------------------------------------------------------------- #
+def find_lines_containing(lines, string):
+    
+    string_lower = string.lower();
+
+    indices = []
+    for ii in range(len(lines)):
+        line = lines[ii].lower()
+        split_on_comments = line.split('#')
+        line = split_on_comments[0]
+        match = re.search(string_lower, line)
+        if (match):
+            indices.append(ii)
+    
+    return indices
+
+# ---------------------------------------------------------------------------- #
+# Deletes a file
+# ---------------------------------------------------------------------------- #
+def trashclean(trashname, control):
+    if control:
+        os.system("rm -f "+trashname)
+
+# ---------------------------------------------------------------------------- #
+# Writes a file from an array of strings
+# ---------------------------------------------------------------------------- #
+def writeinfile(inlines,filename):
+    work_hand=open(filename,'wt')
+    work_hand.writelines(inlines)
+    work_hand.close()
+
+
+# ---------------------------------------------------------------------------- #
+# Reads a file and returns the lines of that file as an array of strings
+# ---------------------------------------------------------------------------- #
+def readinfile(filename):
+
+    hand = open(filename, 'r')
+    inlines = hand.readlines()
+    hand.close()
+    return inlines
+
+# ---------------------------------------------------------------------------- #
+# This allows the main function to be at the beginning of the file
+# ---------------------------------------------------------------------------- #
+
+if __name__ == '__main__':
+    main()
+
+

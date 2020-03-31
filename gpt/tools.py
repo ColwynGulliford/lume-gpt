@@ -50,9 +50,6 @@ def execute2(cmd, timeout=None):
 
 def execute3(cmd,kill_msgs=[],verbose=False,timeout=1e6):
 
-    if(verbose>0):
-        print("Running GPT...")
-
     tstart = time.time()
    
     exception = None
@@ -70,7 +67,7 @@ def execute3(cmd,kill_msgs=[],verbose=False,timeout=1e6):
 
         if(pout):
             log.append(pout)
-            if(verbose>1):
+            if(verbose):
                 print(pout.strip()) 
 
         if(pout == '' and process.poll() is not None):

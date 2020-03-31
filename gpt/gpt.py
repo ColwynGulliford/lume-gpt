@@ -9,7 +9,7 @@ import os
 import tempfile
 from time import time
 
-
+from gpt.parsers import parse_gpt_string
 
 class GPT:
     """ 
@@ -35,6 +35,7 @@ class GPT:
                  gpt_bin='$GPT_BIN',      
                  use_tempdir=True,
                  workdir=None,
+                 timeout=None,
                  verbose=False):
 
         # Save init
@@ -43,7 +44,8 @@ class GPT:
         self.use_tempdir = use_tempdir
         self.workdir = workdir
         if workdir:
-            assert os.path.exists(workdir), 'workdir does not exist: '+workdir        
+            assert os.path.exists(workdir), 'workdir does not exist: '+workdir    
+                
         self.verbose=verbose
         self.gpt_bin = gpt_bin
 
@@ -51,7 +53,7 @@ class GPT:
         self.log = []
         self.output = {}
         #self.screen = [] # list of screens
-        self.timeout=None
+        self.timeout=timeout
         self.error = False
        
         # Run control
@@ -83,22 +85,42 @@ class GPT:
             # Need to attach this to the object. Otherwise it will go out of scope.
             self.tempdir = tempfile.TemporaryDirectory(dir=workdir)
             self.path = self.tempdir.name
+
+        elif(workdir):
+            self.path = workdir
+
         else:
             # Work in place
-            self.path = self.original_path            
+            self.path = self.original_path         
 
         self.input_file = os.path.join(self.path, self.original_input_file) 
         
         parsers.set_support_files(self.input['lines'],self.original_path)              
         
-        self.vprint(f'Configured to run in {self.path}')
+        self.vprint('GPT.configure_gpt:')
+        self.vprint(f'   Original input file "{self.original_input_file}" in "{self.original_path}"')
+        self.vprint(f'   Configured to run in "{self.path}"')
+
         self.configured = True
 
     def load_input(self, input_filePath, absolute_paths=True):
         f = tools.full_path(input_filePath)
         self.original_path, self.original_input_file = os.path.split(f) # Get original path, filename
         self.input = parsers.parse_gpt_input_file(f)            
-            
+
+    def get_dist_file(self):
+        for line in self.input['lines']:
+            if('setfile' in line):
+                return parse_gpt_string(line)[1]
+     
+    def set_dist_file(self,dist_file):
+        for ii, line in enumerate(self.input['lines']):
+            if('setfile' in line):
+                gpt_strs = parse_gpt_string(line)
+                assert len(gpt_strs)==2, "Couldn't find distribution input file strs." 
+                assert gpt_strs[0]=='beam', "Could not find beam defintion in setfile str."
+                self.input['lines'][ii] = f'setfile("beam", "{dist_file}");'
+
     def set_variable(self,variable,value):
         if(variable in self.input["variables"]):
             self.input['variables'][variable]=value
@@ -160,22 +182,27 @@ class GPT:
 
     def run_gpt(self, verbose=False, parse_output=True, timeout=None):
         
+        self.vprint('GPT.run_gpt:')
+
         run_info = {}
         t1 = time()
         run_info['start_time'] = t1
 
         if self.initial_particles:
-            fname = self.write_initial_particles()
-            #	self.input['newrun']['distribution'] = fname  
+            fname = self.write_initial_particles() 
+            # Link input file to new particle file
+            self.set_dist_file(fname)
         
+        #print(self.input
+
         # Move to local directory
         # Save init dir
         init_dir = os.getcwd()
-        self.vprint('init dir: ', init_dir)
+        #self.vprint('init dir: ', init_dir)
 
         os.chdir(self.path)
         # Debugging
-        self.vprint('running GPT in '+os.getcwd())#
+        self.vprint(f'   Running GPT in "{os.getcwd()}"')#
 
         # Write input file from internal dict
         self.write_input_file()
@@ -183,8 +210,10 @@ class GPT:
         runscript = self.get_run_script()
 
         try:
+
             if timeout:
-                #print("Running with timeout")
+               
+                self.vprint(f'   Running with timeout = {self.timeout} sec.')
                 kill_msgs = ["gpt: Spacecharge3Dmesh:", 
                              'Error:','gpt: No valid GPT license']
                 
@@ -193,7 +222,7 @@ class GPT:
                 if(exception is not None):
                     self.error=True
                     run_info["error"]=True
-                    run_info['why_error']=exception
+                    run_info['why_error']=exception.strip()
             else:
                 # Interactive output, for Jupyter
                 log = []
@@ -248,13 +277,14 @@ class GPT:
     
     
     def write_input_file(self):
+        self.vprint(f'   Writing gpt input file to "{self.input_file}"')
         parsers.write_gpt_input_file(self.input, self.input_file)
    
     def write_initial_particles(self, fname=None):
         if not fname:
-            fname = os.path.join(self.path, 'gpt.particles')
-        self.initial_particles.write_gpt(fname,asci2gdf_bin='$ASCI2GDF_BIN', verbose=self.verbose)
-        self.vprint(f'Initial particles written to {fname}')
+            fname = os.path.join(self.path, 'gpt.particles.gdf')
+        self.initial_particles.write_gpt(fname,asci2gdf_bin='$ASCI2GDF_BIN', verbose=False)
+        self.vprint(f'   Initial particles written to "{fname}"')
         return fname 
 
     def load_initial_particles(self, h5):
@@ -312,31 +342,52 @@ class GPT:
 
         outstr = 'GPT object:'
         outstr = outstr+ "\n   Original input file: "+self.original_input_file
-        outstr = outstr+f"\n   Use temp directory: {self.use_tempdir}"
-        outstr = outstr+f"\n   Work directory: {self.workdir}"
+        outstr = outstr+ "\n   Template location: "+self.original_path
+        if(self.workdir):
+            outstr = outstr+ "\n   Top leve work dir: "+self.workdir
+ 
+        if(self.use_tempdir):
+            outstr = outstr+f"\n   Use temp directory: {self.use_tempdir}"
+        #else:
+        #    outstr = outstr+f"\n   Work directory: {self.path}"
        
         # Run control
         outstr = outstr+"\n\nRun Control"
         outstr = outstr+f"\n   Run configured: {self.configured}"
-        outstr = outstr+f"\n   Using temp directory: {self.using_tempdir}"
+        outstr = outstr+f"\n   Work location: {self.path}"
         outstr = outstr+f"\n   Timeout: {self.timeout} (sec)"
 
         # Results
         outstr = outstr+"\n\nResults"
         outstr = outstr+f"\n   Finished: {self.finished}"
         outstr = outstr+f"\n   Error occured: {self.error}"
+        if(self.error):
+            outstr=outstr+f'\n   Cause: {self.output["why_error"]}'
+            errline = self.get_syntax_error_line(self.output["why_error"])
+            if(errline):
+                outstr = outstr+f'\n   Suspected input file line: "{errline}"'
         rtime = self.output['run_time']
         outstr = outstr+f'\n   Run time: {rtime} (sec)'
+        
         #outstr = outstr+f"\n
         #outstr = outstr+f'\n   Log: {self.log}\n'
         return outstr
 
+    def get_syntax_error_line(self,error_msg):
+
+        s=error_msg.strip().replace('\n','')
+        if(s.endswith('Error: syntax error')):
+            error_line_index = int(s[s.find("(")+1:s.find(")")])
+            return self.input['lines'][error_line_index]
+        else:
+            return None
 
 def run_gpt(settings=None, 
             gpt_input_file=None, 
             workdir=None, 
             gpt_bin='$GPT_BIN', 
             timeout=2500, 
+            auto_phase=False,
             verbose=False):
     """
     Run GPT. 
@@ -349,7 +400,7 @@ def run_gpt(settings=None,
     
 
     # Make GPT object
-    G =GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir)
+    G = GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir, verbose=verbose)
     
     G.timeout=timeout
     G.verbose = verbose
@@ -357,8 +408,10 @@ def run_gpt(settings=None,
     # Set inputs
     if settings:
         G.set_variables(settings)
-        #set_astra(A.input, {}, settings, verbose=verbose)
-            
+  
+    if(auto_phase):
+        print('TODO Autophase')
+
     # Run
     G.run()
     

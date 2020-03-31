@@ -1,0 +1,34 @@
+n_particle: 20000
+random_type: hammersley
+
+total_charge:
+  units: nC
+  value: 1
+
+start:
+  MTE:
+    units: meV
+    value: 150
+  type: cathode
+
+r_dist:
+  length:
+    units: mm
+    value: 4
+  ratio:
+    units: dimensionless
+    value: 0.33
+  type: radial_tukey
+
+t_dist:
+  type: tukey
+  length: 
+    units: ps
+    value: 25
+  ratio:
+    units: dimensionless
+    value: 0.5
+   
+output:
+  file: gpt.particles.gdf
+  type: gpt
