@@ -42,6 +42,7 @@ class GPT:
         self.original_input_file = input_file
         self.initial_particles = initial_particles
         self.use_tempdir = use_tempdir
+
         self.workdir = workdir
         if workdir:
             assert os.path.exists(workdir), 'workdir does not exist: '+workdir    
@@ -86,15 +87,12 @@ class GPT:
             self.tempdir = tempfile.TemporaryDirectory(dir=workdir)
             self.path = self.tempdir.name
 
-        elif(workdir):
-            self.path = workdir
-
         else:
             # Work in place
             self.path = self.original_path         
 
         self.input_file = os.path.join(self.path, self.original_input_file) 
-        
+
         parsers.set_support_files(self.input['lines'],self.original_path)              
         
         self.vprint('GPT.configure_gpt:')
@@ -143,12 +141,12 @@ class GPT:
         self.output['particles'] = touts_to_particlegroups(touts)
         
 
-    def run(self):
+    def run(self,gpt_verbose=False):
         if not self.configured:
             print('not configured to run')
             return
         pass
-        self.run_gpt(verbose=self.verbose, timeout=self.timeout)
+        self.run_gpt(verbose=self.verbose, timeout=self.timeout, gpt_verbose=gpt_verbose)
         
     def get_run_script(self, write_to_path=True):
         """
@@ -180,7 +178,7 @@ class GPT:
             outfile = tokens[0]+'.out.gdf'
         return os.path.join(path, outfile)
 
-    def run_gpt(self, verbose=False, parse_output=True, timeout=None):
+    def run_gpt(self, verbose=False, parse_output=True, timeout=None, gpt_verbose=False):
         
         self.vprint('GPT.run_gpt:')
 
@@ -217,7 +215,7 @@ class GPT:
                 kill_msgs = ["gpt: Spacecharge3Dmesh:", 
                              'Error:','gpt: No valid GPT license']
                 
-                run_time,exception,log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout)
+                run_time,exception,log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose)
                 
                 if(exception is not None):
                     self.error=True
@@ -340,7 +338,7 @@ class GPT:
         
     def __str__(self):
 
-        outstr = 'GPT object:'
+        outstr = '\nGPT object:'
         outstr = outstr+ "\n   Original input file: "+self.original_input_file
         outstr = outstr+ "\n   Template location: "+self.original_path
         if(self.workdir):
@@ -388,7 +386,8 @@ def run_gpt(settings=None,
             gpt_bin='$GPT_BIN', 
             timeout=2500, 
             auto_phase=False,
-            verbose=False):
+            verbose=False,
+            gpt_verbose=False):
     """
     Run GPT. 
     
@@ -413,7 +412,7 @@ def run_gpt(settings=None,
         print('TODO Autophase')
 
     # Run
-    G.run()
+    G.run(gpt_verbose=gpt_verbose)
     
     return G  
 
