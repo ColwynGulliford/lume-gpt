@@ -41,21 +41,13 @@ def main():
 
     gpt_phasing(path_to_input_file,path_to_gpt_bin="", verbose=True, debug_flag=False)
 
-def gpt_phasing2(gpt_input_file, gpt_bin, settings, verbose=False):
-
-    cwd = os.getcwd()
-    print(cwd)
-
-    temp_gpt_input_file = gpt_input_file.replace('.in','.temp.in')
-    #phased_gpt_input_file = gpt_input_file.replace('.in','.phased.in')
  
-def gpt_phasing(path_to_input_file, path_to_gpt_bin="", verbose=False, debug_flag=False):
+def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=None, verbose=False, debug_flag=False):
 
     settings = {}
 
     if (verbose == True):
-        print("")
-        print("Phasing: " + path_to_input_file )
+        print("\nPhasing: " + path_to_input_file )
 
     # Interpret input arguments
     split_input_file_path = path_to_input_file.split('/')
@@ -69,6 +61,11 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", verbose=False, debug_fla
         path_to_input_file = path_to_input_file + split_input_file_path[x] + '/'
 
     gpt_input_text = readinfile(path_to_input_file + gpt_input_filename)
+
+    # Add replace usual input distribution with single particle at centroid
+    if(path_to_phasing_dist):
+        dist_line_index = find_lines_containing(gpt_input_text, "setfile")[0]
+        gpt_input_text[dist_line_index]=f'setfile("beam", "{path_to_phasing_dist}");'
 
     # Find all lines marked for phasing
     amplitude_flag_indices = find_lines_containing(gpt_input_text, "phasing_amplitude_")
@@ -172,6 +169,8 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", verbose=False, debug_fla
 
                 gamma_test.append(gamma)
 
+  
+
             gamma_test_indices = numpy.argsort(gamma_test)
 
             best_phase = phase_test[gamma_test_indices[-1]]
@@ -235,7 +234,7 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", verbose=False, debug_fla
     # Delete temporary input file
     trashclean(path_to_input_file + phase_input_filename, True)
 
-    return (finished_phase_input_filename,settings)
+    return (finished_phase_input_filename, settings)
                 
 # ---------------------------------------------------------------------------- #
 # Run GPT with a given phase for a cavity, returns value of (NEGATIVE) gamma
@@ -291,9 +290,8 @@ def call_os_no_output(command):
 # ---------------------------------------------------------------------------- #
 def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag):
 
-    hand = open(filename, 'r')
-    lines = hand.readlines()
-    hand.close()
+    with open(filename, 'r') as hand:
+        lines = hand.readlines()
 
     position_lines = find_lines_containing(lines, "position")
 
@@ -494,9 +492,9 @@ def writeinfile(inlines,filename):
 # ---------------------------------------------------------------------------- #
 def readinfile(filename):
 
-    hand = open(filename, 'r')
-    inlines = hand.readlines()
-    hand.close()
+    with open(filename, 'r') as hand:
+        inlines = hand.readlines()
+
     return inlines
 
 # ---------------------------------------------------------------------------- #

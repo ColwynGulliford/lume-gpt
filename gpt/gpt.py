@@ -127,7 +127,7 @@ class GPT:
             return False
 
     def set_variables(self, variables):
-        return [self.set_variable(var,variables[var]) for var in variables.keys()]
+        return {var:self.set_variable(var,variables[var]) for var in variables.keys()}
     
     def load_output(self, file='gpt.out.gdf'):
 

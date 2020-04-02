@@ -10,6 +10,7 @@ from gpt.gpt_phasing import gpt_phasing
 
 import yaml
 import os
+import time
 
 def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
     """
@@ -95,26 +96,41 @@ def run_gpt_with_distgen(settings=None,
     distgen_params['output'] = {'type':'gpt','file':particle_file}
 
     if(verbose):
-        print('\nDistgen >------')
+        print('\nDistgen >------\n')
     # Configure distgen
-    gen.parse_input(distgen_params)       
+    gen.parse_input(distgen_params)   
+        
 
     # Run
     beam = gen.beam()
     write_gpt(beam, particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
-    
+
     if(verbose):
         print('------< Distgen\n')
 
     if(auto_phase): 
+
         if(verbose):
             print('\nAuto Phasing >------\n')
+        t1 = time.time()
+
+        # Create the distribution used for phasing
+        if(verbose):
+            print('****> Creating intiial distribution for phasing...')
+
+        phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+        phasing_particle_file = os.path.join(G.path, 'gpt_particles.phasing.gdf')
+        write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
+    
+        if(verbose):
+            print('<**** Created intiial distribution for phasing.\n')    
 
         G.write_input_file()   # Write the unphased input file
-        phased_file_name, phased_settings = gpt_phasing(G.input_file, path_to_gpt_bin=G.gpt_bin[:-3], verbose=verbose)
+        phased_file_name, phased_settings = gpt_phasing(G.input_file, path_to_gpt_bin=G.gpt_bin[:-3], path_to_phasing_dist=phasing_particle_file, verbose=verbose)
         G.set_variables(phased_settings)
-
+        t2 = time.time()
         if(verbose):
+            print(f'Time Ellapsed: {t2-t1} sec.')
             print('------< Auto Phasing\n')
 
     G.run(gpt_verbose=gpt_verbose)
@@ -153,5 +169,25 @@ def evaluate_gpt_with_distgen(settings, archive_path=None, merit_f=None, **run_g
         output['archive'] = archive_file
         
     return output
+
+def get_distgen_beam_for_phasing(beam, n_particle=10, verbose=False):
+
+    variables = ['x', 'y', 'z','px', 'py', 'pz', 't']
+
+    transforms = {}
+    for var in variables:
+  
+        avg_var = beam.avg(var)
+        transforms[f'set avg {var}'] = {'variables':var, 'type': 'set_avg', 
+                                        f'avg_{var}': {'value': float(avg_var.magnitude), 'units': str(avg_var.units) }} 
+
+    phasing_distgen_input = {'n_particle':10, 'random_type':'hammersley', 'transforms':transforms,
+                             'total_charge':{'value':0.0, 'units':'C'},
+                             'start': {'type':'time', 'tstart':{'value': 0.0, 'units': 's'}},}
+    
+    gen = Generator(phasing_distgen_input, verbose=verbose) 
+    pbeam = gen.beam()
+
+    return pbeam
 
 
