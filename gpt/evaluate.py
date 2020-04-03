@@ -43,7 +43,7 @@ def default_gpt_merit(G):
         m['end_norm_emitt_y'] = get_norm_emitt(screen['y'],screen['GBy'])
         m['end_std_t']=screen['t'].std()
         m['end_n_particle']=len(screen['x'])
-        m['end_z_screen']=screen['z']
+        m['end_z_screen']=screen['z'].mean()
 
     else:
         raise ValueError('No final screen in GPT data passed to gpt.evaluate.default_gpt_merit!')
