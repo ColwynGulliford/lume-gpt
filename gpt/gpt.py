@@ -213,7 +213,10 @@ class GPT:
                
                 self.vprint(f'   Running with timeout = {self.timeout} sec.')
                 kill_msgs = ["gpt: Spacecharge3Dmesh:", 
-                             'Error:','gpt: No valid GPT license']
+                             'Error:',
+                             'gpt: No valid GPT license',
+                             'malloc'
+                            ]
                 
                 run_time,exception,log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose)
                 

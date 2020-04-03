@@ -7,21 +7,8 @@ from inspect import getfullargspec
 import os
 
 
-#def end_output_data(output):
-#    """
-#    Some outputs are lists. Get the last item. 
-#    """
-#    o = {}
-#    for k in output:
-#        val = output[k]
-#        if isinstance(val, str): # Encode strings
-#            o[k] = val.encode()
-#        elif np.isscalar(val):
-#            o[k]=val
-#        else:
-#            o['end_'+k]=val[-1]
-#           
 
+           
 def get_norm_emitt(x,p):
 
     x0 = x.mean()
@@ -36,7 +23,7 @@ def get_norm_emitt(x,p):
 
 def default_gpt_merit(G):
     """
-    merit function to operate on an evaluated LUME-Astra object A. 
+    merit function to operate on an evaluated LUME-GPT object G  
     
     Returns dict of scalar values
     """
@@ -55,6 +42,11 @@ def default_gpt_merit(G):
         m['end_norm_emitt_x'] = get_norm_emitt(screen['x'],screen['GBx'])
         m['end_norm_emitt_y'] = get_norm_emitt(screen['y'],screen['GBy'])
         m['end_std_t']=screen['t'].std()
+        m['end_n_particle']=len(screen['x'])
+        m['end_z_screen'=screen['z']
+
+    else:
+        raise ValueError('No final screen in GPT data passed to gpt.evaluate.default_gpt_merit!')
 
     # Remove annoying strings
     if 'why_error' in m:
@@ -87,7 +79,7 @@ def evaluate(settings, simulation='gpt', archive_path=None, merit_f=None, **para
         # Import here to limit dependency on distgen
         from .gpt_distgen import run_gpt_with_distgen
         G = run_gpt_with_distgen(settings, **params)
-        
+        print('blip')
     else:
         raise 
         

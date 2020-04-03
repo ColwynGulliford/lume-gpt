@@ -12,22 +12,22 @@ start:
   type: cathode
 
 r_dist:
-  length:
+  sigma_xy:
     units: mm
     value: 4
-  ratio:
+  alpha:
     units: dimensionless
-    value: 0.33
-  type: radial_tukey
+    value: 0.0
+  type: rsg
 
 t_dist:
-  type: tukey
-  length: 
+  type: sg
+  sigma_t: 
     units: ps
     value: 25
-  ratio:
+  alpha:
     units: dimensionless
-    value: 0.5
+    value: 0.0
    
 output:
   file: gpt.particles.gdf
