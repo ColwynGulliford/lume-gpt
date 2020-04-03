@@ -14,13 +14,13 @@ r_dist:
         value: 2
     type: radial_uniform
 t_dist:
-    max_t:
-        units: ps
-        value: 5
-    min_t: 
-        units: ps
-        value: -5
-    type: uniform
+    sigma_t:
+        value: 0.5
+        units: ns
+    alpha: 
+        units: ''
+        value: 0.0
+    type: sg
 output: 
     file: gpt_particles.txt
     type: gpt
