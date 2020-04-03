@@ -107,3 +107,6 @@ venv.bak/
 devel/*
 
 templates/cu_injector
+templates/cu_hcgun
+templates/cold_ncrf_gun
+templates/eic_precool_injector
