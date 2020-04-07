@@ -83,8 +83,6 @@ def run_gpt_with_distgen(settings=None,
         G, distgen_params = set_gpt_and_distgen(G, distgen_params, settings, verbose=verbose)
     
     # Link particle files
-
-    print(G.get_dist_file())
     particle_file = os.path.join(G.path, G.get_dist_file())
 
     if(verbose):

@@ -79,7 +79,6 @@ def evaluate(settings, simulation='gpt', archive_path=None, merit_f=None, **para
         # Import here to limit dependency on distgen
         from .gpt_distgen import run_gpt_with_distgen
         G = run_gpt_with_distgen(settings, **params)
-        print('blip')
     else:
         raise 
         
