@@ -1,5 +1,5 @@
 from gpt import tools, parsers
-from gpt.particles import touts_to_particlegroups, particle_stats
+from gpt.particles import touts_to_particlegroups, particle_stats, raw_data_to_particle_groups
 import gpt.archive 
 
 from pmd_beamphysics.units import pg_units
@@ -73,7 +73,7 @@ class GPT:
         self.configure_gpt(workdir=self.workdir)
  
     def configure_gpt(self, input_filePath=None, workdir=None):
-        
+        """ Configure the GPT object """
         if input_filePath:
             self.load_input(input_filePath)
         
@@ -102,16 +102,19 @@ class GPT:
         self.configured = True
 
     def load_input(self, input_filePath, absolute_paths=True):
+        """ Load the GPT template file """
         f = tools.full_path(input_filePath)
         self.original_path, self.original_input_file = os.path.split(f) # Get original path, filename
         self.input = parsers.parse_gpt_input_file(f)            
 
     def get_dist_file(self):
+        """ Find the distribution input file name in the GPT file """ 
         for line in self.input['lines']:
             if('setfile' in line):
                 return parse_gpt_string(line)[1]
      
     def set_dist_file(self,dist_file):
+        """ Set the input distirbution file name in a GPT file """
         for ii, line in enumerate(self.input['lines']):
             if('setfile' in line):
                 gpt_strs = parse_gpt_string(line)
@@ -120,6 +123,7 @@ class GPT:
                 self.input['lines'][ii] = f'setfile("beam", "{dist_file}");'
 
     def set_variable(self,variable,value):
+        """ Set variable in the GPT input file to a new value """
         if(variable in self.input["variables"]):
             self.input['variables'][variable]=value
             return True
@@ -127,19 +131,35 @@ class GPT:
             return False
 
     def set_variables(self, variables):
+        """ Set a list of variables (variable.keys) to new values (variables.values()) in the GPT Input file """
         return {var:self.set_variable(var,variables[var]) for var in variables.keys()}
     
     def load_output(self, file='gpt.out.gdf'):
+        """ loads the GPT raw data and puts it into particle groups """
+        touts, screens=parsers.read_gdf_file(file)  # Raw GPT data
 
-        touts, screens=parsers.read_gdf_file(file)
-        
-        # Raw GPT 
-        self.screen = screens
-        self.tout = touts
-        
-        # particles as ParticleGroup objects
-        self.output['particles'] = touts_to_particlegroups(touts)
-        
+        self.n_tout = len(touts)
+        self.n_screen = len(screens)
+
+        self.output['particles'] = raw_data_to_particle_groups(touts, screens) 
+
+    @property
+    def tout(self):
+        """ Returns output particle groups for touts """
+        if('particles' in self.output):
+            return self.output['particles'][:self.n_tout]
+
+    @property
+    def screen(self):
+        """ Returns output particle groups for screens """
+        if('particles' in self.output):
+            return self.output['particles'][self.n_tout:]
+
+    @property
+    def particles(self):
+        """ Returns output particle groups for touts + screens """
+        if('particles' in self.output):
+            return self.output['particles']
 
     def run(self,gpt_verbose=False):
         if not self.configured:
@@ -170,6 +190,7 @@ class GPT:
         return runscript
 
     def get_gpt_output_file(self):
+        """ get the name of the GPT output file """
         path, infile = os.path.split(self.input_file)
         tokens = infile.split('.')
         if(len(tokens)>1):
@@ -179,7 +200,7 @@ class GPT:
         return os.path.join(path, outfile)
 
     def run_gpt(self, verbose=False, parse_output=True, timeout=None, gpt_verbose=False):
-        
+        """ RUN GPT and read in results """
         self.vprint('GPT.run_gpt:')
 
         run_info = {}
@@ -265,23 +286,53 @@ class GPT:
         if self.verbose:
             print(*args, **kwargs)    
     
-    def stat(self, key):
+    def stat(self, key, data_type='all'):
         """
         Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
         """
-        particle_groups = self.output['particles']
+        if(data_type=='all'):
+            particle_groups = self.output['particles']
+
+        elif(data_type=='tout'):
+            particle_groups = self.tout
+
+        elif(data_type=='screen'):
+            particle_groups = self.screen
+
+        else:
+            raise ValueError(f'Unsupported GPT data type: {data_type}')
+
         return particle_stats(particle_groups, key)
     
+    #def screen_stat(self, key):
+    ##    """
+    #    Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
+    #    """
+     #   particle_groups = self.screen 
+    #    return particle_stats(particle_groups, key)
+
+    #def tout_stat(self, key):
+    #    """
+    #    Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
+    #    """
+    #    particle_groups = self.tout
+    #    return particle_stats(particle_groups, key)
+
     def stat_units(self, key):
+        """
+        Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
+        """
         """Returns a str decribing the physical units of a stat key."""
         return pg_units(key)
     
     
     def write_input_file(self):
+        """ Write the updated GPT input file """
         self.vprint(f'   Writing gpt input file to "{self.input_file}"')
         parsers.write_gpt_input_file(self.input, self.input_file)
    
     def write_initial_particles(self, fname=None):
+        """ Write the initial particle data to file for use with GPT """
         if not fname:
             fname = os.path.join(self.path, 'gpt.particles.gdf')
         self.initial_particles.write_gpt(fname,asci2gdf_bin='$ASCI2GDF_BIN', verbose=False)

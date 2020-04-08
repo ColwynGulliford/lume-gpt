@@ -26,6 +26,47 @@ def identify_species(mass, charge):
     raise Exception(f'Cannot identify species with mass {mass} and charge {charge}')
    
 
+def raw_data_to_particle_data(gpt_output_dict):
+
+    """
+    Convert a gpt_out (tout or screen) dict to a standard form
+    
+    """
+    data = {}
+
+    n_particle = len(gpt_output_dict['x'])
+    
+    data['x'] = gpt_output_dict['x']
+    data['y'] = gpt_output_dict['y']
+    data['z'] = gpt_output_dict['z']
+    factor = c_light**2 /e_charge # kg -> eV
+    data['px'] = gpt_output_dict['GBx']*gpt_output_dict['m']*factor
+    data['py'] = gpt_output_dict['GBy']*gpt_output_dict['m']*factor
+    data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
+    data['t'] = gpt_output_dict['t']
+    data['status'] = np.full(n_particle, 1)
+    data['weight'] = abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
+    
+    
+    
+    masses = np.unique(gpt_output_dict['m'])
+    charges = np.unique(gpt_output_dict['q'])
+    assert len(masses) == 1, 'All masses must be the same.'
+    assert len(charges) == 1, 'All charges must be the same'
+    mass = masses[0]
+    charge = charges[0]
+
+    species = identify_species(mass, charge)
+    
+    data['species'] = species
+    data['n_particle'] = n_particle
+    return data
+
+def raw_data_to_particle_groups(touts, screens):
+    """
+    Coverts a list of touts to a list of ParticleGroup objects
+    """
+    return [ ParticleGroup(data=tout_to_particle_data(datum))  for datum in touts+screens ] 
 
     
 def tout_to_particle_data(tout):

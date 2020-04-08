@@ -45,7 +45,7 @@ def set_support_files(lines, original_path, target_path='', copy_files=False, pa
                     if(verbose):
                         print("Set path to file: ",lines[ii])        
 
-def parse_gpt_input_file(filePath, condense=False):
+def parse_gpt_input_file(filePath, condense=False, verbose=False):
     """
     Parses GPT input file 
     """
@@ -90,7 +90,7 @@ def parse_gpt_input_file(filePath, condense=False):
             
             if(name not in variables.keys()):
                 variables[name]=value 
-            else:
+            elif(verbose):
                 print("Warning: multiple definitions of variable "+name+" on line "+str(ii)+".")
 
     for line in clean_lines:
