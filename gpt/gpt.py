@@ -181,7 +181,7 @@ class GPT:
         else:
             outfile = tokens[0]+'.out.gdf'
         
-        runscript = [self.gpt_bin, '-j 1 -v -o', self.get_gpt_output_file(), infile]
+        runscript = [self.gpt_bin, '-j 1 -v -o', self.get_gpt_output_file(), self.input_file]
             
         if write_to_path:
             with open(os.path.join(self.path, 'run'), 'w') as f:
@@ -219,9 +219,10 @@ class GPT:
         init_dir = os.getcwd()
         #self.vprint('init dir: ', init_dir)
 
-        os.chdir(self.path)
+        #os.chdir(self.path)
         # Debugging
-        self.vprint(f'   Running GPT in "{os.getcwd()}"')#
+        #self.vprint(f'   Running GPT in "{os.getcwd()}"')#
+        self.vprint(f'   Running GPT...')
 
         # Write input file from internal dict
         self.write_input_file()
