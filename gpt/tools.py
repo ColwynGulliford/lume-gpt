@@ -48,7 +48,7 @@ def execute2(cmd, timeout=None):
         output['why_error'] = 'unknown'
     return output
 
-def execute3(cmd,kill_msgs=[],verbose=False,timeout=1e6):
+def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
 
     tstart = time.time()
    
@@ -56,8 +56,10 @@ def execute3(cmd,kill_msgs=[],verbose=False,timeout=1e6):
     run_time = 0
     all_good = True 
 
+    print('Before command: ', os.getcwd() )
+
     kill_on_warning = len(kill_msgs)>1
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     log = []
 

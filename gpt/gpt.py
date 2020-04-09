@@ -274,7 +274,7 @@ class GPT:
             self.output.update(run_info)
             
             # Return to init_dir
-            os.chdir(init_dir)                        
+            #os.chdir(init_dir)                        
         
         self.finished = True
     
