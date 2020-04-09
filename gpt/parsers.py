@@ -63,20 +63,6 @@ def parse_gpt_input_file(filePath, condense=False, verbose=False):
                 clean_line = tokens[0].strip().replace('\n','')
                 clean_lines.append(clean_line)
 
-        #clean_lines=[]
-    
-        #for line in lines:
-        #    line.replace('\n','')
-        #    if(line!=''):
-        #        tokens = line.split('#')
-        #        if(tokens[0]!=''):
-        #            nline = tokens[0]
-                    #if(not (nline[-1]=='{' or nline[-1]=='}') and nline[-1]!=';'):
-                    #    nline = nline+';'
-
-                   # clean_lines.append(nline)
-        #print(clean_lines)
-
     variables={}
 
     for ii,line in enumerate(clean_lines):
