@@ -48,7 +48,7 @@ def execute2(cmd, timeout=None):
         output['why_error'] = 'unknown'
     return output
 
-def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
+def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6, dirname=None):
 
     tstart = time.time()
    

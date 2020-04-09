@@ -242,7 +242,7 @@ class GPT:
                              'malloc'
                             ]
                 
-                run_time,exception,log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose)
+                run_time,exception,log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose, dirname = self.temp_dir)
                 
                 if(exception is not None):
                     self.error=True
