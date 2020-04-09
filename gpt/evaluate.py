@@ -138,7 +138,7 @@ def evaluate(settings,
                                  gpt_verbose=gpt_verbose,
                                  asci2gdf_bin=asci2gdf_bin)
     else:
-        raise 
+        raise ValueError(f'Unsupported simulation {simulation}')
         
     if merit_f:
         output = merit_f(G)
@@ -146,7 +146,7 @@ def evaluate(settings,
         output = default_gpt_merit(G)
 
     if output['error']:
-        raise
+        raise 
     
     fingerprint = G.fingerprint()
     

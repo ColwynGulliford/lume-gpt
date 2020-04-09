@@ -47,8 +47,9 @@ def raw_data_to_particle_data(gpt_output_dict):
     data['status'] = np.full(n_particle, 1)
     data['weight'] = abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
     
-    
-    
+    if(np.count_nonzero(data['weight'])==0):
+        data['weight'] = np.full( data['weight'].shape, 1/len(data['weight']))
+
     masses = np.unique(gpt_output_dict['m'])
     charges = np.unique(gpt_output_dict['q'])
     assert len(masses) == 1, 'All masses must be the same.'
@@ -66,7 +67,7 @@ def raw_data_to_particle_groups(touts, screens):
     """
     Coverts a list of touts to a list of ParticleGroup objects
     """
-    return [ ParticleGroup(data=tout_to_particle_data(datum))  for datum in touts+screens ] 
+    return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
     
 def tout_to_particle_data(tout):
