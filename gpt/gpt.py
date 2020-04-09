@@ -229,8 +229,6 @@ class GPT:
             
         runscript = self.get_run_script()
 
-        print('boot:', runscript)
-
         try:
 
             if timeout:
@@ -242,7 +240,7 @@ class GPT:
                              'malloc'
                             ]
                 
-                run_time,exception,log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose, dirname = self.tempdir)
+                run_time, exception, log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose, dirname = self.path)
                 
                 if(exception is not None):
                     self.error=True
