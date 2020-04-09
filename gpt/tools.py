@@ -65,6 +65,8 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6, dirname=None):
     kill_on_warning = len(kill_msgs)>1
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    print('after subprocess->Popen')
+
     log = []
 
     while(all_good):
@@ -99,7 +101,7 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6, dirname=None):
   
     run_time=tstop-tstart
 
-    return run_time,exception,log
+    return run_time, exception, log
 
 
 def full_path(path):
