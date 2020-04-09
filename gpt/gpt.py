@@ -181,7 +181,7 @@ class GPT:
         else:
             outfile = tokens[0]+'.out.gdf'
         
-        runscript = [self.gpt_bin, '-v -o', self.get_gpt_output_file(), infile]
+        runscript = [self.gpt_bin, '-j1 -v -o', self.get_gpt_output_file(), infile]
             
         if write_to_path:
             with open(os.path.join(self.path, 'run'), 'w') as f:
