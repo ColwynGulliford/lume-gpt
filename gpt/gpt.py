@@ -229,6 +229,8 @@ class GPT:
             
         runscript = self.get_run_script()
 
+        print('boot:', runscript)
+
         try:
 
             if timeout:
