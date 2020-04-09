@@ -56,16 +56,8 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6, dirname=None):
     run_time = 0
     all_good = True 
 
-    #print('Before command: ', os.getcwd(), 'tmp:', dirname)
-
-    print('current dir:', os.getcwd())
-    print('tmp dir exists:', os.path.exists(dirname))
-    print('run cmd:', cmd)
-
     kill_on_warning = len(kill_msgs)>1
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    print('after subprocess->Popen')
 
     log = []
 
