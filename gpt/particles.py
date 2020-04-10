@@ -45,9 +45,11 @@ def raw_data_to_particle_data(gpt_output_dict):
     data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
     data['t'] = gpt_output_dict['t']
     data['status'] = np.full(n_particle, 1)
-    data['weight'] = gpt_output_dict['w'] #abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
-    
 
+    data['weight'] = abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
+    if(np.sum(data['weight']==0)):
+        data['weight']= np.full(data['weight'].shape, 1/len(data['weight']))
+    
     masses = np.unique(gpt_output_dict['m'])
     charges = np.unique(gpt_output_dict['q'])
     assert len(masses) == 1, 'All masses must be the same.'
