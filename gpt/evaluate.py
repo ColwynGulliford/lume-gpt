@@ -62,7 +62,7 @@ def default_gpt_merit(G):
             angles = ['xp', 'yp']
             energy = ['energy', 'kinetic_energy', 'p', 'gamma']
 
-            all_variables = all_coordinates + all_momentum + cartesian_velocity + angles + energy
+            all_variables = all_coordinates + all_momentum + cartesian_velocity + angles + energy + ['t']
 
             keys =  ['n_particle', 'norm_emit_x', 'norm_emit_y', 'higher_order_energy_spread']
 

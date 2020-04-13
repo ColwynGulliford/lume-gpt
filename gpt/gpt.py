@@ -305,20 +305,6 @@ class GPT:
 
         return particle_stats(particle_groups, key)
     
-    #def screen_stat(self, key):
-    ##    """
-    #    Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
-    #    """
-     #   particle_groups = self.screen 
-    #    return particle_stats(particle_groups, key)
-
-    #def tout_stat(self, key):
-    #    """
-    #    Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
-    #    """
-    #    particle_groups = self.tout
-    #    return particle_stats(particle_groups, key)
-
     def stat_units(self, key):
         """
         Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.

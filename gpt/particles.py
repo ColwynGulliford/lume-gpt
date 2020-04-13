@@ -47,7 +47,8 @@ def raw_data_to_particle_data(gpt_output_dict):
     data['status'] = np.full(n_particle, 1)
 
     data['weight'] = abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
-    if(np.sum(data['weight']==0)):
+
+    if( np.all(data['weight'] == 0.0) ):
         data['weight']= np.full(data['weight'].shape, 1/len(data['weight']))
     
     masses = np.unique(gpt_output_dict['m'])
