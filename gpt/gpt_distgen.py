@@ -174,12 +174,12 @@ def get_distgen_beam_for_phasing(beam, n_particle=10, verbose=False):
 
     variables = ['x', 'y', 'z','px', 'py', 'pz', 't']
 
-    transforms = {}
-    for var in variables:
-  
-        avg_var = beam.avg(var)
-        transforms[f'set avg {var}'] = {'variables':var, 'type': 'set_avg', 
-                                        f'avg_{var}': {'value': float(avg_var.magnitude), 'units': str(avg_var.units) }} 
+    transforms = [ {'type': f'set_avg {var}', f'avg_{var}': { 'value': beam.avg(var).magnitude, 'units':  str(beam.avg(var).units)  } } for var in variables ]
+    #for var in variables:
+    #  
+    #    avg_var = beam.avg(var)
+    #    transforms[f'set avg {var}'] = {'variables':var, 'type': 'set_avg', 
+    #                                    f'avg_{var}': {'value': float(avg_var.magnitude), 'units': str(avg_var.units) }} 
 
     phasing_distgen_input = {'n_particle':10, 'random_type':'hammersley', 'transforms':transforms,
                              'total_charge':{'value':0.0, 'units':'C'},
