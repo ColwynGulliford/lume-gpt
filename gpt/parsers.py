@@ -137,10 +137,10 @@ def read_particle_gdf_file(gdffile,verbose=0):
 
     return screen
 
-def read_gdf_file(gdffile,verbose=0):
+def read_gdf_file(gdffile,verbose=False):
       
     # Read in file:
-    #self.vprint("Reading data from files: ",0,True)
+
   
     #self.vprint("Current file: '"+data_file+"'",1,True)
     #self.vprint("Reading data...",1,False)
@@ -148,7 +148,8 @@ def read_gdf_file(gdffile,verbose=0):
     with open(gdffile, 'rb') as f:
         touts, screens = easygdf.load(f, extra_screen_keys=['q','nmacro',"ID","m"], extra_tout_keys=['q','nmacro',"ID","m"])
     t2 = time.time()
-    #self.vprint("done. Time ellapsed: "+self.ptime(t1,t2)+".",0,True)
+    if(verbose):
+        print(f'   GDF data loaded, time ellapsed: {t2-t1:G} (sec).')
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 

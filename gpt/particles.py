@@ -26,7 +26,7 @@ def identify_species(mass, charge):
     raise Exception(f'Cannot identify species with mass {mass} and charge {charge}')
    
 
-def raw_data_to_particle_data(gpt_output_dict):
+def raw_data_to_particle_data(gpt_output_dict, verbose=False):
 
     """
     Convert a gpt_out (tout or screen) dict to a standard form
@@ -64,10 +64,13 @@ def raw_data_to_particle_data(gpt_output_dict):
     data['n_particle'] = n_particle
     return data
 
-def raw_data_to_particle_groups(touts, screens):
+def raw_data_to_particle_groups(touts, screens, verbose=False):
     """
     Coverts a list of touts to a list of ParticleGroup objects
     """
+    if(verbose):
+        print('   Converting tout and screen data to ParticleGroup(s)')
+
     return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
     

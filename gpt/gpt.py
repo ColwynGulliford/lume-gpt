@@ -136,12 +136,14 @@ class GPT:
     
     def load_output(self, file='gpt.out.gdf'):
         """ loads the GPT raw data and puts it into particle groups """
-        touts, screens=parsers.read_gdf_file(file)  # Raw GPT data
+
+        self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
+        touts, screens=parsers.read_gdf_file(file, self.verbose)  # Raw GPT data
 
         self.n_tout = len(touts)
         self.n_screen = len(screens)
 
-        self.output['particles'] = raw_data_to_particle_groups(touts, screens) 
+        self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose) 
 
     @property
     def tout(self):
@@ -212,16 +214,7 @@ class GPT:
             # Link input file to new particle file
             self.set_dist_file(fname)
         
-        #print(self.input
-
-        # Move to local directory
-        # Save init dir
         init_dir = os.getcwd()
-        #self.vprint('init dir: ', init_dir)
-
-        #os.chdir(self.path)
-        # Debugging
-        #self.vprint(f'   Running GPT in "{os.getcwd()}"')#
         self.vprint(f'   Running GPT...')
 
         # Write input file from internal dict
@@ -257,7 +250,7 @@ class GPT:
                     
             if parse_output:
                 self.load_output(file=self.get_gpt_output_file())
-                
+
         except Exception as ex:
             
             print('Run Aborted:', ex)
@@ -265,14 +258,16 @@ class GPT:
             run_info['why_error'] = str(ex)
             
         finally:
+  
+
             run_info['run_time'] = time() - t1
             run_info['run_error'] = self.error
+            self.vprint(f'   Run finished, total time ellapsed: {run_info["run_time"]:G} (sec)')
+
             
             # Add run_info
             self.output.update(run_info)
-            
-            # Return to init_dir
-            #os.chdir(init_dir)                        
+                     
         
         self.finished = True
     

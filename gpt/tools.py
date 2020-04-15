@@ -57,13 +57,14 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6, dirname=None):
     all_good = True 
 
     kill_on_warning = len(kill_msgs)>1
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
     log = []
 
     while(all_good):
 
-        pout = (process.stderr.readline()).decode("utf-8")
+        pout = (process.stderr.readline())#.decode("utf-8")
 
         if(pout):
             log.append(pout)
