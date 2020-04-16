@@ -45,6 +45,7 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
     data['t'] = gpt_output_dict['t']
     data['status'] = np.full(n_particle, 1)
+    data['id'] = gpt_output_dict['ID']
 
     data['weight'] = abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
 
@@ -64,6 +65,7 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     data['n_particle'] = n_particle
     return data
 
+
 def raw_data_to_particle_groups(touts, screens, verbose=False):
     """
     Coverts a list of touts to a list of ParticleGroup objects
@@ -73,50 +75,6 @@ def raw_data_to_particle_groups(touts, screens, verbose=False):
 
     return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
-    
-def tout_to_particle_data(tout):
-    """
-    Convert a tout dict to a standard form
-    
-    """
-    data = {}
-    
-    n_particle = len(tout['x'])
-    
-    data['x'] = tout['x']
-    data['y'] = tout['y']
-    data['z'] = tout['z']
-    factor = c_light**2 /e_charge # kg -> eV
-    data['px'] = tout['GBx']*tout['m']*factor
-    data['py'] = tout['GBy']*tout['m']*factor
-    data['pz'] = tout['GBz']*tout['m']*factor
-    data['t'] = tout['t']
-    data['status'] = np.full(n_particle, 1)
-    data['weight'] = abs(tout['q']*tout['nmacro'])
-    
-    
-    
-    masses = np.unique(tout['m'])
-    charges = np.unique(tout['q'])
-    assert len(masses) == 1, 'All masses must be the same.'
-    assert len(charges) == 1, 'All charges must be the same'
-    mass = masses[0]
-    charge = charges[0]
-
-    species = identify_species(mass, charge)
-    
-    data['species'] = species
-    data['n_particle'] = n_particle
-    return data
-
-
-
-
-def touts_to_particlegroups(touts):
-    """
-    Coverts a list of touts to a list of ParticleGroup objects
-    """
-    return [ ParticleGroup(data=tout_to_particle_data(tout))  for tout in touts ] 
 
 
 

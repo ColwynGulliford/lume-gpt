@@ -60,7 +60,7 @@ def parse_gpt_input_file(filePath, condense=False, verbose=False):
         for line in f:
             tokens = line.strip().split('#')
             if(len(tokens[0])>0):
-                clean_line = tokens[0].strip().replace('\n','')
+                clean_line = tokens[0].strip().replace('\n', '')
                 clean_lines.append(clean_line)
 
     variables={}
@@ -77,7 +77,7 @@ def parse_gpt_input_file(filePath, condense=False, verbose=False):
             if(name not in variables.keys()):
                 variables[name]=value 
             elif(verbose):
-                print("Warning: multiple definitions of variable "+name+" on line "+str(ii)+".")
+                print(f'Warning: multiple definitions of variable {name} on line {ii}.')
 
     for line in clean_lines:
         find_path(line)
@@ -91,13 +91,13 @@ def parse_gpt_input_file(filePath, condense=False, verbose=False):
 def write_gpt_input_file(finput,inputFile):
 
     #print(inputFile)
-    for var in finput["variables"].keys():
+    for var in finput['variables'].keys():
 
-        value=finput["variables"][var]
-        for index,line in enumerate(finput["lines"]):
-            tokens = line.split("=")
+        value=finput['variables'][var]
+        for index,line in enumerate(finput['lines']):
+            tokens = line.split('=')
             if(len(tokens)==2 and tokens[0].strip()==var):
-                finput["lines"][index]=var+"="+str(value)+";"
+                finput["lines"][index]=f'{var}={value};'
                 break
 
     with open(inputFile,'w') as f:

@@ -1,5 +1,5 @@
 from gpt import tools, parsers
-from gpt.particles import touts_to_particlegroups, particle_stats, raw_data_to_particle_groups
+from gpt.particles import particle_stats, raw_data_to_particle_groups
 import gpt.archive 
 
 from pmd_beamphysics.units import pg_units
