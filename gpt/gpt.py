@@ -8,6 +8,7 @@ import h5py
 import os
 import tempfile
 from time import time
+import numpy as np
 
 from gpt.parsers import parse_gpt_string
 
@@ -163,12 +164,35 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles']
 
+    def trajectory(self, pid, data_type='tout'):
+
+        if(data_type=='tout'):
+            particle_groups = self.tout
+        elif(data_type=='screen'):
+            particle_groups = self.screen
+        else:
+            raise ValueError(f'GPT.trajectory got an unsupported data type = {data_type}.')
+
+        pgs_with_pid = [pg for pg in particle_groups if(pid in pg['id'])]
+
+        variables = ['x', 'y', 'z', 'px', 'py', 'pz', 't']
+   
+        trajectory = {var:np.zeros( (len(pgs_with_pid),) ) for var in variables }    
+
+        for ii, pg in enumerate(pgs_with_pid):
+            for var in variables:
+                trajectory[var][ii] = pg[var][pg['id']==pid]
+
+        return trajectory
+   
+
     def run(self,gpt_verbose=False):
         if not self.configured:
             print('not configured to run')
             return
         pass
         self.run_gpt(verbose=self.verbose, timeout=self.timeout, gpt_verbose=gpt_verbose)
+
         
     def get_run_script(self, write_to_path=True):
         """

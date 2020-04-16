@@ -174,7 +174,7 @@ def get_distgen_beam_for_phasing(beam, n_particle=10, verbose=False):
 
     variables = ['x', 'y', 'z','px', 'py', 'pz', 't']
 
-    transforms = [ {'type': f'set_avg {var}', f'avg_{var}': { 'value': beam.avg(var).magnitude, 'units':  str(beam.avg(var).units)  } } for var in variables ]
+    transforms = { f'avg_{var}':{'type': f'set_avg {var}', f'avg_{var}': { 'value': beam.avg(var).magnitude, 'units':  str(beam.avg(var).units)  } } for var in variables }
     #for var in variables:
     #  
     #    avg_var = beam.avg(var)
