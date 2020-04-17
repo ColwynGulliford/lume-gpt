@@ -11,10 +11,16 @@ def identify_species(mass, charge):
     Finds species:
         'electron'
         'positron'
+        'H2+'
     
     TODO: more species
     
     """
+    
+    
+    if mass == 3.347115e-27 and charge== 1.602e-19:
+        return 'H2+'
+    
     m = round(mass*1e32)/1e32
     q = round(charge*1e20)/1e20
     if m == 9.1e-31:
