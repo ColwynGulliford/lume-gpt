@@ -127,23 +127,14 @@ def run_gpt_with_distgen(settings=None,
 
         G.write_input_file()   # Write the unphased input file
 
-        try: 
+        phased_file_name, phased_settings = gpt_phasing(G.input_file, path_to_gpt_bin=G.gpt_bin[:-3], path_to_phasing_dist=phasing_particle_file, verbose=verbose)
+        G.set_variables(phased_settings)
+        t2 = time.time()
 
-            phased_file_name, phased_settings = gpt_phasing(G.input_file, path_to_gpt_bin=G.gpt_bin[:-3], path_to_phasing_dist=phasing_particle_file, verbose=verbose)
-            G.set_variables(phased_settings)
-            t2 = time.time()
-            if(verbose):
-                print(f'Time Ellapsed: {t2-t1} sec.')
-                print('------< Auto Phasing\n')
+        if(verbose):
+            print(f'Time Ellapsed: {t2-t1} sec.')
+            print('------< Auto Phasing\n')
 
-        except Exception as ex:
-
-            G.error = True 
-            run_info['error'] = self.error
-            run_info['why_error'] = str(ex)
-            G.output.update(run_info)
-
-            return G
 
     # If here, either phasing successful, or no phasing requested
     G.run(gpt_verbose=gpt_verbose)

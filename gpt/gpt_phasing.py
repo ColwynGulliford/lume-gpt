@@ -184,9 +184,9 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
         
             if (numpy.std(gamma_test) == 0):
                 if (gamma_test[0] == 1.0):
-                    sys.exit("ERROR: No particles reached a screen for any attempted phase.")
+                    raise ValueError("GPT PHASING ERROR: No particles reached a screen for any attempted phase.")
                 else:
-                    sys.exit("ERROR: Gamma did not depend on cavity " + str(cav_ii) + " phase, gamma = " + str(gamma_test[0]))
+                    raise ValueError("GPT PHASING ERROR: Gamma did not depend on cavity " + str(cav_ii) + " phase, gamma = " + str(gamma_test[0]))
 
             brent_output = sp.brent(func=neg_run_gpt_phase, args=(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag), brack=bracket, tol=1.0e-5, full_output=1, maxiter=1000)
 
@@ -314,7 +314,7 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag):
 
             command = path_to_gpt_bin + "gpt -v -o " + output_filename + " " + filename
             subprocess.call(command.split())
-        sys.exit("ERROR: No screen output found. GPT crashed?")
+        raise ValueError("GPT PHASING ERROR: No screen output found. GPT crashed?")
     return gamma
 
 # ---------------------------------------------------------------------------- #
@@ -330,7 +330,7 @@ def set_variable_by_name(gpt_input_text, name, value, crash_on_error):
         gpt_input_text_new = set_variable_on_line(gpt_input_text_new, index, value)
     else:
         if (crash_on_error == True):
-            sys.exit("ERROR: variable " + name + " not found.")
+            raise ValueError("GPT PHASING ERROR: variable " + name + " not found.")
 
     return gpt_input_text_new
 
@@ -340,7 +340,7 @@ def set_variable_by_name(gpt_input_text, name, value, crash_on_error):
 def find_line_with_variable_name(gpt_input_text, name):
 
     if (len(name.strip()) == 0):
-        sys.exit("ERROR: attempting to find variable with name = empty string.")
+        raise ValueError("GPT PHASING ERROR: attempting to find variable with name = empty string.")
 
     gpt_input_text_new = gpt_input_text
 
@@ -353,10 +353,9 @@ def find_line_with_variable_name(gpt_input_text, name):
 
     if len(indices) == 0:
         return -1
-        #sys.exit("ERROR: variable " + name + " not found.")
 
     if len(indices) > 1:
-        sys.exit("ERROR: variable " + name + " found on more than one line.")
+        raise ValueError("ERROR: variable " + name + " found on more than one line.")
 
     return indices[0]
 
