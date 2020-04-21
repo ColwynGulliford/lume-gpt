@@ -467,7 +467,8 @@ def run_gpt(settings=None,
             timeout=2500, 
             auto_phase=False,
             verbose=False,
-            gpt_verbose=False):
+            gpt_verbose=False,
+            asci2gdf_bin='$ASCI2GDF_BIN'):
     """
     Run GPT. 
     
