@@ -1,6 +1,8 @@
 from gpt import GPT
-from gpt.tools import full_path
-from gpt.gpt import run_gpt
+from . import tools
+from .gpt import run_gpt
+
+from .merit import default_gpt_merit
 
 from distgen import Generator   
 from distgen.writers import write_gpt
@@ -8,6 +10,7 @@ from distgen.tools import update_nested_dict
 
 from gpt.gpt_phasing import gpt_phasing
 
+from h5py import File
 import yaml
 import os
 import time
@@ -75,7 +78,7 @@ def run_gpt_with_distgen(settings=None,
 
     # Distgen generator
     gen = Generator(verbose=verbose)
-    f = full_path(distgen_input_file)
+    f = tools.full_path(distgen_input_file)
     distgen_params = yaml.safe_load(open(f))
 
     # Set inputs
@@ -99,6 +102,9 @@ def run_gpt_with_distgen(settings=None,
         print('\nDistgen >------\n')
     # Configure distgen
     gen.parse_input(distgen_params)   
+     
+    # Attach distgen input. This is non-standard. Used for archiving
+    G.distgen_input = gen.input        
         
 
     # Run
@@ -141,8 +147,19 @@ def run_gpt_with_distgen(settings=None,
     
     return G
 
-
-def evaluate_gpt_with_distgen(settings, archive_path=None, merit_f=None, **run_gpt_with_distgen_params):
+def evaluate_gpt_with_distgen(settings, 
+             archive_path=None, 
+             merit_f=None, 
+             gpt_input_file=None,
+             distgen_input_file=None,
+             workdir=None, 
+             use_tempdir=True,
+             gpt_bin='$GPT_BIN',
+             timeout=2500,
+             auto_phase=False,
+             verbose=False,
+             gpt_verbose=False,
+             asci2gdf_bin='$ASCI2GDF_BIN'):    
     """
     Simple evaluate GPT.
     
@@ -151,7 +168,17 @@ def evaluate_gpt_with_distgen(settings, archive_path=None, merit_f=None, **run_g
     Will raise an exception if there is an error. 
     
     """
-    G = run_gpt_with_distgen(settings, **run_gpt_with_distgen_params)
+    G = run_gpt_with_distgen(settings=settings,
+                             gpt_input_file=gpt_input_file,
+                             distgen_input_file=distgen_input_file,
+                             workdir=workdir, 
+                             use_tempdir=use_tempdir,
+                             gpt_bin=gpt_bin,
+                             timeout=timeout,
+                             auto_phase=auto_phase,
+                             verbose=verbose,
+                             gpt_verbose=gpt_verbose,
+                             asci2gdf_bin=asci2gdf_bin)
         
     if merit_f:
         output = merit_f(G)
@@ -160,17 +187,23 @@ def evaluate_gpt_with_distgen(settings, archive_path=None, merit_f=None, **run_g
     
     if output['error']:
         raise
+        
+    #Recreate Generator object for fingerprint, proper archiving
+    # TODO: make this cleaner
+    gen = Generator()
+    gen.input = G.distgen_input    
     
-    fingerprint = G.fingerprint()
-    
-    output['fingerprint'] = fingerprint
+    fingerprint = fingerprint_gpt_with_distgen(G, gen)
+    output['fingerprint'] = fingerprint    
     
     if archive_path:
-        path = full_path(archive_path)
+        path = tools.full_path(archive_path)
         assert os.path.exists(path), f'archive path does not exist: {path}'
         archive_file = os.path.join(path, fingerprint+'.h5')
-        G.archive(archive_file)
         output['archive'] = archive_file
+        
+        # Call the composite archive method
+        archive_gpt_with_distgen(G, gen, archive_file=archive_file)          
         
     return output
 
@@ -195,3 +228,37 @@ def get_distgen_beam_for_phasing(beam, n_particle=10, verbose=False):
     return pbeam
 
 
+def fingerprint_gpt_with_distgen(gpt_object, distgen_object):
+    """
+    Calls fingerprint() of each of these objects
+    """
+    f1 = gpt_object.fingerprint()
+    f2 = distgen_object.fingerprint()
+    d = {'f1':f1, 'f2':2}
+    return tools.fingerprint(d)
+
+
+
+def archive_gpt_with_distgen(gpt_object,
+                             distgen_object,
+                             archive_file=None,
+                             gpt_group ='gpt',
+                             distgen_group ='distgen'):
+    """
+    Creates a new archive_file (hdf5) with groups for 
+    gpt and distgen. 
+    
+    Calls .archive method of GPT and Distgen objects, into these groups.
+    """
+    
+    h5 = File(archive_file, 'w')
+    
+    #fingerprint = tools.fingerprint(astra_object.input.update(distgen.input))
+    
+    g = h5.create_group(distgen_group)
+    distgen_object.archive(g)
+    
+    g = h5.create_group(gpt_group)
+    gpt_object.archive(g)
+    
+    h5.close()

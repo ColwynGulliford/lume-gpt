@@ -358,8 +358,22 @@ class GPT:
         See: GPT.archive
         """
         if isinstance(h5, str):
+            h5 = os.path.expandvars(h5)
             g = h5py.File(h5, 'r')
-            self.vprint(f'Reading archive file {h5}')
+            
+            glist = gpt.archive.find_gpt_archives(g)
+            n = len(glist)
+            if n == 0:
+                # legacy: try top level
+                message = 'legacy'
+            elif n == 1:
+                gname = glist[0]
+                message = f'group {gname} from'
+                g = g[gname]
+            else:
+                raise ValueError(f'Multiple archives found in file {h5}: {glist}')
+            
+            self.vprint(f'Reading {message} archive file {h5}')
         else:
             g = h5
         
@@ -382,10 +396,15 @@ class GPT:
             h5 = 'gpt_'+self.fingerprint()+'.h5'
          
         if isinstance(h5, str):
+            h5 = os.path.expandvars(h5)
             g = h5py.File(h5, 'w')
             self.vprint(f'Archiving to file {h5}')
         else:
+            # store directly in the given h5 handle
             g = h5
+        
+        # Write basic attributes
+        gpt.archive.gpt_init(g)
         
         # All input
         gpt.archive.write_input_h5(g, self.input, name='input')
