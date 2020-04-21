@@ -5,6 +5,9 @@ from pmd_beamphysics import ParticleGroup
 
 import numpy as np
 
+from .tools import isotime, native_type
+from ._version import __version__
+
 
 def fstr(s):
     """
@@ -12,6 +15,21 @@ def fstr(s):
     """
     return np.string_(s)
 
+
+def gpt_init(h5, version=__version__):
+    """
+    Set basic information to an open h5 handle
+    
+    """
+    
+    d = {
+        'dataType':'lume-gpt',
+        'software':'lume-gpt',
+        'version':version,
+        'date':isotime()     
+    }
+    for k,v in d.items():
+        h5.attrs[k] = fstr(v)
 
 
 def opmd_init(h5, basePath='/screen/%T/', particlesPath='/' ):
@@ -29,7 +47,26 @@ def opmd_init(h5, basePath='/screen/%T/', particlesPath='/' ):
     }
     for k,v in d.items():
         h5.attrs[k] = fstr(v)
-        
+      
+    
+#----------------------------        
+# Searching archives
+
+def is_gpt_archive(h5, key='dataType', value=np.string_('lume-gpt')):
+    """
+    Checks if an h5 handle is a lume-gpt archive
+    """
+    return key in h5.attrs and h5.attrs[key]==value
+            
+      
+def find_gpt_archives(h5):
+    """
+    Searches one 
+    """
+    if is_gpt_archive(h5):
+        return ['./']
+    else:
+        return [g for g in h5 if is_gpt_archive(h5[g])]      
         
 #-------------------------------------
 # input read/write

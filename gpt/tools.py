@@ -5,6 +5,7 @@ import json
 
 import subprocess
 import os, errno
+import datetime
 import time
 
 def execute(cmd):
@@ -97,12 +98,26 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6, dirname=None):
     return run_time, exception, log
 
 
+"""UTC to ISO 8601 with Local TimeZone information without microsecond"""
+def isotime():
+    return datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone().replace(microsecond=0).isoformat()    
+
+
+
 def full_path(path):
     """
     Helper function to expand enviromental variables and return the absolute path
     """
     return os.path.abspath(os.path.expandvars(path))
 
+
+def native_type(value):
+    """
+    Converts a numpy type to a native python type.
+    See:
+    https://stackoverflow.com/questions/9452775/converting-numpy-dtypes-to-native-python-types/11389998
+    """
+    return getattr(value, 'tolist', lambda: value)()    
 
 
 class NpEncoder(json.JSONEncoder):
