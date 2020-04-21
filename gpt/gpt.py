@@ -441,6 +441,7 @@ class GPT:
             return None
 
 def run_gpt(settings=None, 
+            initial_particles=None,
             gpt_input_file=None, 
             workdir=None, 
             gpt_bin='$GPT_BIN', 
@@ -469,7 +470,32 @@ def run_gpt(settings=None,
         G.set_variables(settings)
   
     if(auto_phase):
-        print('TODO Autophase')
+
+        if(verbose):
+            print('\nAuto Phasing >------\n')
+        t1 = time.time()
+
+        # Create the distribution used for phasing
+        if(verbose):
+            print('****> Creating intiial distribution for phasing...')
+
+        phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+        phasing_particle_file = os.path.join(G.path, 'gpt_particles.phasing.gdf')
+        write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
+    
+        if(verbose):
+            print('<**** Created intiial distribution for phasing.\n')    
+
+        G.write_input_file()   # Write the unphased input file
+
+        phased_file_name, phased_settings = gpt_phasing(G.input_file, path_to_gpt_bin=G.gpt_bin[:-3], path_to_phasing_dist=phasing_particle_file, verbose=verbose)
+        G.set_variables(phased_settings)
+        t2 = time.time()
+
+        if(verbose):
+            print(f'Time Ellapsed: {t2-t1} sec.')
+            print('------< Auto Phasing\n')
+
 
     # Run
     G.run(gpt_verbose=gpt_verbose)
