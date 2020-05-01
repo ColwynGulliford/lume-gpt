@@ -45,8 +45,10 @@ class GPT:
         self.use_tempdir = use_tempdir
 
         self.workdir = workdir
+
         if workdir:
-            assert os.path.exists(workdir), 'workdir does not exist: '+workdir    
+            assert os.path.exists(workdir), 'workdir does not exist: '+workdir  
+            self.workdir = os.path.abspath(workdir)  
                 
         self.verbose=verbose
         self.gpt_bin = gpt_bin
@@ -84,11 +86,13 @@ class GPT:
               
         # Set paths
         if self.use_tempdir:
+
             # Need to attach this to the object. Otherwise it will go out of scope.
             self.tempdir = tempfile.TemporaryDirectory(dir=workdir)
             self.path = self.tempdir.name
 
         else:
+
             # Work in place
             self.path = self.original_path         
 
@@ -116,12 +120,17 @@ class GPT:
      
     def set_dist_file(self,dist_file):
         """ Set the input distirbution file name in a GPT file """
+        dist_file_set = False
         for ii, line in enumerate(self.input['lines']):
             if('setfile' in line):
                 gpt_strs = parse_gpt_string(line)
                 assert len(gpt_strs)==2, "Couldn't find distribution input file strs." 
                 assert gpt_strs[0]=='beam', "Could not find beam defintion in setfile str."
                 self.input['lines'][ii] = f'setfile("beam", "{dist_file}");'
+                dist_file_set = True
+        
+        if(not dist_file_set):
+            self.input['lines'].append(f'setfile("beam", "{dist_file}");')  
 
     def set_variable(self,variable,value):
         """ Set variable in the GPT input file to a new value """
@@ -235,6 +244,8 @@ class GPT:
 
         if self.initial_particles:
             fname = self.write_initial_particles() 
+            print(fname)
+
             # Link input file to new particle file
             self.set_dist_file(fname)
         
