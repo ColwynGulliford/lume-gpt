@@ -150,22 +150,29 @@ class GPT:
         self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
         touts, screens=parsers.read_gdf_file(file, self.verbose)  # Raw GPT data
 
-        self.n_tout = len(touts)
-        self.n_screen = len(screens)
-
         self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose) 
+        self.output['n_tout'] = len(touts)
+        self.output['n_screen'] = len(screens)
+
+    @property
+    def n_tout(self):
+        return self.output['n_tout']
+ 
+    @property
+    def n_screen(self):
+        return self.output['n_screen']
 
     @property
     def tout(self):
         """ Returns output particle groups for touts """
         if('particles' in self.output):
-            return self.output['particles'][:self.n_tout]
+            return self.output['particles'][:self.output['n_tout']]
 
     @property
     def screen(self):
         """ Returns output particle groups for screens """
         if('particles' in self.output):
-            return self.output['particles'][self.n_tout:]
+            return self.output['particles'][self.output['n_tout']:]
 
     @property
     def particles(self):

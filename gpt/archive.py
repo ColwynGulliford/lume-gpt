@@ -116,8 +116,10 @@ def write_output_h5(h5, gpt_output, name='output'):
     For now, only writes gpt_output['particles']
     """
     g = h5.create_group(name)
-
+    g.attrs['n_tout']=gpt_output['n_tout']
+    g.attrs['n_screen']=gpt_output['n_screen']
     write_particles_h5(g, gpt_output['particles'], name='particles')
+    
 
     
 def read_output_h5(h5):
@@ -129,6 +131,9 @@ def read_output_h5(h5):
     """
     gpt_output = {}
     gpt_output['particles'] = read_particles_h5(h5['particles'])
+    gpt_output['n_tout'] = h5.attrs['n_tout']
+    gpt_output['n_screen'] = h5.attrs['n_screen']
+
     return gpt_output    
     
     
@@ -160,4 +165,27 @@ def read_particles_h5(h5):
     ilist = sorted([int(x) for x in list(h5)])
     glist = [str(i) for i in ilist]
     
-    return [ParticleGroup(h5=h5[g]) for g in glist]        
+    return [ParticleGroup(h5=h5[g]) for g in glist]     
+
+
+def write_n_tout_h5(h5, n_tout, name='n_tout'):
+    """
+    Write the number of time outputs in the particles collection to h5
+    """
+    g = h5.create_group(name)
+    g.attrs['ntout'] = n_tout
+
+    
+
+
+def read_n_tout_h5(h5):
+    """
+    Read n_tout from h5
+    """
+    gpt_input['lines'] = list(h5.attrs['lines'])
+
+
+
+
+
+   
