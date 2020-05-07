@@ -71,7 +71,7 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
     amplitude_flag_indices = find_lines_containing(gpt_input_text, "phasing_amplitude_")
     amplitude_flag_indices = sort_lines_by_first_integer(gpt_input_text, amplitude_flag_indices)
     
-    print(gpt_input_text[amplitude_flag_indices[0]])
+    #print(gpt_input_text[amplitude_flag_indices[0]])
 
     amplitude_indices = []
     desired_amplitude = []
@@ -131,7 +131,7 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
     phase_input_text = set_variable_by_name(phase_input_text, 'couplers_on', 0, False)
     phase_input_text = set_variable_by_name(phase_input_text, 'viewscreens_on', 0, False)
 
-    print(gamma_names,oncrest_names)
+    #print(gamma_names,oncrest_names)
 
     # turn off all cavities
     for index in amplitude_indices:
@@ -209,8 +209,6 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
 
         else:
             
-            print('wooster')
-
             best_phase = 0.0
             phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
             phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
@@ -319,8 +317,9 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag):
         command = path_to_gpt_bin + "gpt -v -o " + output_filename + " " + filename
         p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate()
-
-        raise ValueError(f'GPT PHASING ERROR: No screen output found. GPT crashed? See error below:\n{stdout}')
+  
+        print(stdout.decode("utf-8") )
+        raise ValueError(f'GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
     return gamma
 
 # ---------------------------------------------------------------------------- #
