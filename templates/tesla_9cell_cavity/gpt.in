@@ -29,9 +29,9 @@ phi = (phi_oncrest + phi_offset)*pi/180;
 #--------------------------------------------------------------------------
 # 9 Cell Tesla Cavity
 
-#Map25D_TM("wcs", 0, 0, 0.673,  1,0,0,  0,1,0, "fields/tesla_9cell_cavity_for_gpt.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
+Map25D_TM("wcs", 0, 0, 0.673,  1,0,0,  0,1,0, "fields/tesla_9cell_cavity_for_gpt.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
 
-Map1D_TM("wcs", 0, 0, 0.673,  1,0,0, 0,1,0, "fields/tesla_9cell_1d.gdf", "z", "Ez", field_scale, phi, 2*pi*Master_RF);
+#Map1D_TM("wcs", 0, 0, 0.673,  1,0,0, 0,1,0, "fields/tesla_9cell_1d.gdf", "z", "Ez", field_scale, phi, 2*pi*Master_RF);
 #--------------------------------------------------------------------------
 
 
