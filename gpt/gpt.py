@@ -272,7 +272,8 @@ class GPT:
                 kill_msgs = ["gpt: Spacecharge3Dmesh:", 
                              'Error:',
                              'gpt: No valid GPT license',
-                             'malloc'
+                             'malloc',
+                             'Segmentation fault'
                             ]
                 
                 run_time, exception, log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose, dirname = self.path)

@@ -11,7 +11,7 @@ setfile("beam", "gpt.particles.gdf");
 
 auto_phase = 0;
 space_charge=0;
-drift_length = 2.0;
+drift_length = 1.6;
 Master_RF = 1.3e9;
 ZSTOP=drift_length;
 
@@ -29,7 +29,9 @@ phi = (phi_oncrest + phi_offset)*pi/180;
 #--------------------------------------------------------------------------
 # 9 Cell Tesla Cavity
 
-#Map25D_TM("wcs", 0, 0, 0,   1, 0, 0, 0, 1, 0, "fields/tesla_9cell_cavity_for_gpt.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
+#Map25D_TM("wcs", 0, 0, 0.673,  1, 0, 0,  0, 1, 0, "fields/tesla_9cell_cavity_for_gpt.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
+
+Map1D_TM("wcs", 0, 0, 0.673,  1,0,0, 0,1,0, "fields/tesla_9cell_1d.gdf", "z", "Ez", field_scale, phi, 2*pi*Master_RF);
 #--------------------------------------------------------------------------
 
 
@@ -63,14 +65,14 @@ if(space_charge==1) {
 # OUTPUT PARAMETERS
 #--------------------------------------------------------------------------
 Ntout = 50.0;  
-tmax = 1e-9;  
+tmax = 8e-9;  
 
-ZSTART = -0.005;
+ZSTART = -0.5;
 zminmax("wcs", "I", ZSTART, ZSTOP);
 
 tout(0,tmax,tmax/Ntout);
 
-screen("wcs", "I", 1.8);
+screen("wcs", "I", 1.5);
 #--------------------------------------------------------------------------
 
 
