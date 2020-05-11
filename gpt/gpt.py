@@ -91,14 +91,19 @@ class GPT:
             self.tempdir = tempfile.TemporaryDirectory(dir=workdir)
             self.path = self.tempdir.name
 
+        elif(workdir):
+
+            # Use the top level of the provided workdir
+            self.path = workdir
+
         else:
 
-            # Work in place
+            # Work in location of the template file
             self.path = self.original_path         
 
         self.input_file = os.path.join(self.path, self.original_input_file) 
 
-        parsers.set_support_files(self.input['lines'],self.original_path)              
+        parsers.set_support_files(self.input['lines'], self.original_path)              
         
         self.vprint('GPT.configure_gpt:')
         self.vprint(f'   Original input file "{self.original_input_file}" in "{self.original_path}"')
@@ -480,7 +485,8 @@ class GPT:
 
 def run_gpt(settings=None, 
             initial_particles=None,
-            gpt_input_file=None, 
+            gpt_input_file=None,
+            use_tempdir=True, 
             workdir=None, 
             gpt_bin='$GPT_BIN', 
             timeout=2500, 
@@ -499,7 +505,7 @@ def run_gpt(settings=None,
     
 
     # Make GPT object
-    G = GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir, verbose=verbose)
+    G = GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir, verbose=verbose, use_tempdir=use_tempdir)
     
     G.timeout=timeout
     G.verbose = verbose

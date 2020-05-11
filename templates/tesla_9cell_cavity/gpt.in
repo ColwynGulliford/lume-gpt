@@ -29,19 +29,8 @@ phi = (phi_oncrest + phi_offset)*pi/180;
 #--------------------------------------------------------------------------
 # 9 Cell Tesla Cavity
 
-
-#Map25D_TM("wcs", 0, 0, 0.673,  1,0,0,  0,1,0, "fields/tesla_9cell_cavity_for_gpt.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
-
-Map25D_TM("wcs", 0, 0, 0.673,  1,0,0,  0,1,0, "fields/tesla_9cell_cavity_for_gpt_savetxt.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
-
-#Map25D_TM("wcs", 0, 0, 0.673,  1,0,0,  0,1,0, "fields/new9cell.CM.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
-#Map1D_TM("wcs", 0, 0, 0.673,  1,0,0, 0,1,0, "fields/tesla_9cell_1d.gdf", "z", "Ez", field_scale, phi, 2*pi*Master_RF);
-
-# 7 cell MLC cavity
-#MLC01_voltage = 6;
-#MLC_field_scale = 1e6;
-#Map25D_TM("wcs",   0,0,0.57,   1,0,0, 0,1,0, "fields/mlc_scott_2D.gdf",  "r", "z", "Er", "Ez", "Bphi", MLC_field_scale * MLC01_voltage, 0, phi, Master_RF*2*pi);
-
+#Map25D_TM("wcs", 0, 0, 0.673,  1,0,0,  0,1,0, "fields/tesla_9cell_cavity_for_gpt.ls.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
+Map25D_TM("wcs", 0, 0, 0.673,  1,0,0,  0,1,0, "fields/new9cell.gdf",  "R", "Z", "Er", "Ez", "Bphi", field_scale, 0, phi, Master_RF*2*pi);
 #--------------------------------------------------------------------------
 
 
@@ -94,9 +83,4 @@ phasing_amplitude_0 = field_scale;
 phasing_on_crest_0 = phi_oncrest;
 phasing_relative_0 = phi_offset;
 phasing_gamma_0 = gamma0;
-
-#phasing_amplitude_0 = MLC01_voltage;
-#phasing_on_crest_0 = phi_oncrest;
-#phasing_relative_0 = phi_offset;
-#phasing_gamma_0 = gamma0;
 #--------------------------------------------------------------------------

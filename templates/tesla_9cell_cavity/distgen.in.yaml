@@ -11,7 +11,7 @@ total_charge:
 r_dist:
   sigma_xy:
     units: mm
-    value: .001
+    value: .01
   type: radial_gaussian
 z_dist:
   avg_z:
