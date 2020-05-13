@@ -186,7 +186,7 @@ def evaluate_gpt_with_distgen(settings,
         output = default_gpt_merit(G)
     
     if output['error']:
-        raise
+        raise ValueError('error occured!')
         
     #Recreate Generator object for fingerprint, proper archiving
     # TODO: make this cleaner
