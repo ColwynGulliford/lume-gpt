@@ -49,53 +49,60 @@ def execute2(cmd, timeout=None):
         output['why_error'] = 'unknown'
     return output
 
-def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6, dirname=None):
+def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
 
     tstart = time.time()
    
     exception = None
-    run_time = 0
-    all_good = True 
-
-    kill_on_warning = len(kill_msgs)>1
-    #process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-
+    run_time = 0 
     log = []
 
-    while(all_good):
+    kill_on_warning = len(kill_msgs)>1
 
-        pout = (process.stderr.readline())#.decode("utf-8")
+    try:
 
-        if(pout):
-            log.append(pout)
-            if(verbose):
-                print(pout.strip()) 
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
-        if(pout == '' and process.poll() is not None):
-            break
+        while(process.poll() is None):
 
-        if(time.time()-tstart > timeout): 
-            process.terminate()
-            exception = "run timed out"
-            break
+            pout = (process.stderr.readline())#.decode("utf-8")
 
-        if(kill_on_warning):
-            for warning in kill_msgs:
-                if(warning in pout):
-                    process.terminate()
-                    exception = pout               
-                    break
+            if(pout):
+                log.append(pout)
+                if(verbose):
+                    print(pout.strip()) 
 
-    rc = process.poll()
-    
+            elif pout is None:
+                break
+
+            if(pout == '' and process.poll() is not None):
+                break
+
+            if(time.time()-tstart > timeout): 
+                process.kill()
+                exception = "timeout"
+                break
+
+            if(kill_on_warning):
+                for warning in kill_msgs:
+                    if(warning in pout):
+                        process.kill()
+                        exception = pout               
+                        break
+
+        rc = process.poll()
+
+    except Exception as ex:
+        exectption=str(ex)
+
     tstop = time.time()
     if(verbose>0):
-        print("done. Time ellapsed: "+"{0:.2f}".format(tstop-tstart) + " sec.")
+        print(f'done. Time ellapsed: {tstop-tstart} sec.')
   
     run_time=tstop-tstart
 
     return run_time, exception, log
+
 
 
 """UTC to ISO 8601 with Local TimeZone information without microsecond"""

@@ -207,7 +207,7 @@ class GPT:
         return trajectory
    
 
-    def run(self,gpt_verbose=False):
+    def run(self, gpt_verbose=False):
         if not self.configured:
             print('not configured to run')
             return
@@ -281,7 +281,7 @@ class GPT:
                              'Segmentation fault'
                             ]
                 
-                run_time, exception, log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose, dirname = self.path)
+                run_time, exception, log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose)
                 
                 if(exception is not None):
                     self.error=True
