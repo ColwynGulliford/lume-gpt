@@ -23,6 +23,7 @@ sol_2_current = 2.5;
 sol_3_current = 2.5;
 sol_4_current = 2.5;
 sol_5_current = 2.5;
+sol_6_current = 2.5;
 
 buncher_voltage = 100;        # kV
 buncher_oncrest_phase = 0;
