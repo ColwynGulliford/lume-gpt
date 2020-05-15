@@ -22,6 +22,7 @@ sol_1_current = 3;
 sol_2_current = 2.5;
 sol_3_current = 2.5;
 sol_4_current = 2.5;
+sol_5_current = 2.5;
 
 buncher_voltage = 100;        # kV
 buncher_oncrest_phase = 0;
@@ -63,7 +64,8 @@ ZSLA01 = 0.344;
 ZSLA02 = 0.8;
 ZCTB01 = 1.25;
 ZSLA03 = 1.75;
-ZSLA04 = 3.00;
+ZSLA04 = 2.375;
+ZSLA05 = 3.00;
 ZCTC01 = 3.50;
 
 # DC GUN
@@ -85,6 +87,8 @@ Map2D_B("wcs", 0,0,ZSLA02,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z
 Map2D_B("wcs", 0,0,ZSLA03,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_3_current);
 
 Map2D_B("wcs", 0,0,ZSLA04,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_4_current);
+
+Map2D_B("wcs", 0,0,ZSLA05,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_5_current);
 
 Map1D_TM("wcs", 0,0,ZCTC01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, cavity_1_phase, 2*pi*Master_RF);
 
