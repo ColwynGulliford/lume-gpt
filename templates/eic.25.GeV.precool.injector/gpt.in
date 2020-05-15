@@ -119,8 +119,8 @@ tout(0,tmax,tmax/Ntout);
 # AUTO PHASING DEFINITIONS
 #--------------------------------------------------------------------------
 # 9 cell mark up
-#phasing_amplitude_0 = buncher_voltage;
-#phasing_on_crest_0  = buncher_oncrest_phase;
-#phasing_relative_0  = buncher_relative_phase;
-#phasing_gamma_0 = buncher_gamma;
+phasing_amplitude_0 = buncher_voltage;
+phasing_on_crest_0  = buncher_oncrest_phase;
+phasing_relative_0  = buncher_relative_phase;
+phasing_gamma_0 = buncher_gamma;
 #--------------------------------------------------------------------------
