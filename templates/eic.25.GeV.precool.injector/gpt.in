@@ -31,7 +31,7 @@ buncher_phase = (buncher_oncrest_phase + buncher_relative_phase)*pi/180;
 
 cavity_1_voltage = 2500;        # kV
 cavity_1_oncrest_phase = 0;
-cavity_1_relative_phase = -90;
+cavity_1_relative_phase = 0;
 cavity_1_gamma = 1;
 cavity_1_phase = (cavity_1_oncrest_phase + cavity_1_relative_phase)*pi/180;
 
@@ -85,7 +85,7 @@ Map2D_B("wcs", 0,0,ZSLA03,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z
 
 Map2D_B("wcs", 0,0,ZSLA04,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_4_current);
 
-Map1D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, buncher_phase, 2*pi*Master_RF);
+Map1D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, cavity_1_phase, 2*pi*Master_RF);
 
 #--------------------------------------------------------------------------
 # Spacecharge Parameters
