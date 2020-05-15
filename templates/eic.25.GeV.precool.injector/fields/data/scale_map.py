@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import cmath
 from scipy import optimize
 
 c = 299792458
@@ -20,13 +21,13 @@ def center_map(z, E, zscale=1):
     zc = z[E==np.max(E)]
     return (z-zc)*zscale
 
-def integrateEz(z, E, phi, f):
+def integrateEz(z, E, phi, f, s=1):
     
     phi = phi*math.pi/180
     w = 2*math.pi*f
     phase = w*z/c + phi
     
-    return np.trapz(z, E*np.exp(-np.complex(0,1)*phase))
+    return np.trapz(z, E*np.exp(s*np.complex(0,1)*phase))
 
 def integrateReEz(z, E, phi, f):
     return np.real(integrateEz(z, E, phi, f))
@@ -34,8 +35,8 @@ def integrateReEz(z, E, phi, f):
 def minus_integrateReEz(phi, z, E, f):
     return -integrateReEz(z, E, phi, f)
 
-def get_oncrest_phase(z, E, f): 
-    return optimize.brent(minus_integrateReEz, args=(z, E, f))%360
+def get_oncrest_phase(z, E, f):
+    return (-cmath.phase(integrateEz(z, E, 0, f))*180/math.pi)%360
 
 def save_map(z, E, filename):
     

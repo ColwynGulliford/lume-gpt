@@ -83,21 +83,23 @@ BSLA01 = sol_1_current * SLAPolarity;
 
 Map2D_B("wcs", 0,0,ZSLA01,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_1_current);
 
-Map1D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", buncher_voltage*cavity_field_scale, buncher_phase, 2*pi*Master_RF);
+Map25D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0,"fields/CTB.197.MHz.gdf", "R", "Z", "Er", "Ez", "H", buncher_voltage*cavity_field_scale, 0, buncher_phase, 2*pi*Master_RF);
+
+#Map1D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", buncher_voltage*cavity_field_scale, buncher_phase, 2*pi*Master_RF);
 
 Map2D_B("wcs", 0,0,ZSLA02,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_2_current);
 
-Map2D_B("wcs", 0,0,ZSLA03,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_3_current);
+#Map2D_B("wcs", 0,0,ZSLA03,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_3_current);
 
-Map2D_B("wcs", 0,0,ZSLA04,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_4_current);
+#Map2D_B("wcs", 0,0,ZSLA04,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_4_current);
 
-Map2D_B("wcs", 0,0,ZSLA05,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_5_current);
+#Map2D_B("wcs", 0,0,ZSLA05,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_5_current);
 
-Map1D_TM("wcs", 0,0,ZCTC01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, cavity_1_phase, 2*pi*Master_RF);
+#Map1D_TM("wcs", 0,0,ZCTC01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, cavity_1_phase, 2*pi*Master_RF);
 
-Map1D_TM("wcs", 0,0,ZCTC02,  1,0,0, 0,1,0, "fields/591MHz.qw.cavity.gdf", "z", "Ez", cavity_2_voltage*cavity_field_scale, cavity_2_phase, 2*pi*3*Master_RF);
+#Map1D_TM("wcs", 0,0,ZCTC02,  1,0,0, 0,1,0, "fields/591MHz.qw.cavity.gdf", "z", "Ez", cavity_2_voltage*cavity_field_scale, cavity_2_phase, 2*pi*3*Master_RF);
 
-Map2D_B("wcs", 0,0,ZSLA06,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_6_current);
+#Map2D_B("wcs", 0,0,ZSLA06,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_6_current);
 #--------------------------------------------------------------------------
 
 
