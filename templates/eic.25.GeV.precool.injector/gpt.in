@@ -1,0 +1,126 @@
+#--------------------------------------------------------------------------
+# Initial Distribution
+#--------------------------------------------------------------------------
+setfile("beam", "gpt.particles.gdf");
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# TOP LEVEL SETTINGS
+#--------------------------------------------------------------------------
+auto_phase = 0;
+space_charge=0;
+
+Master_RF = 197e6;
+ZSTOP=6.0;
+
+cavity_field_scale = 1000;
+
+gun_voltage=300;
+
+sol_1_current = 3;
+sol_2_current = 2.5;
+sol_3_current = 2.5;
+sol_4_current = 2.5;
+
+buncher_voltage = 100;        # kV
+buncher_oncrest_phase = 0;
+buncher_relative_phase = -90;
+buncher_gamma = 1;
+buncher_phase = (buncher_oncrest_phase + buncher_relative_phase)*pi/180;
+
+cavity_1_voltage = 2500;        # kV
+cavity_1_oncrest_phase = 0;
+cavity_1_relative_phase = -90;
+cavity_1_gamma = 1;
+cavity_1_phase = (cavity_1_oncrest_phase + cavity_1_relative_phase)*pi/180;
+
+cavity_2_voltage = 1000;        # kV
+cavity_2_oncrest_phase = 0;
+cavity_2_relative_phase = -90;
+cavity_2_gamma = 1;
+cavity_2_phase = (cavity_2_oncrest_phase + cavity_2_relative_phase)*pi/180;
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# ACCURACY AND INTEGRATION PARAMETERS
+#--------------------------------------------------------------------------
+RadiusMax = 0.1;
+GBacc =5.5;
+xacc  =6.5;
+accuracy(GBacc, xacc);
+dtmin =1e-16;
+dtmax =1e-10;
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# ELEMENTS
+#--------------------------------------------------------------------------
+ZSLA01 = 0.344;
+
+ZSLA02 = 0.8;
+ZCTB01 = 1.25;
+ZSLA03 = 1.75;
+ZSLA04 = 3.00;
+
+# DC GUN
+Zdcgun = 0.15;
+Maxdcgun  = 500.0;
+Edcgun    = gun_voltage / Maxdcgun;
+Map2D_E("wcs", "z", Zdcgun, "fields/gun_0mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+
+# SOL1
+SLAPolarity = -1;
+BSLA01 = sol_1_current * SLAPolarity;
+
+Map2D_B("wcs", 0,0,ZSLA01,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_1_current);
+
+Map1D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, buncher_phase, 2*pi*Master_RF);
+
+Map2D_B("wcs", 0,0,ZSLA02,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_2_current);
+
+Map2D_B("wcs", 0,0,ZSLA03,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_3_current);
+
+Map2D_B("wcs", 0,0,ZSLA04,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_4_current);
+
+
+#--------------------------------------------------------------------------
+# Spacecharge Parameters
+#--------------------------------------------------------------------------
+Alpha  =1;    # 1.0   (manual default is 1.0), (bigger is better)
+Fn     =0.5;  # 0.5   (manual default is 0.5), (smaller is better)
+verror =0.005;# 0.005 (manual default is 0.01), (smaller is better)
+Nstd   =5;    # 5     (manual default is 5), (bigger is better)
+
+if(space_charge==1) {
+    spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+}
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# OUTPUT PARAMETERS
+#--------------------------------------------------------------------------
+Ntout = 50.0;  
+tmax = 50e-9;  
+
+ZSTART = -0.5;
+zminmax("wcs", "I", ZSTART, ZSTOP);
+
+tout(0,tmax,tmax/Ntout);
+
+#screen("wcs", "I", 1.5);
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# AUTO PHASING DEFINITIONS
+#--------------------------------------------------------------------------
+# 9 cell mark up
+#phasing_amplitude_0 = buncher_voltage;
+#phasing_on_crest_0  = buncher_oncrest_phase;
+#phasing_relative_0  = buncher_relative_phase;
+#phasing_gamma_0 = buncher_gamma;
+#--------------------------------------------------------------------------
