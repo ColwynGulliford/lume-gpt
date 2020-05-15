@@ -38,7 +38,7 @@ cavity_1_phase = (cavity_1_oncrest_phase + cavity_1_relative_phase)*pi/180;
 
 cavity_2_voltage = 1000;        # kV
 cavity_2_oncrest_phase = 0;
-cavity_2_relative_phase = -90;
+cavity_2_relative_phase = +90;
 cavity_2_gamma = 1;
 cavity_2_phase = (cavity_2_oncrest_phase + cavity_2_relative_phase)*pi/180;
 #--------------------------------------------------------------------------
@@ -61,12 +61,14 @@ dtmax =1e-10;
 #--------------------------------------------------------------------------
 ZSLA01 = 0.344;
 
-ZSLA02 = 0.8;
-ZCTB01 = 1.25;
-ZSLA03 = 1.75;
+ZSLA02 = 0.800;
+ZCTB01 = 1.250;
+ZSLA03 = 1.750;
 ZSLA04 = 2.375;
-ZSLA05 = 3.00;
-ZCTC01 = 3.50;
+ZSLA05 = 3.000;
+ZSLA06 = 5.000;
+ZCTC01 = 3.500;
+ZCTC02 = 4.250;
 
 # DC GUN
 Zdcgun = 0.15;
@@ -91,6 +93,12 @@ Map2D_B("wcs", 0,0,ZSLA04,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z
 Map2D_B("wcs", 0,0,ZSLA05,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_5_current);
 
 Map1D_TM("wcs", 0,0,ZCTC01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, cavity_1_phase, 2*pi*Master_RF);
+
+Map1D_TM("wcs", 0,0,ZCTC02,  1,0,0, 0,1,0, "fields/591MHz.qw.cavity.gdf", "z", "Ez", cavity_2_voltage*cavity_field_scale, cavity_2_phase, 2*pi**3*Master_RF);
+
+Map2D_B("wcs", 0,0,ZSLA06,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_6_current);
+#--------------------------------------------------------------------------
+
 
 #--------------------------------------------------------------------------
 # Spacecharge Parameters
@@ -134,4 +142,9 @@ phasing_amplitude_1 = cavity_1_voltage;
 phasing_on_crest_1  = cavity_1_oncrest_phase;
 phasing_relative_1  = cavity_1_relative_phase;
 phasing_gamma_1 = cavity_1_gamma;
+
+phasing_amplitude_2 = cavity_2_voltage;
+phasing_on_crest_2  = cavity_2_oncrest_phase;
+phasing_relative_2  = cavity_2_relative_phase;
+phasing_gamma_2 = cavity_2_gamma;
 #--------------------------------------------------------------------------
