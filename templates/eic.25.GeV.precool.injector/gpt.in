@@ -77,7 +77,7 @@ BSLA01 = sol_1_current * SLAPolarity;
 
 Map2D_B("wcs", 0,0,ZSLA01,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_1_current);
 
-Map1D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", cavity_1_voltage*cavity_field_scale, buncher_phase, 2*pi*Master_RF);
+Map1D_TM("wcs", 0,0,ZCTB01,  1,0,0, 0,1,0, "fields/197MHz.qw.cavity.gdf", "z", "Ez", buncher_voltage*cavity_field_scale, buncher_phase, 2*pi*Master_RF);
 
 Map2D_B("wcs", 0,0,ZSLA02,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", sol_2_current);
 
@@ -111,7 +111,7 @@ zminmax("wcs", "I", ZSTART, ZSTOP);
 
 tout(0,tmax,tmax/Ntout);
 
-#screen("wcs", "I", 1.5);
+screen("wcs", "I", 5.5);
 #--------------------------------------------------------------------------
 
 
