@@ -125,8 +125,8 @@ phasing_on_crest_0  = buncher_oncrest_phase;
 phasing_relative_0  = buncher_relative_phase;
 phasing_gamma_0 = buncher_gamma;
 
-phasing_amplitude_1 = buncher_voltage;
-phasing_on_crest_1  = buncher_oncrest_phase;
-phasing_relative_1  = buncher_relative_phase;
-phasing_gamma_1 = buncher_gamma;
+phasing_amplitude_1 = cavity_1_voltage;
+phasing_on_crest_1  = cavity_1_oncrest_phase;
+phasing_relative_1  = cavity_1_relative_phase;
+phasing_gamma_1 = cavity_1_gamma;
 #--------------------------------------------------------------------------
