@@ -194,7 +194,12 @@ class GPT:
         else:
             raise ValueError(f'GPT.trajectory got an unsupported data type = {data_type}.')
 
+        #for pg in particle_groups:
+        #    print(pg, pid in pg['id'])
         pgs_with_pid = [pg for pg in particle_groups if(pid in pg['id'])]
+
+        if(len(pgs_with_pid)==0):
+            return None
 
         variables = ['x', 'y', 'z', 'px', 'py', 'pz', 't']
    

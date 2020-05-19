@@ -106,7 +106,6 @@ def run_gpt_with_distgen(settings=None,
     # Attach distgen input. This is non-standard. Used for archiving
     G.distgen_input = gen.input        
         
-
     # Run
     beam = gen.beam()
     write_gpt(beam, particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
