@@ -19,7 +19,7 @@ KE = MTE/2000.0;
 G  = 1+KE/mc2 ;
 setGdist( "beam", "u", G, 0) ;
 } else {
-setfile("beam", "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/dcgun/gpt_particles.gdf");
+setfile("beam", "gpt_particles.gdf");
 }
 RadiusMax=0.04;
 GBacc=5.5;
@@ -33,7 +33,7 @@ ZSLA02=1.16;
 Zdcgun=0.15;
 Maxdcgun=500.0;
 Edcgun    = gun_voltage / Maxdcgun;
-Map2D_E("wcs", "z", Zdcgun, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/dcgun/fields/gun_0mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+Map2D_E("wcs", "z", Zdcgun, "fields/gun_0mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
 SLAPolarity=-1.0;
 LSLA01=0.6;
 XSLA01=0.0;
