@@ -487,6 +487,7 @@ class GPT:
             return self.input['lines'][error_line_index]
         else:
             return None
+            
 
 def run_gpt(settings=None, 
             initial_particles=None,
