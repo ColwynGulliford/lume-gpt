@@ -407,6 +407,10 @@ class GPT:
             g = h5
         
         self.input = gpt.archive.read_input_h5(g['input'])
+        
+        if 'initial_particles' in g:
+            self.initial_particles=ParticleGroup(g['initial_particles'])        
+        
         self.output = gpt.archive.read_output_h5(g['output'])
         
         self.vprint('Loaded from archive. Note: Must reconfigure to run again.')
@@ -438,6 +442,9 @@ class GPT:
         # All input
         gpt.archive.write_input_h5(g, self.input, name='input')
 
+        if self.initial_particles:
+            self.initial_particles.write(g, name='initial_particles')        
+        
         # All output
         gpt.archive.write_output_h5(g, self.output, name='output')
 
