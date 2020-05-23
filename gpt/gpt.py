@@ -4,6 +4,8 @@ import gpt.archive
 
 from pmd_beamphysics.units import pg_units
 
+from pmd_beamphysics import ParticleGroup
+
 import h5py
 import os
 import tempfile
