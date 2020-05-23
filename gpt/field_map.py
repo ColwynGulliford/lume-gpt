@@ -56,6 +56,9 @@ class GDFFieldMap():
 
     def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN'):
         
+        
+        assert os.path.exists(gdf2a_bin), f'GDF2A binary does not exist: {gdf2a_bin}'  
+
         self.source_data_file = source_data
         temp_ascii_file = f'{self.source_data_file}.temp.txt'
         os.system(f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}')
