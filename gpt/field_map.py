@@ -339,7 +339,6 @@ class Map2D(GDFFieldMap):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names)
     
-        print(required_columns)
         self.required_columns = required_columns
         assert 'z' in required_columns
         assert 'r' in required_columns
@@ -355,7 +354,6 @@ class Map2D_E(Map2D):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Er'])
         self.type = 'Map2D_E'
-
 
     def z(self):
         return np.squeeze(self.z[self.r==0])
