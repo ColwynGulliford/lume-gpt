@@ -368,9 +368,6 @@ class Map2D_E(Map2D):
     def on_axis_integral(self):
         return np.trapz(self.on_axis_Ez, self.z[self.r==0])
 
-    def write_to_gpt_file(gpt_file, element, gdf_file, z, x=0, y=0, ccs = 'wcs', e1=[1,0,0], e2=[0, 1, 0]):
-        pass
-
 class Map2D_B(Map2D):
 
     def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}):
