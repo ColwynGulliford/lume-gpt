@@ -46,7 +46,7 @@ def integrate_Ez(z, Ez, w, phi, beta=1):
             phase = (w/c)*z + phi
             return np.trapz(Ez*np.exp(np.complex(0,1)*phase), z)
 
-def energy_gain(z, Ez, w, phi, beta):
+def energy_gain(z, Ez, w, phi, beta=1):
 
         if(isinstance(phi, float)):
             return np.real(integrate_Ez(z, Ez, w, phi, beta))
@@ -121,6 +121,8 @@ class GDFFieldMap():
             return np.unique(getattr(self, self.column_names[key]))
         elif(key in self.field_components):
             return np.transpose(np.reshape(getattr(self, self.column_names[key]), self.data_shape, 'F'), self.ordering)
+        else:
+            print(f'Field map does not contain item "{key}"')
 
     def scale_coordinates(self, scale):
         for coordinate in self.coordinates:
@@ -130,16 +132,68 @@ class GDFFieldMap():
         for component in self.field_components:
             setattr(self, component, scale*getattr(self, component))
 
-    def write_gdf(self, new_gdf_file, asci2gdf_bin='$ASCI2GDF_BIN'):
+    def write_gdf(self, new_gdf_file, asci2gdf_bin='$ASCI2GDF_BIN', verbose=True):
 
         temp_ascii_file = new_gdf_file + '.txt'
 
-        headers = ' '.join(self.column_names)
         data = np.zeros( (len(getattr(self, self.field_components[0])), len(self.column_names)) )
+
+        headers = []
+        for ii, var in enumerate(self.coordinates+self.field_components):
+            headers.append(var)
+            data[:,ii] = getattr(self, self.column_names[var])
+
+        headers = '     '.join(headers)
         np.savetxt(temp_ascii_file, data, header=headers, comments=' ')
 
         os.system(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}')
         os.system(f'rm {temp_ascii_file}')
+
+    def gpt_lines(self, element, gdf_file=None, ccs = 'wcs', r=[0, 0, 0], e1=[1, 0, 0], e2=[0, 1, 0], scale =1, user_vars=[]):
+
+        #print(element, gdf_file, ccs, r, e1, e2, scale, user_vars) 
+
+        inverse_column_names = {value:key for key,value in self.column_names.items()}
+
+        map_line = f'{self.type}("{ccs}", '
+        extra_lines={}
+
+        for ii, coordinate in enumerate(['x', 'y','z']):
+            if(coordinate in user_vars):
+                extra_lines[coordinate] = f'{element}_{coordinate} = {r[ii]};'
+                map_line = map_line + f'{element}_{coordinate}, '
+            else:
+                map_line = map_line + f'{str(r[ii])}, '
+
+        for ii, m in enumerate(['e11', 'e12', 'e13']):
+            if(m in user_vars):
+                extra_lines[m] = f'{element}_{m} = {e1[ii]};'
+                map_line = map_line + f'{element}_{m}, '
+            else:
+                map_line = map_line + f'{str(e1[ii])}, '
+
+        for ii, m in enumerate(['e21', 'e22', 'e23']):
+            if(m in user_vars):
+                extra_lines[m] = f'{element}_{m} = {e2[ii]};'
+                map_line = map_line + f'{element}_{m}, '
+            else:
+                map_line = map_line + f'{str(e2[ii])}, '
+
+        if(gdf_file is None):
+            gdf_file = self.source_data_file
+
+        map_line = map_line + f'"{gdf_file}", '
+
+        for ii, rc in enumerate(self.required_columns):
+            map_line = map_line + f'"{inverse_column_names[rc]}", '
+        
+        if('scale' in user_vars):
+            extra_lines['scale'] = f'{element}_scale = {scale};'
+            map_line = map_line + f'{element}_scale);'
+        else:
+            map_line = map_line + f'{scale});'
+
+        return [extra_line for extra_line in extra_lines.values()] + [map_line]
 
 
 class Map1D(GDFFieldMap):
@@ -149,6 +203,8 @@ class Map1D(GDFFieldMap):
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names)
 
         self.zpos = zpos
+
+        self.type = None
 
         self.required_columns = required_columns
         assert 'z' in required_columns
@@ -164,12 +220,12 @@ class Map1D(GDFFieldMap):
     def cum_on_axis_integral(self):
         return cumptrapz(getattr(self, self.fieldstr), self.zpos + getattr(self, 'z'), initial=0)
 
-
 class Map1D_E(Map1D):
 
     def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, zpos=0):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'], zpos=zpos)
+        self.type = 'Map1D_E'
 
     @property
     def energy_gain(self, r=0, field_order =1):
@@ -179,19 +235,19 @@ class Map1D_E(Map1D):
         else:
             print('wtf?')
 
-
 class Map1D_B(Map1D):
 
     def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Bz'], zpos=zpos)
-
+        self.type = 'Map1D_B'
 
 class Map1D_TM(Map1D):
 
     def __init__(self, source_data, frequency, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, kinetic_energy=float('Inf')):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'])
+        self.type='Map1D_TM'
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency
@@ -235,6 +291,47 @@ class Map1D_TM(Map1D):
         self._kinetic_energy = kinetic_energy
         self._beta = KE_to_beta(kinetic_energy)
 
+    def gpt_lines(self, 
+        element, 
+        gdf_file=None, 
+        ccs = 'wcs', 
+        r=[0, 0, 0], 
+        e1=[1, 0, 0], 
+        e2=[0, 1, 0], 
+        scale =1, 
+        oncrest_phase=0, 
+        relative_phase=0, 
+        auto_phase_index=None,
+        user_vars=[]):
+
+        if(auto_phase_index is not None and 'scale' not in user_vars):
+            user_vars.append('scale')
+
+        base_lines = super().gpt_lines(element, gdf_file=gdf_file, ccs=ccs, r=r, e1=e1, e2=e2, scale=scale, user_vars=user_vars)
+
+        extra_lines = base_lines[:-1]
+        map_line = base_lines[-1].replace(');','')
+
+        extra_lines.append(f'{element}_oncrest_phase = {oncrest_phase};')
+        extra_lines.append(f'{element}_relative_phase = {relative_phase};')
+        extra_lines.append(f'{element}_phase = ({element}_oncrest_phase + {element}_relative_phase)*pi/180;')
+        extra_lines.append(f'{element}_gamma = 1;')
+
+        if(auto_phase_index is not None):
+            extra_lines.append(f'phasing_amplitude_{0} = {element}_scale;')
+            extra_lines.append(f'phasing_on_crest_0  = {element}_oncrest_phase;')
+            extra_lines.append(f'phasing_relative_0  = {element}_relative_phase;')
+            extra_lines.append(f'phasing_gamma_0 = {element}_gamma;')
+
+        map_line = map_line + f', {element}_phase, '
+
+        if('frequency' in user_vars):
+            extra_lines.append(f'{element}_frequency = {self._frequency};');
+            map_line = map_line + f'2*pi*{element}_frequency);'
+        else:
+            map_line = map_line + f'{2*math.pi*self._frequency});'
+
+        return extra_lines + [map_line]
 
 class Map2D(GDFFieldMap):
 
@@ -242,6 +339,7 @@ class Map2D(GDFFieldMap):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names)
     
+        print(required_columns)
         self.required_columns = required_columns
         assert 'z' in required_columns
         assert 'r' in required_columns
@@ -255,7 +353,9 @@ class Map2D_E(Map2D):
     
     def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez', 'r', 'Er'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Er'])
+        self.type = 'Map2D_E'
+
 
     def z(self):
         return np.squeeze(self.z[self.r==0])
@@ -268,12 +368,15 @@ class Map2D_E(Map2D):
     def on_axis_integral(self):
         return np.trapz(self.on_axis_Ez, self.z[self.r==0])
 
+    def write_to_gpt_file(gpt_file, element, gdf_file, z, x=0, y=0, ccs = 'wcs', e1=[1,0,0], e2=[0, 1, 0]):
+        pass
 
 class Map2D_B(Map2D):
 
     def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Bz', 'r', 'Br'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Br', 'Bz'])
+        self.type='Map2D_B'
 
     @property
     def on_axis_Bz(self):
@@ -288,7 +391,9 @@ class Map25D_TM(Map2D):
 
     def __init__(self, source_data, frequency, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, kinetic_energy=float('Inf')):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez', 'r', 'Er', 'Bphi'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
+
+        self.type='Map25D_TM'
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency
@@ -335,6 +440,55 @@ class Map25D_TM(Map2D):
     def kinetic_energy(self, kinetic_energy):
         self._kinetic_energy = kinetic_energy
         self._beta = KE_to_beta(kinetic_energy)
+
+    def gpt_lines(self, 
+        element, 
+        gdf_file=None, 
+        ccs = 'wcs', 
+        r=[0, 0, 0], 
+        e1=[1, 0, 0], 
+        e2=[0, 1, 0], 
+        scale =1, 
+        oncrest_phase=0, 
+        relative_phase=0, 
+        k=0,
+        auto_phase_index=None,
+        user_vars=[]):
+
+        if(auto_phase_index is not None and 'scale' not in user_vars):
+            user_vars.append('scale')
+
+        base_lines = super().gpt_lines(element, gdf_file=gdf_file, ccs=ccs, r=r, e1=e1, e2=e2, scale=scale, user_vars=user_vars)
+
+        extra_lines = base_lines[:-1]
+        map_line = base_lines[-1].replace(');','')
+
+        extra_lines.append(f'{element}_oncrest_phase = {oncrest_phase};')
+        extra_lines.append(f'{element}_relative_phase = {relative_phase};')
+        extra_lines.append(f'{element}_phase = ({element}_oncrest_phase + {element}_relative_phase)*pi/180;')
+        extra_lines.append(f'{element}_gamma = 1;')
+
+        if(auto_phase_index is not None):
+            extra_lines.append(f'phasing_amplitude_{0} = {element}_scale;')
+            extra_lines.append(f'phasing_on_crest_0  = {element}_oncrest_phase;')
+            extra_lines.append(f'phasing_relative_0  = {element}_relative_phase;')
+            extra_lines.append(f'phasing_gamma_0 = {element}_gamma;')
+
+        if('k' in user_vars):
+            extra_lines.append(f'{element}_k = {k};')
+            map_line = map_line + f', {element}_k, '
+        else:
+            map_line = map_line + f', {k}, '
+
+        map_line = map_line + f'{element}_phase, '
+
+        if('frequency' in user_vars):
+            extra_lines.append(f'{element}_frequency = {self._frequency};');
+            map_line = map_line + f'2*pi*{element}_frequency);'
+        else:
+            map_line = map_line + f'{2*math.pi*self._frequency});'
+
+        return extra_lines + [map_line]
 
 
 
