@@ -318,10 +318,10 @@ class Map1D_TM(Map1D):
         extra_lines.append(f'{element}_gamma = 1;')
 
         if(auto_phase_index is not None):
-            extra_lines.append(f'phasing_amplitude_{0} = {element}_scale;')
-            extra_lines.append(f'phasing_on_crest_0  = {element}_oncrest_phase;')
-            extra_lines.append(f'phasing_relative_0  = {element}_relative_phase;')
-            extra_lines.append(f'phasing_gamma_0 = {element}_gamma;')
+            extra_lines.append(f'phasing_amplitude_{auto_phase_index} = {element}_scale;')
+            extra_lines.append(f'phasing_on_crest_{auto_phase_index} = {element}_oncrest_phase;')
+            extra_lines.append(f'phasing_relative_{auto_phase_index}  = {element}_relative_phase;')
+            extra_lines.append(f'phasing_gamma_{auto_phase_index} = {element}_gamma;')
 
         map_line = map_line + f', {element}_phase, '
 

@@ -263,7 +263,7 @@ class GPT:
 
         if self.initial_particles:
             fname = self.write_initial_particles() 
-            print(fname)
+            #print(fname)
 
             # Link input file to new particle file
             self.set_dist_file(fname)
