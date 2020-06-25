@@ -180,6 +180,7 @@ def evaluate_gpt_with_distgen(settings,
                              asci2gdf_bin=asci2gdf_bin)
         
     if merit_f:
+        merit_f = tools.get_function(merif_f)
         output = merit_f(G)
     else:
         output = default_gpt_merit(G)
