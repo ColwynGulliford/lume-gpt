@@ -154,5 +154,29 @@ def fingerprint(keyed_data, digest_size=16):
         h.update(s)
     return h.hexdigest()  
 
+def get_function(name):
+    """
+    Returns a function from a fully qualified name or global name.
+    """
+    
+    # Check if already a function
+    if callable(name):
+        return name
+    
+    if not isinstance(name, str):
+        raise ValueError(f'{name} must be callable or a string.')
+    
+    if name in globals(): 
+        if callable(globals()[name]):
+            f = globals()[name]
+        else:
+            raise ValueError(f'global {name} is not callable')
+    else:
+        # try to import
+        m_name, f_name = name.rsplit('.', 1)
+        module = importlib.import_module(m_name)
+        f = getattr(module, f_name)
+    
+    return f 
 
 
