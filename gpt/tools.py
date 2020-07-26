@@ -182,3 +182,13 @@ def get_function(name):
     return f 
 
 
+def is_floatable(value):
+
+    try:
+        float(value)
+        return True
+    except:
+        return False
+
+
+
