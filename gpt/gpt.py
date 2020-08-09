@@ -339,7 +339,7 @@ class GPT:
     
     def stat(self, key, data_type='all'):
         """
-        Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
+        Calculates any statistic that the ParticleGroup class can calculate, on all particle groups, or just touts, or screens
         """
         if(data_type=='all'):
             particle_groups = self.output['particles']
