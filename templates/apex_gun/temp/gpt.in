@@ -1,0 +1,56 @@
+Master_RF=187000000.0;
+gun_voltage=300.0;
+gun_peak_field=20000000.0;
+voltage_scale=1.0;
+gun_phase=171.34;
+tmax=4e-07;
+Ntout=100;
+single_particle=0.0;
+space_charge=0;
+space_charge_type=1.0;
+use_gun_peak_field=1.0;
+setfile("beam", "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/apex_gun/temp/gpt.particles.gdf");
+RadiusMax=0.015;
+GBacc=6.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=0;
+dtmax=1e-10;
+XGUN=0.0;
+YGUN=0.0;
+ZGUN=0.0;
+if(use_gun_peak_field==1) {
+Escale   = gun_peak_field;
+} else {
+Escale   = gun_voltage / voltage_scale;
+}
+Map25D_TM("wcs", XGUN,YGUN,ZGUN,  1,0,0, 0,1,0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/apex_gun/fields/apex_gun.gdf", "R", "Z", "Er", "Ez", "Bphi", Escale, 0, gun_phase*(pi/180), 2*pi*Master_RF);
+XSOL=0.0;
+YSOL=0.0;
+ZSOL=0.24653;
+maxB=0.9146327987525218;
+BSOL=0.057;
+BFAC = BSOL/maxB;
+Map2D_B("wcs", XSOL,YSOL, ZSOL,  1,0,0, 0,1,0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/apex_gun/fields/apex_solenoid.gdf", "R", "Z", "Br", "Bz", BFAC);
+forwardscatter("wcs", "I", "remove", 0.0);
+scatterpipe("wcs","I", -1, 1, RadiusMax) scatter="remove";
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+if (space_charge_type == 1) {
+spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+}
+if (space_charge_type == 2) {
+setrmacrodist("beam","u",tree_code_R,0) ;
+spacecharge3Dtree(tree_code_theta) ;
+}
+}
+ZSTART=-1e-06;
+ZSTOP=0.5;
+zminmax("wcs","I",ZSTART,ZSTOP);
+screen("wcs", "I", 0, ZSTOP, 0.005);
+tout(0,tmax,tmax/Ntout);
