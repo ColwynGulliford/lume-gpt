@@ -1,5 +1,8 @@
 from gpt import tools, parsers
 from gpt.particles import particle_stats, raw_data_to_particle_groups
+
+from .plot import plot_stats_with_layout
+
 import gpt.archive 
 
 from pmd_beamphysics.units import pg_units
@@ -337,6 +340,24 @@ class GPT:
         if self.verbose:
             print(*args, **kwargs)    
     
+    def plot(self, y=['sigma_x', 'sigma_y'], x='mean_z', xlim=None, y2=[],
+            nice=True, 
+            include_layout=False,
+            include_labels=False, 
+            include_particles=True,
+            include_legend=True, 
+             **kwargs):
+        """
+        
+        
+        """
+        plot_stats_with_layout(self, ykeys=y, ykeys2=y2, 
+                           xkey=x, xlim=xlim, 
+                           nice=nice, 
+                           include_layout=include_layout,
+                           include_labels=include_labels, 
+                           include_legend=include_legend, **kwargs)     
+    
     def stat(self, key, data_type='all'):
         """
         Calculates any statistic that the ParticleGroup class can calculate, on all particle groups, or just touts, or screens
@@ -355,7 +376,7 @@ class GPT:
 
         return particle_stats(particle_groups, key)
     
-    def stat_units(self, key):
+    def units(self, key):
         """
         Calculates any statistic that the ParticleGroup class can calculate, on all particle groups.
         """
@@ -451,7 +472,15 @@ class GPT:
         gpt.archive.write_output_h5(g, self.output, name='output')
 
         return h5        
-        
+
+    @classmethod
+    def from_archive(cls, archive_h5):
+        """
+        Class method to return an GPT object loaded from an archive file
+        """        
+        c = cls()
+        c.load_archive(archive_h5)
+        return c    
         
     def __str__(self):
 
