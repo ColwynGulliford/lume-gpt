@@ -1,12 +1,12 @@
 from gpt import tools, parsers
 from gpt.particles import particle_stats, raw_data_to_particle_groups
-
+from gpt.parsers import parse_gpt_string
 from .plot import plot_stats_with_layout
 
 import gpt.archive 
 
 from pmd_beamphysics.units import pg_units
-
+from pmd_beamphysics.particles import single_particle
 from pmd_beamphysics import ParticleGroup
 
 import h5py
@@ -14,8 +14,8 @@ import os
 import tempfile
 from time import time
 import numpy as np
+from copy import deepcopy
 
-from gpt.parsers import parse_gpt_string
 
 class GPT:
     """ 
@@ -80,6 +80,7 @@ class GPT:
             self.vprint('Warning: Input file does not exist. Not configured.')
 
     def configure(self):
+        """ Convenience wrapper for configure_gpt """
         self.configure_gpt(workdir=self.workdir)
  
     def configure_gpt(self, input_filePath=None, workdir=None):
@@ -168,10 +169,12 @@ class GPT:
 
     @property
     def n_tout(self):
+        """ number of tout particle groups """
         return self.output['n_tout']
  
     @property
     def n_screen(self):
+        """ number of screen particle groups"""
         return self.output['n_screen']
 
     @property
@@ -193,6 +196,8 @@ class GPT:
             return self.output['particles']
 
     def trajectory(self, pid, data_type='tout'):
+
+        """ Returns a 3d particle trajectory for particle with id = pid """
 
         if(data_type=='tout'):
             particle_groups = self.tout
@@ -220,10 +225,12 @@ class GPT:
    
 
     def run(self, gpt_verbose=False):
+
+        """ performs a basic GPT simulation configured in the current GPT object """
+
         if not self.configured:
-            print('not configured to run')
-            return
-        pass
+            self.configure()
+        #pass
         self.run_gpt(verbose=self.verbose, timeout=self.timeout, gpt_verbose=gpt_verbose)
 
         
@@ -527,7 +534,26 @@ class GPT:
             return self.input['lines'][error_line_index]
         else:
             return None
-            
+
+    def track(self, particles, s=None, output='tout'):
+        return track(self, particles, s=s, output=output)
+
+    def track1(self, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, s=None, species='electron', output='tout'):
+        return track1(self, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, species=species, s=s, output=output)
+
+    def copy(self):
+        """
+        Returns a deep copy of this object.
+        
+        If a tempdir is being used, will clear this and deconfigure. 
+        """
+        G2 = deepcopy(self)
+        # Clear this 
+        if G2.use_tempdir:
+            G2.path = None
+            G2.configured = False
+        
+        return G2
 
 def run_gpt(settings=None, 
             initial_particles=None,
@@ -591,5 +617,38 @@ def run_gpt(settings=None,
     # Run
     G.run(gpt_verbose=gpt_verbose)
     
-    return G  
+    return G
+
+
+
+
+def track(gpt_object, particles, s=None, output='tout'):
+
+    """ Convenience function for tracking a particle set and returning the final tout or screen as particle group """
+
+    assert output=='tout' or output=='screen', 'gpt.track -> output must be "tout" or "screen".'
+
+    gpt_object.initial_particles = particles
+    gpt_object.run()
+
+    if('particles' in gpt_object.output):
+
+        if(output == 'tout'):
+            pg = gpt_object.tout[-1]
+        elif(output == 'screen'):
+            pg = gpt_object.screen[-1]
+
+        return pg
+    else:
+        return []
+
+def track1(gpt_object, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1, status=1, species=None, s=None, output='tout'):
+
+    """ Convenience function for tracking a single particle and returning the final tout or screen as particle group """ 
+
+    particles = single_particle(x=x0, px=px0, y=y0, py=py0, z=z0, pz=pz0, t=t0, weight=weight, status=status, species=species)
+    return track(gpt_object, particles, s=s, output=output)
+
+
+
 
