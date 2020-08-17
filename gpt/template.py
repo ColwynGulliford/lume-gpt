@@ -3,6 +3,7 @@ BASIC_TEMPLATE=[
 '\n', 
 'auto_phase=0.0;\n', 
 'space_charge=0.0;\n', 
+'cathode=0.0;\n',
 'space_charge_type=1.0;\n', 
 'RadiusMax=0.04;\n', 
 'GBacc=5.5;\n', 
@@ -21,7 +22,11 @@ BASIC_TEMPLATE=[
 'if (space_charge == 1) {\n', 
 '\n', 
 '    if (space_charge_type == 1) {\n', 
-'        spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n', 
+'        if(cathode == 1) {\n'
+'            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n', 
+'        } else {\n'
+'            spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n',
+'        }' 
 '    }\n', 
 '    if (space_charge_type == 2) {\n', 
 '        setrmacrodist("beam","u",tree_code_R,0) ;\n', 
