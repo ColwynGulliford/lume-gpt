@@ -10,6 +10,9 @@ import time
 
 import importlib
 
+from math import pi
+import math
+
 def execute(cmd):
     """
     
@@ -183,12 +186,133 @@ def get_function(name):
 
 
 def is_floatable(value):
+    """Checks if an object can be cast to a float, returns True or False"""
 
     try:
         float(value)
         return True
     except:
         return False
+
+
+# Geometry
+def deg(theta_rad):
+    return theta_rad*180/math.pi
+
+def rad(theta_deg):
+    return theta_deg*math.pi/180
+
+def cvector(rvector):
+    """ Converts a numpy array or list into a column vector """
+ 
+    if(rvector is None):
+        return rvector
+    elif(isinstance(rvector,list)):
+        return np.array([np.array(rvector)]).T
+    elif(rvector.shape==(3,1)):
+        return rvector
+    elif(rvector.shape==(3,)):
+        return np.array([np.array(rvector)]).T
+
+    print('wooooooops')
+
+def rotation_matrix(theta=0, phi=0, psi=0, units='deg'):
+
+    """Defines a general 3d rotation in terms of the orientation angles theta, phi, psi"""
+
+    rpy = Rpy(theta,units)
+    rmx = Rmx(phi, units)
+    rpz = Rpz(psi, units)
+
+    return np.matmul(rpy, np.matmul(rmx, rpz))
+
+def Rpy(angle=0, units='deg'):
+
+    """Defines a roation in around +y direction"""
+
+    if(units=='deg'):
+        angle = angle*pi/180
+
+    C = np.cos(angle)
+    S = np.sin(angle)
+
+    M = np.identity(3)
+
+    M[0,0] = +C
+    M[0,2] = +S
+    M[2,0] = -S
+    M[2,2] = +C
+
+    return M
+
+def Rmx(angle=0, units='deg'):
+
+    """Defines a roation around -x direction"""
+
+    if(units=='deg'):
+        angle = angle*pi/180
+
+    C = np.cos(angle)
+    S = np.sin(angle)
+
+    M = np.identity(3)
+
+    M[1,1] = +C
+    M[1,2] = +S
+    M[2,1] = -S
+    M[2,2] = +C
+
+    return M
+
+def Rpz(angle=0, units='deg'):
+
+    """Defines a roation arounx +z direction"""
+
+    if(units=='deg'):
+        angle = angle*pi/180
+
+    C = np.cos(angle)
+    S = np.sin(angle)
+
+    M = np.identity(3)
+
+    M[0,0] = +C
+    M[0,1] = -S
+    M[1,0] = +S
+    M[1,1] = +C
+
+    return M
+
+
+def get_arc(R, p1, e1, theta, npts=100):
+
+    thetas = np.linspace(0, theta, npts)
+    arc = np.zeros( (3, npts) )
+
+    for ii, theta in enumerate(thetas):
+
+        M = rotation_matrix(theta)
+        pii = p1 + np.sign(theta)*R*(e1 - np.matmul(M,e1))
+        arc[:,ii] = np.squeeze(pii)
+
+    return arc
+
+
+
+def write_ecs(p, M):
+
+    ecs_str = ''
+    for ii in range(3):
+        ecs_str = ecs_str + f'{p[ii,0]}, '
+
+    for jj in range(2):
+        for ii in range(3):
+            ecs_str = ecs_str + f'{M[ii,jj]}, '
+
+    return ecs_str
+
+def in_ecs(p, ecs_origin, M_ecs):
+    return np.matmul( np.linalg.inv(M_ecs), (p-ecs_origin))
 
 
 

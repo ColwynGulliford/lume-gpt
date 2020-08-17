@@ -88,7 +88,7 @@ def parse_gpt_input_file(filePath, condense=False, verbose=False):
     return finput
 
 
-def write_gpt_input_file(finput,inputFile):
+def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
 
     #print(inputFile)
     for var in finput['variables'].keys():
@@ -104,6 +104,9 @@ def write_gpt_input_file(finput,inputFile):
 
         for line in finput["lines"]:
             f.write(line+"\n")
+
+        if(ccs_beg!="wcs"):
+            f.write(f'settransform("{ccs_beg}", 0,0,0, 1,0,0, 0,1,0, "beam");\n')
 
 def read_particle_gdf_file(gdffile,verbose=0):
 
@@ -241,19 +244,9 @@ def make_screen_dict(screens):
     t2 = time.time()
     #self.vprint("done. Time ellapsed: "+self.ptime(t1,t2)+".",0,True)
 
-    ts=[screen['time'] for screen in pdata]
-    inds={}
-
-    ts_sorted = sorted(ts)
-    pdata_temp=[]
-
-    for t in ts_sorted:
-        for screen in pdata:
-            if(t == screen["time"]):
-                pdata_temp.append(screen)
-               
-    pdata=pdata_temp
-    return pdata
+    ts=np.array([screen['time'] for screen in pdata])
+    sorted_indices = np.argsort(ts)
+    return [pdata[sii] for sii in sorted_indices]
 
 def parse_gpt_string(line):
     return re.findall(r'\"(.+?)\"',line) 
