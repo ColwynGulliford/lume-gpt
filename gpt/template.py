@@ -1,5 +1,5 @@
 BASIC_TEMPLATE=[
-'setfile("beam", "distgen_gpt_particles.gdf");\n', 
+'setfile("beam", "gpt_particles.gdf");\n', 
 '\n', 
 'auto_phase=0.0;\n', 
 'space_charge=0.0;\n', 
@@ -35,3 +35,11 @@ BASIC_TEMPLATE=[
 'tout(0,tmax,tmax/Ntout);\n', 
 '\n'
 ]
+
+def basic_template(filename='gpt.temp.in'):
+
+    with open(filename, 'w') as fid:
+        for line in BASIC_TEMPLATE:
+            fid.write(line+'\n')
+
+    return filename
