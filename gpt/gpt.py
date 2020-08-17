@@ -42,11 +42,13 @@ class GPT:
                  use_tempdir=True,
                  workdir=None,
                  timeout=None,
-                 verbose=False):
+                 verbose=False,
+                 ccs_beg='wcs'):
 
         # Save init
         self.original_input_file = input_file
         self.initial_particles = initial_particles
+        self.ccs_beg = ccs_beg
         self.use_tempdir = use_tempdir
 
         self.workdir = workdir
@@ -348,7 +350,7 @@ class GPT:
             include_legend=True, 
              **kwargs):
         """
-        
+        Convenience plotting function for making nice plots.
         
         """
         plot_stats_with_layout(self, ykeys=y, ykeys2=y2, 
@@ -387,7 +389,7 @@ class GPT:
     def write_input_file(self):
         """ Write the updated GPT input file """
         self.vprint(f'   Writing gpt input file to "{self.input_file}"')
-        parsers.write_gpt_input_file(self.input, self.input_file)
+        parsers.write_gpt_input_file(self.input, self.input_file, self.ccs_beg)
    
     def write_initial_particles(self, fname=None):
         """ Write the initial particle data to file for use with GPT """
