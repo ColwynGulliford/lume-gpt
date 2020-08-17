@@ -280,7 +280,7 @@ class GPT:
             # Link input file to new particle file
             self.set_dist_file(fname)
         
-        init_dir = os.getcwd()
+        #init_dir = os.getcwd()
         self.vprint(f'   Running GPT...')
 
         # Write input file from internal dict
