@@ -198,7 +198,6 @@ class GPT:
     def trajectory(self, pid, data_type='tout'):
 
         """ Returns a 3d particle trajectory for particle with id = pid """
-
         if(data_type=='tout'):
             particle_groups = self.tout
         elif(data_type=='screen'):
