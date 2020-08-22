@@ -25,7 +25,7 @@ def is_screen(element):
     else:
         return False
 
-class Element():
+class Element:
 
     """ Defines a basic element object """
 
@@ -46,6 +46,8 @@ class Element():
 
     def set_ref_trajectory(self, npts=100):
 
+        """ Get points to visualize the reference (geometric) trajectory """
+
         if(self._s_beg!=self._s_end):
 
             self._s_ref = np.linspace(self._s_beg, self._s_end, npts) 
@@ -61,7 +63,13 @@ class Element():
 
     def place(self, ref_element, ds=0):
 
+        """ Places an element with respect to a reference element, shifted by ds
+            If ds >= 0, the this is the distance from ref_element.p_end to self.p_beg 
+            If ds < 0, then this is the distance from self.p_end to ref_element.p_beg
+        """
+
         if(ds>=0):
+
             s = ref_element.s_end
             M = ref_element.M_end
             p = ref_element.p_end
