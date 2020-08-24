@@ -12,6 +12,8 @@ accuracy(GBacc, xacc);
 dtmin=1e-16;
 dtmax=1e-10;
 
+IA1SDR01_z=0.922;
+screen("wcs","I",IA1SDR01_z);
 ZSTOP=3;
 Alpha=1.0;
 Fn=0.5;

@@ -4,6 +4,10 @@ import math, cmath
 from scipy.integrate import cumtrapz
 from gpt import tools
 
+from gpt.tools import cvector
+
+from gpt.element import Element
+
 c = 299792458
 mc2 = 0.51e6
 
@@ -74,8 +78,7 @@ def energy_gain(z, Ez, w, phi, beta=1):
         else:
             return np.array( list(map(lambda p: np.real(integrate_Ez(z, Ez, w, p, beta=beta)), phi)) )
 
-class GDFFieldMap():
-
+class GDFFieldMap(Element):
     """ General class for holding GDF field map data """
 
     def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN'):
@@ -172,21 +175,39 @@ class GDFFieldMap():
         os.system(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}')
         os.system(f'rm {temp_ascii_file}')
 
-    def gpt_lines(self, element, gdf_file=None, ccs = 'wcs', r=[0, 0, 0], e1=[1, 0, 0], e2=[0, 1, 0], scale =1, user_vars=[]):
+    def gpt_lines(self, ccs=None, gdf_file=None, e1=[1, 0, 0], e2=[0, 1, 0], scale =1, user_vars=[]):
 
-        #print(element, gdf_file, ccs, r, e1, e2, scale, user_vars) 
+        element = self._name
 
         inverse_column_names = {value:key for key,value in self.column_names.items()}
 
-        map_line = f'{self.type}("{ccs}", '
+        if(ccs is None):
+            ccs = self.ccs_beg
+
+        ds = np.linalg.norm((self._p_beg - self._ccs_beg_origin))
+        ccs_beg_e3 = cvector([0,0,1])
+        r = ds*ccs_beg_e3
+
+        map_line = f'{self.type}("{self.ccs_beg}", '
         extra_lines={}
 
+        if(self._field_pos=='center'):
+            zoff = self._length/2.0
+        elif(self._field_pos=='end'):
+            zoff = self._length
+        else:
+            zoff = 0
+
         for ii, coordinate in enumerate(['x', 'y','z']):
-            if(coordinate in user_vars):
-                extra_lines[coordinate] = f'{element}_{coordinate} = {r[ii]};'
-                map_line = map_line + f'{element}_{coordinate}, '
+            #if(coordinate in user_vars):
+            if(coordinate=='z'):
+                val = r[ii][0]+zoff
             else:
-                map_line = map_line + f'{str(r[ii])}, '
+                val = r[ii][0]
+            extra_lines[coordinate] = f'{element}_{coordinate} = {val};'
+            map_line = map_line + f'{element}_{coordinate}, '
+            #else:
+            #    map_line = map_line + f'{str(r[ii][0])}, '
 
         for ii, m in enumerate(['e11', 'e12', 'e13']):
             if(m in user_vars):
@@ -210,11 +231,11 @@ class GDFFieldMap():
         for ii, rc in enumerate(self.required_columns):
             map_line = map_line + f'"{inverse_column_names[rc]}", '
         
-        if('scale' in user_vars):
-            extra_lines['scale'] = f'{element}_scale = {scale};'
-            map_line = map_line + f'{element}_scale);'
-        else:
-            map_line = map_line + f'{scale});'
+        #if('scale' in user_vars):
+        extra_lines['scale'] = f'{element}_scale = {scale};'
+        map_line = map_line + f'{element}_scale);'
+        #else:
+        #    map_line = map_line + f'{scale});'
 
         return [extra_line for extra_line in extra_lines.values()] + [map_line]
 
@@ -228,8 +249,7 @@ class Map1D(GDFFieldMap):
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names)
 
         self.zpos = zpos
-
-        self.type = None
+        self._type = 'Map1D'
 
         self.required_columns = required_columns
         assert 'z' in required_columns
@@ -245,12 +265,73 @@ class Map1D(GDFFieldMap):
     def cum_on_axis_integral(self):
         return cumptrapz(getattr(self, self.fieldstr), self.zpos + getattr(self, 'z'), initial=0)
 
+    def plot_floor(self, axis=None, alpha=1.0, ax=None):
+
+        f = 0.01
+        zs = getattr(self,'z')
+        Fz = getattr(self,self.fieldstr)
+
+        maxF = max(np.abs(Fz))
+
+        for ii,z in enumerate(zs):
+            if(np.abs(Fz[ii]) >= f*maxF):
+                zL = z
+                break
+
+        zs = np.flip(zs)
+        Fz = np.flip(Fz)
+
+        for ii,z in enumerate(zs):
+            if(np.abs(Fz[ii]) >= f*maxF):
+                zR = z
+                break
+
+        effective_plot_length = zR-zL
+
+        if(ax == None):
+            ax = plt.gca()
+
+        pc = 0.5*(self.p_beg + self.p_end)
+
+        p1 = self.p_beg + (self._width/2)*cvector(self._M_beg[:,0])
+        p2 = self.p_beg - (self._width/2)*cvector(self._M_beg[:,0])
+        p3 = self.p_end + (self._width/2)*cvector(self._M_end[:,0])
+        p4 = self.p_end - (self._width/2)*cvector(self._M_end[:,0])
+
+        ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
+
+        p1 = pc + (self._width/2)*cvector(self._M_beg[:,0]) - (effective_plot_length/2.0)*cvector(self._M_beg[:,2])
+        p2 = p1 - (self._width)*cvector(self._M_beg[:,0]) 
+        p3 = p2 + (effective_plot_length)*cvector(self._M_beg[:,2])
+        p4 = p3 + (self._width)*cvector(self._M_end[:,0])
+
+        ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
+
+        ax.plot(ps1[2], ps1[0], self.color, alpha=0.2)
+        ax.plot(ps2[2], ps2[0], self.color, alpha=alpha)
+        ax.set_xlabel('z (m)')
+        ax.set_ylabel('x (m)')
+
+        if(axis=='equal'):
+            ax.set_aspect('equal')
+
+    #@property
+    #def z(self):
+    #    return self._z
+    
+
 class Map1D_E(Map1D):
 
-    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, zpos=0):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, zpos=0, width=0.2):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'], zpos=zpos)
-        self.type = 'Map1D_E'
+       
+        self._name = name
+        self._type = 'Map1D_E'
+        self._length = self.z[-1]-self.z[0]
+        self._width = 0.2
+        self._height = self._width
+        self._color = '#1f77b4'
 
     @property
     def energy_gain(self, r=0, field_order =1):
@@ -262,17 +343,23 @@ class Map1D_E(Map1D):
 
 class Map1D_B(Map1D):
 
-    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Bz'], zpos=zpos)
-        self.type = 'Map1D_B'
+        
+        self._name = name
+        self._type = 'Map1D_B'
+        self._length = self.z[-1]-self.z[0]
+        self._width = 0.2
+        self._height = self._width
+        self._color = '#2ca02c'
 
 class Map1D_TM(Map1D):
 
     def __init__(self, source_data, frequency, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, kinetic_energy=float('Inf')):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'])
-        self.type='Map1D_TM'
+        self._type='Map1D_TM'
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency
@@ -375,10 +462,16 @@ class Map2D(GDFFieldMap):
 
 class Map2D_E(Map2D):
     
-    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}, field_pos='center'):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Er'])
-        self.type = 'Map2D_E'
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez'])
+        self._name = name
+        self._type = 'Map2D_E'
+        self._length = self.z[-1]-self.z[0]
+        self._width = 0.2
+        self._height = self._width
+        self._color = '#1f77b4'
+        self._field_pos = field_pos
 
     def z(self):
         return np.squeeze(self.z[self.r==0])
@@ -393,10 +486,16 @@ class Map2D_E(Map2D):
 
 class Map2D_B(Map2D):
 
-    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}, field_pos='center'):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Br', 'Bz'])
-        self.type='Map2D_B'
+        self._type='Map2D_B'
+        self._name = name
+        self._length = self.z[-1]-self.z[0]
+        self._width = 0.2
+        self._height = self._width
+        self._color = '#2ca02c'
+        self._field_pos = field_pos
 
     @property
     def on_axis_Bz(self):
@@ -413,7 +512,7 @@ class Map25D_TM(Map2D):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
 
-        self.type='Map25D_TM'
+        self._type='Map25D_TM'
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency

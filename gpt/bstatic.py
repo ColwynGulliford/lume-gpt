@@ -61,6 +61,7 @@ class Sectormagnet(SectorBend):
             raise ValueError(f'Unknown particle type: {species}')
 
         self._B = p/R/c
+        self._p = p
 
         self._gap=gap
 
