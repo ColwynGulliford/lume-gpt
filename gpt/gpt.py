@@ -16,6 +16,7 @@ from time import time
 import numpy as np
 from copy import deepcopy
 
+c = 299792458
 
 class GPT:
     """ 
@@ -48,7 +49,6 @@ class GPT:
         # Save init
         self.original_input_file = input_file
         self.initial_particles = initial_particles
-        self.ccs_beg = ccs_beg
         self.use_tempdir = use_tempdir
 
         self.workdir = workdir
@@ -71,6 +71,8 @@ class GPT:
         self.finished = False
         self.configured = False
         self.using_tempdir = False
+
+        self.ccs_beg = ccs_beg
       
         # Call configure
         if input_file:
@@ -540,6 +542,27 @@ class GPT:
     def track1(self, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, s=None, species='electron', output='tout'):
         return track1(self, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, species=species, s=s, output=output)
 
+    def track1_to_z(self, 
+        z_end=0, 
+        ds=None,
+        ccs_beg='wcs', 
+        ccs_end='wcs', 
+        x0=0,
+        px0=0, 
+        y0=0, 
+        py0=0, 
+        z0=0, 
+        pz0=1e-15, 
+        t0=0, 
+        weight=1, 
+        status=1, 
+        species='electron', 
+        Ntout=100,
+        xacc=6.5,
+        GBacc=6.5):
+    
+        return track1_to_z(self, z_end=z_end, ds=ds, ccs_beg=ccs_beg, ccs_end=ccs_end, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, weight=weight, status=status, species=species)
+
     def copy(self):
         """
         Returns a deep copy of this object.
@@ -619,6 +642,50 @@ def run_gpt(settings=None,
     return G
 
 
+def track1_to_z(gpt_object, 
+    z_end=0, 
+    ds=None, 
+    ccs_beg='wcs', 
+    ccs_end='wcs', 
+    x0=0, 
+    px0=0, 
+    y0=0, 
+    py0=0, 
+    z0=0, 
+    pz0=1e-15, 
+    t0=0, 
+    weight=1, 
+    status=1, 
+    species='electron', 
+    Ntout=100,
+    xacc=6.5,
+    GBacc=6.5):
+
+    """ Tracks a single particle up to z_end in "ccs" curvilinear coordinate system"""
+
+    particle = single_particle(x=x0, px=px0, y=y0, py=py0, z=z0, pz=pz0, t=t0, weight=weight, status=status, species=species)
+
+    time = particle['mean_t']
+
+    gpt_object.ccs_beg = ccs_beg
+
+    if(ds is None):
+        ds = z_end - particle['mean_z']
+    
+    delta_t = ds/c/particle['mean_beta_z']
+
+    settings = {'time':time, 'tmax':time+1.2*delta_t, 'Ntout':Ntout, 'xacc':xacc, 'GBacc':GBacc}
+
+    gpt_object.initial_particles = particle
+    gpt_object.set_variables(settings)
+
+    gpt_object.input['lines'].append(get_screen_line(ccs_end, z=z_end))
+    gpt_object.run()
+
+    if(gpt_object.n_screen>0):
+        return gpt_object.screen[-1]
+    else:
+        return None
 
 
 def track(gpt_object, particles, s=None, output='tout'):
@@ -649,5 +716,10 @@ def track1(gpt_object, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1
     return track(gpt_object, particles, s=s, output=output)
 
 
+def get_screen_line(ccs='wcs', r=[0,0,0], e1=[1,0,0], e2=[0,1,0], z=0):
+
+    return f'screen("{ccs}", {r[0]}, {r[1]}, {r[2]}, {e1[0]}, {e1[1]}, {e1[2]}, {e2[0]}, {e2[1]}, {e2[2]}, {z});'
+
+    
 
 

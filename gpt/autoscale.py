@@ -76,3 +76,14 @@ def autoscale_lattice(lattice, initial_particles, space_charge=False):
 def autoscale_bend(lattice, initial_particles, space_charge=False):
     pass
 """
+
+
+
+
+
+
+
+
+
+
+

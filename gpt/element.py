@@ -61,12 +61,15 @@ class Element:
             self._s_ref = np.array([self._s_beg, self._s_end])
             self._p_ref = np.concatenate( (self._p_beg, self._p_end) , axis=1)
 
-    def place(self, ref_element, ds=0):
+    def place(self, ref_element=None, ds=0):
 
         """ Places an element with respect to a reference element, shifted by ds
             If ds >= 0, the this is the distance from ref_element.p_end to self.p_beg 
             If ds < 0, then this is the distance from self.p_end to ref_element.p_beg
         """
+
+        if(ref_element is None):
+            ref_element=Beg()
 
         if(ds>=0):
 
@@ -137,6 +140,12 @@ class Element:
 
         if(axis=='equal'):
             ax.set_aspect('equal')
+
+    def track1(self, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1, status=1, species='electron', s=None):
+        pass
+
+    def track_ref(self, p0=1e-15):
+        pass
 
     def __str__(self):
       
@@ -241,6 +250,15 @@ class Element:
     def gpt_lines(self):
         return []
 
+    def write_element_to_gpt_file(self, gptfile):
+
+        assert os.path.exists(gptfile)
+
+        with open(gptfile, 'a') as fid:
+            lines = self.gpt_lines()
+            for line in lines:
+                fid.write(line+'\n')
+
 
 class Screen(Element):
 
@@ -309,10 +327,11 @@ class Quad(Element):
         width=0.2, 
         height=0, 
         n_screens=2,
-        angles=[0,0,0]):
+        angles=[0,0,0],
+        color='b'):
 
         self._type = 'Quad'
-        super().__init__(name, length=length, width=width, height=height, angles=angles, color='b')
+        super().__init__(name, length=length, width=width, height=height, angles=angles, color=color)
 
 
 class SectorBend(Element):
@@ -343,9 +362,11 @@ class SectorBend(Element):
         ostr = f'{ostr}\nCCS into dipole: "{self._ccs_beg}"'
         return ostr
 
-    def place(self, previous_element, ds=0):
+    def place(self, previous_element=Beg(), ds=0):
 
-        assert ds, "Bending magnets must be added in beamline order (ds>0)."
+        """ This functin sets the element in the correct position in the lattice """
+
+        assert ds>=0, "Bending magnets must be added in beamline order (ds>=0)."
 
         self._ccs_beg = previous_element.ccs_end
         self._ccs_end = f'{self.name}_ccs_end'

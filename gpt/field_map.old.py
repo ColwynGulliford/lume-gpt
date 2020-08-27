@@ -2,51 +2,30 @@ import numpy as np
 import os
 import math, cmath
 from scipy.integrate import cumtrapz
-import tempfile
-
-from gpt import GPT
 from gpt import tools
-from gpt.tools import cvector
-from gpt.element import Element
-from gpt.template import basic_template
-
-from matplotlib import pyplot as plt
-
-from pmd_beamphysics import single_particle
 
 c = 299792458
 mc2 = 0.51e6
 
 def gamma_to_beta(gamma):
-    """ Converts relativistic gamma to beta"""
     return np.sqrt(1 - 1/gamm**2)
 
 def beta_to_gamma(beta):
-    """ Converts relativistic beta to gamma """
     return 1/np.sqrt(1-beta**2)
 
 def KE_to_gamma(KE):
-    """ Converts kinetic energy to relativistic gamma """
     return 1 + KE/mc2
 
 def gamma_to_KE(gamma):
-    """ Converts relativistic gamma to kinetic energy """
     return mc2*(gamma-1)
 
 def KE_to_beta(KE):
-    """ Converts kinetic energy to relativists beta """
     return gamma_to_beta(KE_to_gamma(KE))
 
 def beta_to_KE(beta):
-    """ Converts relativists beta to kinetic energy """
     return gamma_to_KE(beta_to_gamma(beta))
 
-def get_gdf_header(gdf_file, gdf2a_bin=os.path.expandvars('$GDF2A_BIN')):
-
-    """Reads the header (column names) of gdf_file and returns them"""
-
-    assert os.path.exists(gdf2a_bin), f'The gdf2a binary "{gdf2a_bin}" does not exist.'
-    assert os.path.exists(gdf_file), f'The gdf file "{gdf_file}" does not exist'
+def get_gdf_header(gdf_file, gdf2a_bin='$GDF2A_BIN'):
 
     temp_ascii_file = f'{gdf_file}.temp.txt'
     rc = os.system(f'{gdf2a_bin} -o {temp_ascii_file} {gdf_file}')
@@ -61,16 +40,6 @@ def scale_field_map(in_gdf_file, out_gdf_file):
 
 def integrate_Ez(z, Ez, w, phi, beta=1):
 
-        """Integrates a complex field map on axis:
-        z  = vector of z points of on axis field map 
-        Ez = vector of Ez(z)
-        w  = cavity angular frequency [rad*Hz]
-        phi = phase offset
-        beta = relativistic beta, defaults to 1
-
-        Computes: Integral ( Ez(z) * exp(iwz /cbeta + phi) dz)
-        """
-
         phi = phi*math.pi/180
 
         if(beta==1):
@@ -84,8 +53,7 @@ def energy_gain(z, Ez, w, phi, beta=1):
         else:
             return np.array( list(map(lambda p: np.real(integrate_Ez(z, Ez, w, p, beta=beta)), phi)) )
 
-class GDFFieldMap(Element):
-    """ General class for holding GDF field map data """
+class GDFFieldMap():
 
     def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN'):
         
@@ -181,39 +149,21 @@ class GDFFieldMap(Element):
         os.system(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}')
         os.system(f'rm {temp_ascii_file}')
 
-    def gpt_lines(self, ccs=None, gdf_file=None, e1=[1, 0, 0], e2=[0, 1, 0], scale =1, user_vars=[]):
+    def gpt_lines(self, element, gdf_file=None, ccs = 'wcs', r=[0, 0, 0], e1=[1, 0, 0], e2=[0, 1, 0], scale =1, user_vars=[]):
 
-        element = self._name
+        #print(element, gdf_file, ccs, r, e1, e2, scale, user_vars) 
 
         inverse_column_names = {value:key for key,value in self.column_names.items()}
 
-        if(ccs is None):
-            ccs = self.ccs_beg
-
-        ds = np.linalg.norm((self._p_beg - self._ccs_beg_origin))
-        ccs_beg_e3 = cvector([0,0,1])
-        r = ds*ccs_beg_e3
-
-        map_line = f'{self.type}("{self.ccs_beg}", '
+        map_line = f'{self.type}("{ccs}", '
         extra_lines={}
 
-        if(self._field_pos=='center'):
-            zoff = self._length/2.0
-        elif(self._field_pos=='end'):
-            zoff = self._length
-        else:
-            zoff = 0
-
         for ii, coordinate in enumerate(['x', 'y','z']):
-            #if(coordinate in user_vars):
-            if(coordinate=='z'):
-                val = r[ii][0]+zoff
+            if(coordinate in user_vars):
+                extra_lines[coordinate] = f'{element}_{coordinate} = {r[ii]};'
+                map_line = map_line + f'{element}_{coordinate}, '
             else:
-                val = r[ii][0]
-            extra_lines[coordinate] = f'{element}_{coordinate} = {val};'
-            map_line = map_line + f'{element}_{coordinate}, '
-            #else:
-            #    map_line = map_line + f'{str(r[ii][0])}, '
+                map_line = map_line + f'{str(r[ii])}, '
 
         for ii, m in enumerate(['e11', 'e12', 'e13']):
             if(m in user_vars):
@@ -237,25 +187,24 @@ class GDFFieldMap(Element):
         for ii, rc in enumerate(self.required_columns):
             map_line = map_line + f'"{inverse_column_names[rc]}", '
         
-        #if('scale' in user_vars):
-        extra_lines['scale'] = f'{element}_scale = {scale};'
-        map_line = map_line + f'{element}_scale);'
-        #else:
-        #    map_line = map_line + f'{scale});'
+        if('scale' in user_vars):
+            extra_lines['scale'] = f'{element}_scale = {scale};'
+            map_line = map_line + f'{element}_scale);'
+        else:
+            map_line = map_line + f'{scale});'
 
         return [extra_line for extra_line in extra_lines.values()] + [map_line]
 
 
 class Map1D(GDFFieldMap):
 
-    """ Class for storing 1D GDF field maps, derives from GDFfieldMap """
-
     def __init__(self, source_data, required_columns, gdf2a_bin='$GDF2A_BIN', column_names=None, zpos=0):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names)
 
         self.zpos = zpos
-        self._type = 'Map1D'
+
+        self.type = None
 
         self.required_columns = required_columns
         assert 'z' in required_columns
@@ -271,73 +220,12 @@ class Map1D(GDFFieldMap):
     def cum_on_axis_integral(self):
         return cumptrapz(getattr(self, self.fieldstr), self.zpos + getattr(self, 'z'), initial=0)
 
-    def plot_floor(self, axis=None, alpha=1.0, ax=None):
-
-        f = 0.01
-        zs = getattr(self,'z')
-        Fz = getattr(self,self.fieldstr)
-
-        maxF = max(np.abs(Fz))
-
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zL = z
-                break
-
-        zs = np.flip(zs)
-        Fz = np.flip(Fz)
-
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zR = z
-                break
-
-        effective_plot_length = zR-zL
-
-        if(ax == None):
-            ax = plt.gca()
-
-        pc = 0.5*(self.p_beg + self.p_end)
-
-        p1 = self.p_beg + (self._width/2)*cvector(self._M_beg[:,0])
-        p2 = self.p_beg - (self._width/2)*cvector(self._M_beg[:,0])
-        p3 = self.p_end + (self._width/2)*cvector(self._M_end[:,0])
-        p4 = self.p_end - (self._width/2)*cvector(self._M_end[:,0])
-
-        ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
-
-        p1 = pc + (self._width/2)*cvector(self._M_beg[:,0]) - (effective_plot_length/2.0)*cvector(self._M_beg[:,2])
-        p2 = p1 - (self._width)*cvector(self._M_beg[:,0]) 
-        p3 = p2 + (effective_plot_length)*cvector(self._M_beg[:,2])
-        p4 = p3 + (self._width)*cvector(self._M_end[:,0])
-
-        ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
-
-        ax.plot(ps1[2], ps1[0], self.color, alpha=0.2)
-        ax.plot(ps2[2], ps2[0], self.color, alpha=alpha)
-        ax.set_xlabel('z (m)')
-        ax.set_ylabel('x (m)')
-
-        if(axis=='equal'):
-            ax.set_aspect('equal')
-
-    #@property
-    #def z(self):
-    #    return self._z
-    
-
 class Map1D_E(Map1D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, zpos=0, width=0.2):
+    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, zpos=0):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'], zpos=zpos)
-       
-        self._name = name
-        self._type = 'Map1D_E'
-        self._length = self.z[-1]-self.z[0]
-        self._width = 0.2
-        self._height = self._width
-        self._color = '#1f77b4'
+        self.type = 'Map1D_E'
 
     @property
     def energy_gain(self, r=0, field_order =1):
@@ -349,37 +237,17 @@ class Map1D_E(Map1D):
 
 class Map1D_B(Map1D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0, width=0.2):
+    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Bz'], zpos=zpos)
-        
-        self._name = name
-        self._type = 'Map1D_B'
-        self._length = self.z[-1]-self.z[0]
-        self._width = width
-        self._height = self._width
-        self._color = '#2ca02c'
+        self.type = 'Map1D_B'
 
 class Map1D_TM(Map1D):
 
-    def __init__(self, 
-        name, 
-        source_data, 
-        frequency, 
-        gdf2a_bin='$GDF2A_BIN', 
-        column_names={'z':'z', 'Ez':'Ez'}, 
-        kinetic_energy=float('Inf'), 
-        color='darkorange',
-        field_pos='center'):
+    def __init__(self, source_data, frequency, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, kinetic_energy=float('Inf')):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'])
-
-        self._name = name
-        self._type='Map1D_TM'
-        self._length = self.z[-1]-self.z[0]
-        self._width = 0.2
-        self._height = self._width
-        self._color = color
+        self.type='Map1D_TM'
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency
@@ -390,10 +258,6 @@ class Map1D_TM(Map1D):
         else:
             gamma = 1+self._kinetic_energy/mc2
             self._beta=np.sqrt(1 - 1/gamma**2)
-
-        self._field_pos=field_pos
-
-        self.place()
 
     def integrate_Ez(self, phi):
         return integrate_Ez(self.z, self.Ez, self._w, phi, self._beta)
@@ -427,56 +291,7 @@ class Map1D_TM(Map1D):
         self._kinetic_energy = kinetic_energy
         self._beta = KE_to_beta(kinetic_energy)
 
-    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, relative_phase=0, oncrest_phase=0, scale=1):
-
-        z_beg = np.linalg.norm(self._ccs_beg_origin - self._p_beg)
-
-        tfile = tempfile.NamedTemporaryFile()
-        gpt_file = tfile.name
-
-        self.write_element_to_gpt_file(basic_template(gpt_file))
-
-        settings = {'xacc':xacc, 'GBacc':GBacc, 'dtmin':dtmin, 'dtmax':dtmax}
-        settings[f'{self.name}_relative_phase'] = relative_phase
-        settings[f'{self.name}_oncrest_phase'] = oncrest_phase
-        settings[f'{self.name}_scale'] = scale
-
-        G = GPT(gpt_file, ccs_beg=self.ccs_beg)
-        G.set_variables(settings)
-        G.track1_to_z(z_end=z_beg+(self.s_end-self.s_beg), ds=self.s_end-self.s_beg, ccs_beg=self.ccs_beg, ccs_end=self.ccs_end, z0=z_beg, pz0=p, species='electron')
-
-        return G
-   
-
-    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
-
-        """ Auto phases a cavity for a particle entering the fieldmap at time = t with total momentum = p """
-        pass
-
-        #particle = single_particle(t=t, pz=p, species='electron', weight=1)
-
-        #GPT()
-
-    def gpt_lines(self, oncrest_phase=0, relative_phase=0):
-
-        name = self.name
-
-        base_lines = super().gpt_lines()
-        extra_lines = base_lines[:-1]
-        map_line = base_lines[-1].replace(');','')
-
-        extra_lines.append(f'{name}_oncrest_phase = {oncrest_phase};')
-        extra_lines.append(f'{name}_relative_phase = {relative_phase};')
-        extra_lines.append(f'{name}_phase = ({name}_oncrest_phase + {name}_relative_phase)*pi/180;')
-
-        map_line = map_line + f', {name}_phase, '
-
-        extra_lines.append(f'{name}_frequency = {self._frequency};');
-        map_line = map_line + f'2*pi*{name}_frequency);'
-
-        return extra_lines + [map_line]
-
-    def gpt_lines2(self, 
+    def gpt_lines(self, 
         element, 
         gdf_file=None, 
         ccs = 'wcs', 
@@ -531,76 +346,14 @@ class Map2D(GDFFieldMap):
 
         for rc in required_columns:
             assert rc in column_names.values(),f'User must specify a key name for required column {rc}'
-
-    def plot_floor(self, axis=None, alpha=1.0, ax=None):
-
-        f = 0.01
-        zs = getattr(self,'z')
-        Fz = getattr(self,self.fieldstr)
-
-        maxF = max(np.abs(Fz))
-
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zL = z
-                break
-
-        zs = np.flip(zs)
-        Fz = np.flip(Fz)
-
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zR = z
-                break
-
-        effective_plot_length = zR-zL
-
-        if(ax == None):
-            ax = plt.gca()
-
-        pc = 0.5*(self.p_beg + self.p_end)
-
-        max_radius = np.max(self['R'])
-
-        p1 = self.p_beg + max_radius*cvector(self._M_beg[:,0])
-        p2 = self.p_beg - max_radius*cvector(self._M_beg[:,0])
-        p3 = self.p_end + max_radius*cvector(self._M_end[:,0])
-        p4 = self.p_end - max_radius*cvector(self._M_end[:,0])
-
-        ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
-
-        max_radius = np.max(self['R'])
-
-        p1 = self.p_beg + (self._width/2)*cvector(self._M_beg[:,0])
-        p2 = p1 + effective_plot_length*cvector(self._M_beg[:,2])
-        p3 = p2 - (self._width)*self.e1_beg
-        p4 = p3 - effective_plot_length*self.e3_beg
-
-        ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
-
-        ax.plot(ps1[2], ps1[0], self.color, alpha=0.2)
-        ax.plot(ps2[2], ps2[0], self.color, alpha=alpha)
-        ax.set_xlabel('z (m)')
-        ax.set_ylabel('x (m)')
-
-        if(axis=='equal'):
-            ax.set_aspect('equal')
     
 
 class Map2D_E(Map2D):
     
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}, field_pos='center'):
+    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez'])
-        self._name = name
-        self._type = 'Map2D_E'
-        self._length = self.z[-1]-self.z[0]
-        self._width = 0.2
-        self._height = self._width
-        self._color = '#1f77b4'
-        self._field_pos = field_pos
-
-        self.fieldstr='Ez'
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Er'])
+        self.type = 'Map2D_E'
 
     def z(self):
         return np.squeeze(self.z[self.r==0])
@@ -615,16 +368,10 @@ class Map2D_E(Map2D):
 
 class Map2D_B(Map2D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}, field_pos='center'):
+    def __init__(self, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Br', 'Bz'])
-        self._type='Map2D_B'
-        self._name = name
-        self._length = self.z[-1]-self.z[0]
-        self._width = 0.2
-        self._height = self._width
-        self._color = '#2ca02c'
-        self._field_pos = field_pos
+        self.type='Map2D_B'
 
     @property
     def on_axis_Bz(self):
@@ -641,7 +388,7 @@ class Map25D_TM(Map2D):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
 
-        self._type='Map25D_TM'
+        self.type='Map25D_TM'
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency

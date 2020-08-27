@@ -1,5 +1,6 @@
 BASIC_TEMPLATE=[
 'setfile("beam", "gpt_particles.gdf");\n', 
+'time=0.0;'
 '\n', 
 'auto_phase=0.0;\n', 
 'space_charge=0.0;\n', 
@@ -35,9 +36,11 @@ BASIC_TEMPLATE=[
 'Ntout=50.0;\n', 
 'tmax=10e-9;\n', 
 'ZSTART=-0.005;\n', 
-'zminmax("wcs","I",ZSTART,ZSTOP);\n', 
+'zminmax("wcs", "I", ZSTART, ZSTOP);\n', 
 '\n', 
-'tout(0,tmax,tmax/Ntout);\n', 
+'if(Ntout>0) {\n',
+'    tout(time, tmax, tmax/Ntout);\n',
+'}\n' 
 '\n'
 ]
 

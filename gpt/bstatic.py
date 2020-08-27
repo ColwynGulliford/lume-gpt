@@ -9,6 +9,7 @@ from gpt.tools import deg, rad
 from gpt.tools import get_arc
 from gpt.tools import write_ecs
 from gpt.tools import in_ecs
+from gpt.template import basic_template
 
 from matplotlib import pyplot as plt
 
@@ -17,7 +18,13 @@ from numpy.linalg import norm
 from gpt.element import SectorBend
 from gpt.element import Element
 from gpt.element import Quad
+from gpt.element import Beg
 
+from gpt import GPT
+
+import tempfile
+
+from pmd_beamphysics import single_particle
 
 
 c = 299792458  # Speed of light 
@@ -38,10 +45,11 @@ class Sectormagnet(SectorBend):
         b2=0,
         dl=0,
         n_screens=0,
-        species='e',
+        species='electron',
         plot_pole_faces=True,
         color='r',
-        fix=False
+        fix=False,
+        place=False
         ):
 
         assert np.abs(angle)>0 and np.abs(angle)<180, 'Bend angle must be 0 < abs(angle) < 180'
@@ -55,10 +63,12 @@ class Sectormagnet(SectorBend):
 
         self._type = 'Sectormagnet'
 
-        if(species == 'e'):
+        if(species == 'electron'):
             self._q = -1.60217662e-19
         else:
             raise ValueError(f'Unknown particle type: {species}')
+
+        self._species = species
 
         self._B = p/R/c
         self._p = p
@@ -80,6 +90,9 @@ class Sectormagnet(SectorBend):
         self._s_screen=None
 
         self._fix = fix
+
+        if(place):
+            self.place()
 
     @property
     def p(self):
@@ -124,10 +137,15 @@ class Sectormagnet(SectorBend):
     @property
     def n_screens(self):
         return self._n_screens
-    
-    def place(self, previous_element, ds=0):
 
-        super().place(previous_element,ds=ds)
+    @property
+    def species(self):
+        return self._species
+    
+    
+    def place(self, previous_element=Beg(), ds=0):
+
+        super().place(previous_element=previous_element, ds=ds)
         self.set_screens()
   
     def set_screens(self):
@@ -295,13 +313,40 @@ class Sectormagnet(SectorBend):
         else:
             print('No fringe specified, skipping plot.')
 
+    def track_ref(self, p0=1e-15, xacc=6.5, GBacc=5.5, dtmin=1e-14, dtmax=1e-10, Ntout=100):
+
+        dz_ccs_beg = np.linalg.norm( self.p_beg - self._ccs_beg_origin )
+
+        dz_fringe = 0
+
+        if(np.abs(self._b1)>0):
+            dz_fringe = 10.0/self._b1
+        else:
+            dz_fringe = 0
+
+        settings={'xacc':xacc, 'GBacc':GBacc, 'dtmin':dtmin, 'dtmax':dtmax, 'Ntout':Ntout, 'ZSTART': -2*np.sign(dz_ccs_beg-dz_fringe)*dz_ccs_beg-dz_fringe}
+
+        particle = single_particle(z=dz_ccs_beg-dz_fringe, pz=p0, t=0, weight=1, status=1, species=self.species)
+
+        tfile = tempfile.NamedTemporaryFile()
+        gpt_file = tfile.name
+
+        self.write_element_to_gpt_file(basic_template(gpt_file))
+
+        G = GPT(gpt_file, initial_particles=particle, ccs_beg=self.ccs_beg)
+        G.set_variables(settings)
+        G.track1_to_z(z_end=dz_fringe, ds=self.length + 2*dz_fringe, ccs_beg=self.ccs_beg, ccs_end=self.ccs_end, z0=dz_ccs_beg-dz_fringe, pz0=p0, species=self.species)
+
+        #os.remove(gpt_file)
+
+        return G
 
 
 class QuadF(Quad):
 
-    def __init__(self, name, G, length, width=0.2, height=0, angles=[0,0,0], gap=None, b1=0, dl=0, npts=1000):
+    def __init__(self, name, G, length, width=0.2, height=0, angles=[0,0,0], gap=None, b1=0, dl=0, npts=1000, color='b'):
 
-        super().__init__(name, length, width=width, height=height, angles=angles)
+        super().__init__(name, length, width=width, height=height, angles=angles, color=color)
 
         self._G = G
 

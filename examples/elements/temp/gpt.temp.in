@@ -1,0 +1,49 @@
+setfile("beam", "/Users/colwyngulliford/Documents/GitHub/lume-gpt/examples/elements/temp/gpt.particles.gdf");
+time=0.0;
+auto_phase=0.0;
+space_charge=0.0;
+cathode=0.0;
+space_charge_type=1.0;
+RadiusMax=0.04;
+GBacc=5.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=1e-14;
+dtmax=1e-10;
+ZSTOP=3.0;
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+if (space_charge_type == 1) {
+if(cathode == 1) {
+spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+} else {
+spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+}    }
+if (space_charge_type == 2) {
+setrmacrodist("beam","u",tree_code_R,0) ;
+spacecharge3Dtree(tree_code_theta) ;
+}
+}
+Ntout=100;
+tmax=5.151865233350562e-09;
+ZSTART=-0.25;
+zminmax("wcs", "I", ZSTART, ZSTOP);
+tout(time, tmax, tmax/Ntout);
+b1_end_x=0.2928932188134524;
+b1_end_y=0.0;
+b1_end_z=0.7071067811865475;
+ccs("wcs", b1_end_x, b1_end_y, b1_end_z, 0.7071067811865477, 0.0, -0.7071067811865475, 0, 1, 0, "b1_ccs_end");
+b1_radius=1.0;
+b1_Bfield=0.03335640951981523;
+b1_phi_in=22.5;
+b1_phi_out=22.5;
+b1_fringe_dl=0.0;
+b1_fringe_b1=40.0;
+b1_fringe_b2=0.0;
+sectormagnet_fix("wcs", "b1_ccs_end", b1_radius, b1_Bfield, b1_phi_in/deg, b1_phi_out/deg, b1_fringe_dl, b1_fringe_b1, b1_fringe_b2);
+screen("b1_ccs_end", 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25);
