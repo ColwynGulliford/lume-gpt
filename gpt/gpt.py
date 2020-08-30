@@ -86,6 +86,7 @@ class GPT:
         self.configure_gpt(workdir=self.workdir)
  
     def configure_gpt(self, input_filePath=None, workdir=None):
+
         """ Configure the GPT object """
         if input_filePath:
             self.load_input(input_filePath)
@@ -501,7 +502,7 @@ class GPT:
             outstr = outstr+ "\n   Template location: "+self.original_path
 
         if(self.workdir):
-            outstr = outstr+ "\n   Top leve work dir: "+self.workdir
+            outstr = outstr+ "\n   Top level work dir: "+self.workdir
  
         if(self.use_tempdir):
             outstr = outstr+f"\n   Use temp directory: {self.use_tempdir}"
@@ -567,7 +568,8 @@ class GPT:
         GBacc=6.5, 
         workdir=None,
         use_tempdir=True,
-        n_screen=1):
+        n_screen=1,
+        s_beg=0):
 
         return track1_in_ccs(self, 
             z_beg=z_beg, 
@@ -586,7 +588,8 @@ class GPT:
             GBacc=GBacc,
             workdir=workdir,
             use_tempdir=use_tempdir,
-            n_screen=n_screen)
+            n_screen=n_screen,
+            s_beg=s_beg)
 
     def get_zminmax_line(self, z_beg, z_end):
         return get_zminmax_line(self, z_beg, z_end)
@@ -734,15 +737,12 @@ def track1_in_ccs(gpt_object,
     GBacc=6.5,
     workdir=None,
     use_tempdir=True,
-    n_screen=1):
+    n_screen=1,
+    s_beg=0):
 
     assert n_screen >= 1, 'n_screen must be >= 1'
 
     settings = {'time':t0, 'xacc':xacc, 'GBacc':GBacc, 'ZSTART':z_beg, 'ZSTOP':z_end}
-
-    gpt_object.workdir=workdir
-    gpt_object.use_tempdir=use_tempdir
-    gpt_object.configure()
 
     gpt_object.initial_particles = single_particle(x=x0, px=px0, y=y0, py=py0, z=z_beg, pz=pz0, t=t0, weight=weight, status=status, species=species)
 
@@ -750,13 +750,13 @@ def track1_in_ccs(gpt_object,
     gpt_object.get_zminmax_line(z_beg, z_end)
 
     if(n_screen==1):
-        gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end))
+        gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end, s_beg=s_beg))
 
     else:
         zs = np.linspace(z_beg, z_end, n_screen)
         for z in zs:
-            gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end))
-    
+            gpt_object.input['lines'].append(get_screen_line(ccs, z=z, s_beg=s_beg))
+
     gpt_object.run()
 
     return gpt_object
@@ -779,7 +779,9 @@ def track1(gpt_object, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1
     return track(gpt_object, particles, s=s)
 
 
-def get_screen_line(ccs='wcs', r=[0,0,0], e1=[1,0,0], e2=[0,1,0], z=0):
+def get_screen_line(ccs='wcs', r=[0,0,0], e1=[1,0,0], e2=[0,1,0], z=0, s_beg=0):
+
+    scr_line = f'screen("{ccs}", {r[0]}, {r[1]}, {r[2]}, {e1[0]}, {e1[1]}, {e1[2]}, {e2[0]}, {e2[1]}, {e2[2]}, {z});'
 
     return f'screen("{ccs}", {r[0]}, {r[1]}, {r[2]}, {e1[0]}, {e1[1]}, {e1[2]}, {e2[0]}, {e2[1]}, {e2[2]}, {z});'
 

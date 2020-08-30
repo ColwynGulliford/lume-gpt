@@ -9,6 +9,7 @@ from gpt import tools
 from gpt.tools import cvector
 from gpt.element import Element
 from gpt.template import basic_template
+from gpt.template import ztrack1_template
 
 from matplotlib import pyplot as plt
 
@@ -416,6 +417,7 @@ class Map1D_TM(Map1D):
         source_data, 
         frequency, 
         scale=1,
+        relative_phase=0,
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'z':'z', 'Ez':'Ez'}, 
         kinetic_energy=float('Inf'), 
@@ -444,7 +446,7 @@ class Map1D_TM(Map1D):
         self._field_pos=field_pos
         self._oncrest_phase=0
         self._scale=1
-        self._relative_phase=0
+        self._relative_phase=relative_phase
         self._scale=scale
 
         self.place()
@@ -504,16 +506,16 @@ class Map1D_TM(Map1D):
         ax.set_xlabel('s (m)')
 
 
-    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, use_tempfile=True, n_screen=100):
-        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen)
+    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
 
-    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0):
-        return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase)
+    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
+        return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase, workdir=workdir, n_screen=n_screen)
 
-    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
-        return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax)
+    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
+        return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen)
 
-    def gpt_lines(self, oncrest_phase=0, relative_phase=0):
+    def gpt_lines(self):
 
         name = self.name
 
@@ -521,8 +523,8 @@ class Map1D_TM(Map1D):
         extra_lines = base_lines[:-1]
         map_line = base_lines[-1].replace(');','')
 
-        extra_lines.append(f'{name}_oncrest_phase = {oncrest_phase};')
-        extra_lines.append(f'{name}_relative_phase = {relative_phase};')
+        extra_lines.append(f'{name}_oncrest_phase = {self._oncrest_phase};')
+        extra_lines.append(f'{name}_relative_phase = {self._relative_phase};')
         extra_lines.append(f'{name}_phase = ({name}_oncrest_phase + {name}_relative_phase)*pi/180;')
 
         map_line = map_line + f', {name}_phase, '
@@ -823,42 +825,33 @@ class Map25D_TM(Map2D):
         return lines
 
 
-    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, use_tempfile=True, n_screen=1):
-        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, use_tempfile=use_tempfile, n_screen=n_screen)
+    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
 
-    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0):
-        return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase)
+    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
+        return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase, workdir=workdir, n_screen=n_screen)
 
-    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
-        return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax)
+    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
+        return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen)
 
 
 
-def track_on_axis(element, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, use_tempfile=True):
 
-    if(use_tempfile):
-        tfile = tempfile.NamedTemporaryFile()
-        gpt_file = tfile.name
+def track_on_axis(element, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+
+    if(workdir is None):
+        tempdir = tempfile.TemporaryDirectory(dir=workdir)  
+        gpt_file = os.path.join(tempdir.name, f'{element.name}.gpt.in')
+        workdir = tempdir.name
+
     else:
-        gpt_file = 'gpt.temp.in'
 
-    element.write_element_to_gpt_file(basic_template(gpt_file))
+        gpt_file = os.path.join(workdir, f'{element.name}.gpt.in' )
+ 
+    element.write_element_to_gpt_file(ztrack1_template(gpt_file))
 
-    settings = {'xacc':xacc, 'GBacc':GBacc, 'dtmin':dtmin, 'dtmax':dtmax}
-    #settings[f'{cavity.name}_relative_phase'] = cavity._relative_phase
-    #settings[f'{cavity.name}_oncrest_phase'] = cavity._oncrest_phase
-    #settings[f'{cavity.name}_scale'] = cavity._scale
-        #settings[f'{}']
-
-    # Need to attach this to the object. Otherwise it will go out of scope.
-    tempdir = tempfile.TemporaryDirectory(dir=workdir)
-            
-    
-
-    G = GPT(ccs_beg=element.ccs_beg)
-    
-    print(G.workdir)
-    G.set_variables(settings)
+    G = GPT(gpt_file, ccs_beg=element.ccs_beg, workdir=workdir, use_tempdir=False)
+    G.set_variables({'xacc':xacc, 'GBacc':GBacc, 'dtmin':dtmin, 'dtmax':dtmax})
 
     z_beg = np.linalg.norm(element._ccs_beg_origin - element._p_beg)  
 
@@ -872,11 +865,12 @@ def track_on_axis(element, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n
     species='electron',
     xacc=xacc,
     GBacc=GBacc,
-    n_screen=n_screen)
+    n_screen=n_screen, 
+    s_beg=element.s_beg)
 
     return G
 
-def autophase_track1(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0):
+def autophase_track1(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
 
     cavity._oncrest_phase = oncrest_phase
 
@@ -884,14 +878,16 @@ def autophase_track1(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8,
         xacc=xacc, 
         GBacc=GBacc, 
         dtmin=dtmin, 
-        dtmax=dtmax)
+        dtmax=dtmax,
+        workdir=workdir,
+        n_screen=n_screen)
 
-    if(G.n_screen==1):
+    if(G.n_screen>=1):
         return -G.screen[-1]['mean_energy']
     else:
         return 8e88
 
-def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
+def autophase(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
 
     """ Auto phases a cavity for a particle entering the fieldmap at time = t with total momentum = p """
 
@@ -900,6 +896,7 @@ def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
     cavity._t_beg = t
 
     relative_phase = cavity._relative_phase
+
     cavity._relative_phase=0
 
     oncrest_phase = brent(lambda x: cavity.autophase_track1(t, p,  
@@ -907,7 +904,9 @@ def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
         GBacc=GBacc, 
         dtmin=dtmin, 
         dtmax=dtmax,
-        oncrest_phase=x), )
+        oncrest_phase=x,
+        workdir=workdir,
+        n_screen=1), )
 
     cavity._oncrest_phase = oncrest_phase
 
@@ -915,9 +914,11 @@ def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
         xacc=xacc, 
         GBacc=GBacc, 
         dtmin=dtmin, 
-        dtmax=dtmax,)
+        dtmax=dtmax,
+        workdir=workdir,
+        n_screen=1)
 
-    if(G.n_screen==1):
+    if(G.n_screen>=1):
         if(G.screen[-1]['mean_pz']<0):
             raise ValueError(f'Autophasing {cavity._name} failed: particle has pz<0 at oncresst phase.')
     else:
@@ -929,16 +930,18 @@ def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
         xacc=xacc, 
         GBacc=GBacc, 
         dtmin=dtmin, 
-        dtmax=dtmax,)
+        dtmax=dtmax,
+        workdir=workdir,
+        n_screen=n_screen)
 
-    if(G.n_screen==1):
+    if(G.n_screen>=1):
         if(G.screen[-1]['mean_pz']<0):
             raise ValueError(f'Autophasing {cavity._name} failed: particle has pz<0 at relative phase.')
     else:
         raise ValueError(f'Autophasing {cavity._name} failed: no data found when cavity tracked with relative phase = {relative_phase}.')
 
-    self._momentum_end=G.screen[-1]['mean_p']
-    self._t_end=G.screen[-1]['mean_t']
+    cavity._momentum_end=G.screen[-1]['mean_p']
+    cavity._t_end=G.screen[-1]['mean_t']
 
     return G   
 

@@ -294,9 +294,12 @@ class Element:
 
         assert os.path.exists(gptfile)
 
+        #print(self._relative_phase, self._oncrest_phase)
+
         with open(gptfile, 'a') as fid:
             lines = self.gpt_lines()
             for line in lines:
+                #print(line)
                 fid.write(line+'\n')
 
 
