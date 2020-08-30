@@ -495,8 +495,11 @@ class GPT:
     def __str__(self):
 
         outstr = '\nGPT object:'
-        outstr = outstr+ "\n   Original input file: "+self.original_input_file
-        outstr = outstr+ "\n   Template location: "+self.original_path
+
+        if(self.configured):
+            outstr = outstr+ "\n   Original input file: "+self.original_input_file
+            outstr = outstr+ "\n   Template location: "+self.original_path
+
         if(self.workdir):
             outstr = outstr+ "\n   Top leve work dir: "+self.workdir
  
@@ -508,20 +511,22 @@ class GPT:
         # Run control
         outstr = outstr+"\n\nRun Control"
         outstr = outstr+f"\n   Run configured: {self.configured}"
-        outstr = outstr+f"\n   Work location: {self.path}"
-        outstr = outstr+f"\n   Timeout: {self.timeout} (sec)"
 
-        # Results
-        outstr = outstr+"\n\nResults"
-        outstr = outstr+f"\n   Finished: {self.finished}"
-        outstr = outstr+f"\n   Error occured: {self.error}"
-        if(self.error):
-            outstr=outstr+f'\n   Cause: {self.output["why_error"]}'
-            errline = self.get_syntax_error_line(self.output["why_error"])
-            if(errline):
-                outstr = outstr+f'\n   Suspected input file line: "{errline}"'
-        rtime = self.output['run_time']
-        outstr = outstr+f'\n   Run time: {rtime} (sec)'
+        if(self.configured):
+            outstr = outstr+f"\n   Work location: {self.path}"
+            outstr = outstr+f"\n   Timeout: {self.timeout} (sec)"
+
+            # Results
+            outstr = outstr+"\n\nResults"
+            outstr = outstr+f"\n   Finished: {self.finished}"
+            outstr = outstr+f"\n   Error occured: {self.error}"
+            if(self.error):
+                outstr=outstr+f'\n   Cause: {self.output["why_error"]}'
+                errline = self.get_syntax_error_line(self.output["why_error"])
+                if(errline):
+                    outstr = outstr+f'\n   Suspected input file line: "{errline}"'
+            rtime = self.output['run_time']
+            outstr = outstr+f'\n   Run time: {rtime} (sec)'
         
         #outstr = outstr+f"\n
         #outstr = outstr+f'\n   Log: {self.log}\n'
@@ -542,26 +547,49 @@ class GPT:
     def track1(self, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, s=None, species='electron', output='tout'):
         return track1(self, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, species=species, s=s, output=output)
 
-    def track1_to_z(self, 
+    def track1_to_z(self, z_end, ds=0, ccs_beg='wcs', ccs_end='wcs', x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1, status=1, species='electron'):
+        return track1_to_z(self, z_end=z_end, ds=ds, ccs_beg=ccs_beg, ccs_end=ccs_end, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, weight=weight, status=status, species=species)
+
+    def track1_in_ccs(self, 
+        z_beg=0, 
         z_end=0, 
-        ds=None,
-        ccs_beg='wcs', 
-        ccs_end='wcs', 
-        x0=0,
+        ccs='wcs', 
+        x0=0, 
         px0=0, 
         y0=0, 
         py0=0, 
-        z0=0, 
         pz0=1e-15, 
         t0=0, 
         weight=1, 
         status=1, 
         species='electron', 
-        Ntout=100,
-        xacc=6.5,
-        GBacc=6.5):
-    
-        return track1_to_z(self, z_end=z_end, ds=ds, ccs_beg=ccs_beg, ccs_end=ccs_end, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, weight=weight, status=status, species=species)
+        xacc=6.5, 
+        GBacc=6.5, 
+        workdir=None,
+        use_tempdir=True,
+        n_screen=1):
+
+        return track1_in_ccs(self, 
+            z_beg=z_beg, 
+            z_end=z_end, 
+            ccs=ccs, 
+            x0=x0, 
+            px0=px0, 
+            y0=y0, 
+            py0=py0, 
+            pz0=pz0, 
+            t0=t0, 
+            weight=weight, 
+            status=status, 
+            species=species,
+            xacc=xacc,
+            GBacc=GBacc,
+            workdir=workdir,
+            use_tempdir=use_tempdir,
+            n_screen=n_screen)
+
+    def get_zminmax_line(self, z_beg, z_end):
+        return get_zminmax_line(self, z_beg, z_end)
 
     def copy(self):
         """
@@ -665,6 +693,8 @@ def track1_to_z(gpt_object,
 
     particle = single_particle(x=x0, px=px0, y=y0, py=py0, z=z0, pz=pz0, t=t0, weight=weight, status=status, species=species)
 
+    #print(particle['mean_z'], particle['mean_t'])
+
     time = particle['mean_t']
 
     gpt_object.ccs_beg = ccs_beg
@@ -674,7 +704,7 @@ def track1_to_z(gpt_object,
     
     delta_t = ds/c/particle['mean_beta_z']
 
-    settings = {'time':time, 'tmax':time+1.2*delta_t, 'Ntout':Ntout, 'xacc':xacc, 'GBacc':GBacc}
+    settings = {'time':time, 'tmax':time+1.2*delta_t, 'Ntout':Ntout, 'xacc':xacc, 'GBacc':GBacc, 'ZSTOP':z_end+2*ds}
 
     gpt_object.initial_particles = particle
     gpt_object.set_variables(settings)
@@ -687,38 +717,79 @@ def track1_to_z(gpt_object,
     else:
         return None
 
+def track1_in_ccs(gpt_object, 
+    z_beg=0, 
+    z_end=0, 
+    ccs='wcs', 
+    x0=0, 
+    px0=0, 
+    y0=0, 
+    py0=0, 
+    pz0=1e-15, 
+    t0=0, 
+    weight=1, 
+    status=1, 
+    species='electron',
+    xacc=6.5,
+    GBacc=6.5,
+    workdir=None,
+    use_tempdir=True,
+    n_screen=1):
 
-def track(gpt_object, particles, s=None, output='tout'):
+    assert n_screen >= 1, 'n_screen must be >= 1'
+
+    settings = {'time':t0, 'xacc':xacc, 'GBacc':GBacc, 'ZSTART':z_beg, 'ZSTOP':z_end}
+
+    gpt_object.workdir=workdir
+    gpt_object.use_tempdir=use_tempdir
+    gpt_object.configure()
+
+    gpt_object.initial_particles = single_particle(x=x0, px=px0, y=y0, py=py0, z=z_beg, pz=pz0, t=t0, weight=weight, status=status, species=species)
+
+    gpt_object.set_variables(settings)
+    gpt_object.get_zminmax_line(z_beg, z_end)
+
+    if(n_screen==1):
+        gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end))
+
+    else:
+        zs = np.linspace(z_beg, z_end, n_screen)
+        for z in zs:
+            gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end))
+    
+    gpt_object.run()
+
+    return gpt_object
+    
+
+def track(gpt_object, particles, s=None):
 
     """ Convenience function for tracking a particle set and returning the final tout or screen as particle group """
-
-    assert output=='tout' or output=='screen', 'gpt.track -> output must be "tout" or "screen".'
 
     gpt_object.initial_particles = particles
     gpt_object.run()
 
-    if('particles' in gpt_object.output):
-
-        if(output == 'tout'):
-            pg = gpt_object.tout[-1]
-        elif(output == 'screen'):
-            pg = gpt_object.screen[-1]
-
-        return pg
-    else:
-        return []
+    return gpt_object
 
 def track1(gpt_object, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1, status=1, species=None, s=None, output='tout'):
 
     """ Convenience function for tracking a single particle and returning the final tout or screen as particle group """ 
 
     particles = single_particle(x=x0, px=px0, y=y0, py=py0, z=z0, pz=pz0, t=t0, weight=weight, status=status, species=species)
-    return track(gpt_object, particles, s=s, output=output)
+    return track(gpt_object, particles, s=s)
 
 
 def get_screen_line(ccs='wcs', r=[0,0,0], e1=[1,0,0], e2=[0,1,0], z=0):
 
     return f'screen("{ccs}", {r[0]}, {r[1]}, {r[2]}, {e1[0]}, {e1[1]}, {e1[2]}, {e2[0]}, {e2[1]}, {e2[2]}, {z});'
+
+def get_zminmax_line(gpt_object, z_beg, z_end, ccs='wcs'):
+
+    zminmax_line = f'zminmax("{ccs}", "I", {z_beg}, {z_end});'
+
+    for ii,line in enumerate(gpt_object.input['lines']):
+        if('zminmax' in line):
+            gpt_object.input[ii]=zminmax_line
 
     
 

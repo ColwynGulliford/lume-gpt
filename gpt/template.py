@@ -12,8 +12,7 @@ BASIC_TEMPLATE=[
 'accuracy(GBacc, xacc);\n', 
 'dtmin=1e-16;\n', 
 'dtmax=1e-10;\n', 
-'\n', 
-'ZSTOP=3;\n', 
+'\n',  
 'Alpha=1.0;\n', 
 'Fn=0.5;\n', 
 'verror=0.005;\n', 
@@ -36,6 +35,7 @@ BASIC_TEMPLATE=[
 'Ntout=50.0;\n', 
 'tmax=10e-9;\n', 
 'ZSTART=-0.005;\n', 
+'ZSTOP=3;\n',
 'zminmax("wcs", "I", ZSTART, ZSTOP);\n', 
 '\n', 
 'if(Ntout>0) {\n',
@@ -44,6 +44,32 @@ BASIC_TEMPLATE=[
 '\n'
 ]
 
+ZTRACK1_TEMPLATE=[
+'setfile("beam", "gpt_particles.gdf");\n', 
+'time=0.0;'
+'\n', 
+'RadiusMax=0.04;\n', 
+'GBacc=5.5;\n', 
+'xacc=6.5;\n', 
+'accuracy(GBacc, xacc);\n', 
+'dtmin=1e-16;\n', 
+'dtmax=1e-10;\n', 
+'\n',  
+'tmax=1;\n', 
+'ZSTART=-0.005;\n', 
+'ZSTOP=3;\n',
+'zminmax("wcs", "I", ZSTART, ZSTOP);\n', 
+'\n'
+]
+
+
+def template(template_type='basic', filename='gpt.temp.in'):
+
+    template_type = template_type.upper()+'_TEMPLATE'
+
+    #with open()
+
+
 def basic_template(filename='gpt.temp.in'):
 
     with open(filename, 'w') as fid:
@@ -51,3 +77,14 @@ def basic_template(filename='gpt.temp.in'):
             fid.write(line+'\n')
 
     return filename
+
+
+def ztrack1_template(filename='gpt.temp.in'):
+
+    with open(filename, 'w') as fid:
+        for line in ZTRACK1_TEMPLATE:
+            fid.write(line+'\n')
+
+    return filename
+
+

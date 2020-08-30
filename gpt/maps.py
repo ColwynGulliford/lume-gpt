@@ -14,6 +14,8 @@ from matplotlib import pyplot as plt
 
 from pmd_beamphysics import single_particle
 
+from scipy.optimize import brent
+
 c = 299792458
 mc2 = 0.51e6
 
@@ -147,6 +149,9 @@ class GDFFieldMap(Element):
         for component in self.field_components:
             setattr(self, column_names[component], ndata[:,columns.index(component)])
 
+    def invert_column_names(self, var):
+        pass
+
     def __getitem__(self, key):
 
         if(key in self.coordinates):
@@ -154,6 +159,16 @@ class GDFFieldMap(Element):
         elif(key in self.field_components):
             return np.transpose(np.reshape(getattr(self, self.column_names[key]), self.data_shape, 'F'), self.ordering)
         else:
+
+            for k, v in self.column_names.items():
+                
+                if(key==v):
+                    
+                    if(k in self.coordinates):
+                        return np.unique(getattr(self, self.column_names[k]))
+                    elif(k in self.field_components):
+                        return np.transpose(np.reshape(getattr(self, self.column_names[k]), self.data_shape, 'F'), self.ordering)
+
             print(f'Field map does not contain item "{key}"')
 
     def scale_coordinates(self, scale):
@@ -181,7 +196,7 @@ class GDFFieldMap(Element):
         os.system(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}')
         os.system(f'rm {temp_ascii_file}')
 
-    def gpt_lines(self, ccs=None, gdf_file=None, e1=[1, 0, 0], e2=[0, 1, 0], scale =1, user_vars=[]):
+    def gpt_lines(self, ccs=None, gdf_file=None, e1=[1, 0, 0], e2=[0, 1, 0], scale =None, user_vars=[]):
 
         element = self._name
 
@@ -237,6 +252,9 @@ class GDFFieldMap(Element):
         for ii, rc in enumerate(self.required_columns):
             map_line = map_line + f'"{inverse_column_names[rc]}", '
         
+        if(scale is None):
+            scale = self._scale
+
         #if('scale' in user_vars):
         extra_lines['scale'] = f'{element}_scale = {scale};'
         map_line = map_line + f'{element}_scale);'
@@ -274,8 +292,8 @@ class Map1D(GDFFieldMap):
     def plot_floor(self, axis=None, alpha=1.0, ax=None):
 
         f = 0.01
-        zs = getattr(self,'z')
-        Fz = getattr(self,self.fieldstr)
+        zs = getattr(self, 'z')
+        Fz = getattr(self, self.fieldstr)
 
         maxF = max(np.abs(Fz))
 
@@ -299,17 +317,17 @@ class Map1D(GDFFieldMap):
 
         pc = 0.5*(self.p_beg + self.p_end)
 
-        p1 = self.p_beg + (self._width/2)*cvector(self._M_beg[:,0])
-        p2 = self.p_beg - (self._width/2)*cvector(self._M_beg[:,0])
-        p3 = self.p_end + (self._width/2)*cvector(self._M_end[:,0])
-        p4 = self.p_end - (self._width/2)*cvector(self._M_end[:,0])
+        p1 = self.p_beg + (self._width/2)*self.e1_beg
+        p2 = self.p_beg - (self._width/2)*self.e1_beg
+        p3 = self.p_end + (self._width/2)*self.e1_beg
+        p4 = self.p_end - (self._width/2)*self.e1_beg
 
         ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
 
-        p1 = pc + (self._width/2)*cvector(self._M_beg[:,0]) - (effective_plot_length/2.0)*cvector(self._M_beg[:,2])
-        p2 = p1 - (self._width)*cvector(self._M_beg[:,0]) 
-        p3 = p2 + (effective_plot_length)*cvector(self._M_beg[:,2])
-        p4 = p3 + (self._width)*cvector(self._M_end[:,0])
+        p1 = pc + (self._width/2)*self.e1_beg - (effective_plot_length/2.0)*self.e3_beg
+        p2 = p1 - (self._width)*self.e1_beg
+        p3 = p2 + (effective_plot_length)*self.e3_beg
+        p4 = p3 + (self._width)*self.e1_beg
 
         ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
 
@@ -349,7 +367,7 @@ class Map1D_E(Map1D):
 
 class Map1D_B(Map1D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0, width=0.2):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0, width=0.2, field_pos='center', scale=1):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Bz'], zpos=zpos)
         
@@ -359,6 +377,37 @@ class Map1D_B(Map1D):
         self._width = width
         self._height = self._width
         self._color = '#2ca02c'
+        self._field_pos = 'center'
+        self._scale=scale
+
+        self.place()
+
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        if(self._field_pos=='center'):
+            zoff = self._length/2.0
+        elif(self._field_pos=='end'):
+            zoff = self._length
+        else:
+            zoff = 0
+
+        zs = self.s_beg + zoff + self['z']
+
+        Bz = self['Bz']
+
+        if(normalize):
+            Bz = Bz/np.max(np.abs(Bz))
+        else:
+            Bz = self._scale*Bz
+
+        ax.plot(zs, Bz, self._color)
+        ax.set_xlabel('s (m)')
+
+        
+
 
 class Map1D_TM(Map1D):
 
@@ -366,6 +415,7 @@ class Map1D_TM(Map1D):
         name, 
         source_data, 
         frequency, 
+        scale=1,
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'z':'z', 'Ez':'Ez'}, 
         kinetic_energy=float('Inf'), 
@@ -392,6 +442,10 @@ class Map1D_TM(Map1D):
             self._beta=np.sqrt(1 - 1/gamma**2)
 
         self._field_pos=field_pos
+        self._oncrest_phase=0
+        self._scale=1
+        self._relative_phase=0
+        self._scale=scale
 
         self.place()
 
@@ -427,35 +481,37 @@ class Map1D_TM(Map1D):
         self._kinetic_energy = kinetic_energy
         self._beta = KE_to_beta(kinetic_energy)
 
-    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, relative_phase=0, oncrest_phase=0, scale=1):
+    def plot_field_profile(self, ax=None, normalize=False):
 
-        z_beg = np.linalg.norm(self._ccs_beg_origin - self._p_beg)
+        if(ax == None):
+            ax = plt.gca()
 
-        tfile = tempfile.NamedTemporaryFile()
-        gpt_file = tfile.name
+        if(self._field_pos=='center'):
+            zoff = self._length/2.0
+        elif(self._field_pos=='end'):
+            zoff = self._length
+        else:
+            zoff = 0
 
-        self.write_element_to_gpt_file(basic_template(gpt_file))
+        zs = self.s_beg + zoff + self['z']
 
-        settings = {'xacc':xacc, 'GBacc':GBacc, 'dtmin':dtmin, 'dtmax':dtmax}
-        settings[f'{self.name}_relative_phase'] = relative_phase
-        settings[f'{self.name}_oncrest_phase'] = oncrest_phase
-        settings[f'{self.name}_scale'] = scale
+        Ez = self['Ez']
 
-        G = GPT(gpt_file, ccs_beg=self.ccs_beg)
-        G.set_variables(settings)
-        G.track1_to_z(z_end=z_beg+(self.s_end-self.s_beg), ds=self.s_end-self.s_beg, ccs_beg=self.ccs_beg, ccs_end=self.ccs_end, z0=z_beg, pz0=p, species='electron')
+        if(normalize):
+            Ez = Ez/np.max(np.abs(Ez))
 
-        return G
-   
+        ax.plot(zs, Ez, self._color)
+        ax.set_xlabel('s (m)')
+
+
+    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, use_tempfile=True, n_screen=100):
+        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen)
+
+    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0):
+        return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase)
 
     def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
-
-        """ Auto phases a cavity for a particle entering the fieldmap at time = t with total momentum = p """
-        pass
-
-        #particle = single_particle(t=t, pz=p, species='electron', weight=1)
-
-        #GPT()
+        return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax)
 
     def gpt_lines(self, oncrest_phase=0, relative_phase=0):
 
@@ -476,47 +532,6 @@ class Map1D_TM(Map1D):
 
         return extra_lines + [map_line]
 
-    def gpt_lines2(self, 
-        element, 
-        gdf_file=None, 
-        ccs = 'wcs', 
-        r=[0, 0, 0], 
-        e1=[1, 0, 0], 
-        e2=[0, 1, 0], 
-        scale =1, 
-        oncrest_phase=0, 
-        relative_phase=0, 
-        auto_phase_index=None,
-        user_vars=[]):
-
-        if(auto_phase_index is not None and 'scale' not in user_vars):
-            user_vars.append('scale')
-
-        base_lines = super().gpt_lines(element, gdf_file=gdf_file, ccs=ccs, r=r, e1=e1, e2=e2, scale=scale, user_vars=user_vars)
-
-        extra_lines = base_lines[:-1]
-        map_line = base_lines[-1].replace(');','')
-
-        extra_lines.append(f'{element}_oncrest_phase = {oncrest_phase};')
-        extra_lines.append(f'{element}_relative_phase = {relative_phase};')
-        extra_lines.append(f'{element}_phase = ({element}_oncrest_phase + {element}_relative_phase)*pi/180;')
-        extra_lines.append(f'{element}_gamma = 1;')
-
-        if(auto_phase_index is not None):
-            extra_lines.append(f'phasing_amplitude_{auto_phase_index} = {element}_scale;')
-            extra_lines.append(f'phasing_on_crest_{auto_phase_index} = {element}_oncrest_phase;')
-            extra_lines.append(f'phasing_relative_{auto_phase_index}  = {element}_relative_phase;')
-            extra_lines.append(f'phasing_gamma_{auto_phase_index} = {element}_gamma;')
-
-        map_line = map_line + f', {element}_phase, '
-
-        if('frequency' in user_vars):
-            extra_lines.append(f'{element}_frequency = {self._frequency};');
-            map_line = map_line + f'2*pi*{element}_frequency);'
-        else:
-            map_line = map_line + f'{2*math.pi*self._frequency});'
-
-        return extra_lines + [map_line]
 
 class Map2D(GDFFieldMap):
 
@@ -562,19 +577,24 @@ class Map2D(GDFFieldMap):
 
         max_radius = np.max(self['R'])
 
-        p1 = self.p_beg + max_radius*cvector(self._M_beg[:,0])
-        p2 = self.p_beg - max_radius*cvector(self._M_beg[:,0])
-        p3 = self.p_end + max_radius*cvector(self._M_end[:,0])
-        p4 = self.p_end - max_radius*cvector(self._M_end[:,0])
+        if(max_radius is None):
+            max_radius = np.max(self['r'])
+
+        pc = 0.5*(self.p_beg + self.p_end)
+
+        p1 = self.p_beg + (self._width/2)*self.e1_beg
+        p2 = self.p_beg - (self._width/2)*self.e1_beg
+        p3 = self.p_end + (self._width/2)*self.e1_beg
+        p4 = self.p_end - (self._width/2)*self.e1_beg
 
         ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
 
         max_radius = np.max(self['R'])
 
-        p1 = self.p_beg + (self._width/2)*cvector(self._M_beg[:,0])
-        p2 = p1 + effective_plot_length*cvector(self._M_beg[:,2])
-        p3 = p2 - (self._width)*self.e1_beg
-        p4 = p3 - effective_plot_length*self.e3_beg
+        p1 = pc + (self._width/2)*self.e1_beg - (effective_plot_length/2.0)*self.e3_beg
+        p2 = p1 - (self._width)*self.e1_beg
+        p3 = p2 + (effective_plot_length)*self.e3_beg
+        p4 = p3 + (self._width)*self.e1_beg
 
         ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
 
@@ -585,6 +605,35 @@ class Map2D(GDFFieldMap):
 
         if(axis=='equal'):
             ax.set_aspect('equal')
+
+        return ax
+
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        if(self._field_pos=='center'):
+            zoff = self._length/2.0
+        elif(self._field_pos=='end'):
+            zoff = self._length
+        else:
+            zoff = 0
+
+        zs = self.z
+        Fz = self.on_axis_Ez
+
+        zs = self.s_beg + zoff + self['z']
+
+        if(normalize):
+            Fz = np.abs(Fz/np.max(np.abs(Fz)))
+
+        ax.plot(zs, Fz, self._color)
+        ax.set_xlabel('s (m)')
+
+        if(not normalize):
+            ax.set_xlabel('z (m)')
+            ax.set_ylabel('$E_z$ (V/m)')
     
 
 class Map2D_E(Map2D):
@@ -613,11 +662,35 @@ class Map2D_E(Map2D):
     def on_axis_integral(self):
         return np.trapz(self.on_axis_Ez, self.z[self.r==0])
 
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        if(self._field_pos=='center'):
+            zoff = self._length/2.0
+        elif(self._field_pos=='end'):
+            zoff = self._length
+        else:
+            zoff = 0
+
+        zs = self.z
+        Fz = self.on_axis_Ez
+
+        zs = self.s_beg + zoff + self['z']
+
+        if(normalize):
+            Fz = np.abs(Fz/np.max(np.abs(Fz)))
+
+        ax.plot(zs, Fz, self._color)
+        ax.set_xlabel('s (m)')
+
 class Map2D_B(Map2D):
 
     def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}, field_pos='center'):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Br', 'Bz'])
+
         self._type='Map2D_B'
         self._name = name
         self._length = self.z[-1]-self.z[0]
@@ -633,15 +706,29 @@ class Map2D_B(Map2D):
     @property
     def on_axis_integral(self):
         return np.trapz(self.on_axis_Bz, self.z[self.r==0])
-    
 
 class Map25D_TM(Map2D):
 
-    def __init__(self, source_data, frequency, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, kinetic_energy=float('Inf')):
+    def __init__(self, 
+        name,
+        source_data, 
+        frequency, 
+        scale=1,
+        relative_phase=0,
+        gdf2a_bin='$GDF2A_BIN', 
+        column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, 
+        kinetic_energy=float('Inf'),
+        field_pos='center',
+        k=0,
+        color='darkorange'):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
 
+        self._name=name
         self._type='Map25D_TM'
+
+        self._scale = scale
+        self._relative_phase = relative_phase
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency
@@ -652,6 +739,21 @@ class Map25D_TM(Map2D):
         else:
             gamma = 1+self._kinetic_energy/mc2
             self._beta=np.sqrt(1 - 1/gamma**2)
+
+        self._field_pos=field_pos
+        self._oncrest_phase=0
+
+        self._length = self.z[-1]-self.z[0]
+        self._width = 0.2
+        self._height = self._width
+        self._color = color
+
+        self._k=k
+
+        self.fieldstr='Ez'
+        self.rstr = 'r'
+
+        self.place()
 
     @property
     def on_axis_Ez(self):
@@ -689,54 +791,154 @@ class Map25D_TM(Map2D):
         self._kinetic_energy = kinetic_energy
         self._beta = KE_to_beta(kinetic_energy)
 
-    def gpt_lines(self, 
-        element, 
-        gdf_file=None, 
-        ccs = 'wcs', 
-        r=[0, 0, 0], 
-        e1=[1, 0, 0], 
-        e2=[0, 1, 0], 
-        scale =1, 
-        oncrest_phase=0, 
-        relative_phase=0, 
-        k=0,
-        auto_phase_index=None,
-        user_vars=[]):
+    @property
+    def scale(self):
+        return self._scale
 
-        if(auto_phase_index is not None and 'scale' not in user_vars):
-            user_vars.append('scale')
+    def gpt_lines(self, oncrest_phase=None, relative_phase=None):
 
-        base_lines = super().gpt_lines(element, gdf_file=gdf_file, ccs=ccs, r=r, e1=e1, e2=e2, scale=scale, user_vars=user_vars)
+        name = self.name
 
+        base_lines = super().gpt_lines()
         extra_lines = base_lines[:-1]
         map_line = base_lines[-1].replace(');','')
 
-        extra_lines.append(f'{element}_oncrest_phase = {oncrest_phase};')
-        extra_lines.append(f'{element}_relative_phase = {relative_phase};')
-        extra_lines.append(f'{element}_phase = ({element}_oncrest_phase + {element}_relative_phase)*pi/180;')
-        extra_lines.append(f'{element}_gamma = 1;')
+        if(oncrest_phase is None):
+            oncrest_phase = self._oncrest_phase
 
-        if(auto_phase_index is not None):
-            extra_lines.append(f'phasing_amplitude_{0} = {element}_scale;')
-            extra_lines.append(f'phasing_on_crest_0  = {element}_oncrest_phase;')
-            extra_lines.append(f'phasing_relative_0  = {element}_relative_phase;')
-            extra_lines.append(f'phasing_gamma_0 = {element}_gamma;')
+        if(relative_phase is None):
+            relative_phase = self._relative_phase
 
-        if('k' in user_vars):
-            extra_lines.append(f'{element}_k = {k};')
-            map_line = map_line + f', {element}_k, '
-        else:
-            map_line = map_line + f', {k}, '
+        extra_lines.append(f'{name}_oncrest_phase = {oncrest_phase};')
+        extra_lines.append(f'{name}_relative_phase = {relative_phase};')
+        extra_lines.append(f'{name}_phase = ({name}_oncrest_phase + {name}_relative_phase)*pi/180;')
+        extra_lines.append(f'{name}_k = {self._k};')
 
-        map_line = map_line + f'{element}_phase, '
+        map_line = map_line + f', {name}_k, {name}_phase, '
+        extra_lines.append(f'{name}_frequency = {self._frequency};')
+        map_line = map_line + f'2*pi*{name}_frequency);'
 
-        if('frequency' in user_vars):
-            extra_lines.append(f'{element}_frequency = {self._frequency};');
-            map_line = map_line + f'2*pi*{element}_frequency);'
-        else:
-            map_line = map_line + f'{2*math.pi*self._frequency});'
+        lines = extra_lines + [map_line]
 
-        return extra_lines + [map_line]
+        return lines
 
 
+    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, use_tempfile=True, n_screen=1):
+        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, use_tempfile=use_tempfile, n_screen=n_screen)
+
+    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0):
+        return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase)
+
+    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
+        return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax)
+
+
+
+def track_on_axis(element, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, use_tempfile=True):
+
+    if(use_tempfile):
+        tfile = tempfile.NamedTemporaryFile()
+        gpt_file = tfile.name
+    else:
+        gpt_file = 'gpt.temp.in'
+
+    element.write_element_to_gpt_file(basic_template(gpt_file))
+
+    settings = {'xacc':xacc, 'GBacc':GBacc, 'dtmin':dtmin, 'dtmax':dtmax}
+    #settings[f'{cavity.name}_relative_phase'] = cavity._relative_phase
+    #settings[f'{cavity.name}_oncrest_phase'] = cavity._oncrest_phase
+    #settings[f'{cavity.name}_scale'] = cavity._scale
+        #settings[f'{}']
+
+    # Need to attach this to the object. Otherwise it will go out of scope.
+    tempdir = tempfile.TemporaryDirectory(dir=workdir)
+            
+    
+
+    G = GPT(ccs_beg=element.ccs_beg)
+    
+    print(G.workdir)
+    G.set_variables(settings)
+
+    z_beg = np.linalg.norm(element._ccs_beg_origin - element._p_beg)  
+
+    G.track1_in_ccs(z_beg=z_beg, 
+    z_end=z_beg+element.length, 
+    ccs=element.ccs_beg, 
+    pz0=p, 
+    t0=t, 
+    weight=1, 
+    status=1, 
+    species='electron',
+    xacc=xacc,
+    GBacc=GBacc,
+    n_screen=n_screen)
+
+    return G
+
+def autophase_track1(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0):
+
+    cavity._oncrest_phase = oncrest_phase
+
+    G = cavity.track_on_axis(t, p,  
+        xacc=xacc, 
+        GBacc=GBacc, 
+        dtmin=dtmin, 
+        dtmax=dtmax)
+
+    if(G.n_screen==1):
+        return -G.screen[-1]['mean_energy']
+    else:
+        return 8e88
+
+def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8):
+
+    """ Auto phases a cavity for a particle entering the fieldmap at time = t with total momentum = p """
+
+    cavity._oncrest_phase=0
+    cavity._momentum_beg=p
+    cavity._t_beg = t
+
+    relative_phase = cavity._relative_phase
+    cavity._relative_phase=0
+
+    oncrest_phase = brent(lambda x: cavity.autophase_track1(t, p,  
+        xacc=xacc, 
+        GBacc=GBacc, 
+        dtmin=dtmin, 
+        dtmax=dtmax,
+        oncrest_phase=x), )
+
+    cavity._oncrest_phase = oncrest_phase
+
+    G = cavity.track_on_axis(t, p,  
+        xacc=xacc, 
+        GBacc=GBacc, 
+        dtmin=dtmin, 
+        dtmax=dtmax,)
+
+    if(G.n_screen==1):
+        if(G.screen[-1]['mean_pz']<0):
+            raise ValueError(f'Autophasing {cavity._name} failed: particle has pz<0 at oncresst phase.')
+    else:
+        raise ValueError(f'Autophasing {cavity._name} failed: no data found when cavity tracked with resulting oncrest phase = {oncrest_phase}.')
+
+    cavity._relative_phase=relative_phase
+
+    G = cavity.track_on_axis(t, p,  
+        xacc=xacc, 
+        GBacc=GBacc, 
+        dtmin=dtmin, 
+        dtmax=dtmax,)
+
+    if(G.n_screen==1):
+        if(G.screen[-1]['mean_pz']<0):
+            raise ValueError(f'Autophasing {cavity._name} failed: particle has pz<0 at relative phase.')
+    else:
+        raise ValueError(f'Autophasing {cavity._name} failed: no data found when cavity tracked with relative phase = {relative_phase}.')
+
+    self._momentum_end=G.screen[-1]['mean_p']
+    self._t_end=G.screen[-1]['mean_t']
+
+    return G   
 

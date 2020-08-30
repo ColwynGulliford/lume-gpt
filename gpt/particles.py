@@ -1,8 +1,7 @@
 from pmd_beamphysics import ParticleGroup
-from pmd_beamphysics.units import c_light, e_charge
+from pmd_beamphysics.units import c_light, e_charge, m_e
 
 import numpy as np
-
 
 def identify_species(mass, charge):
     """
@@ -41,23 +40,7 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     data = {}
 
     n_particle = len(gpt_output_dict['x'])
-    
-    data['x'] = gpt_output_dict['x']
-    data['y'] = gpt_output_dict['y']
-    data['z'] = gpt_output_dict['z']
-    factor = c_light**2 /e_charge # kg -> eV
-    data['px'] = gpt_output_dict['GBx']*gpt_output_dict['m']*factor
-    data['py'] = gpt_output_dict['GBy']*gpt_output_dict['m']*factor
-    data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
-    data['t'] = gpt_output_dict['t']
-    data['status'] = np.full(n_particle, 1)
-    data['id'] = gpt_output_dict['ID']
-
-    data['weight'] = abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
-
-    if( np.all(data['weight'] == 0.0) ):
-        data['weight']= np.full(data['weight'].shape, 1/len(data['weight']))
-    
+     
     masses = np.unique(gpt_output_dict['m'])
     charges = np.unique(gpt_output_dict['q'])
     assert len(masses) == 1, 'All masses must be the same.'
@@ -69,6 +52,34 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     
     data['species'] = species
     data['n_particle'] = n_particle
+
+    data['x'] = gpt_output_dict['x']
+    data['y'] = gpt_output_dict['y']
+    data['z'] = gpt_output_dict['z']
+    factor = c_light**2 /e_charge # kg -> eV
+
+    #data['px'] = gpt_output_dict['GBx']*gpt_output_dict['m']*factor
+    #data['py'] = gpt_output_dict['GBy']*gpt_output_dict['m']*factor
+    #data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
+
+    mec = m_e #[mc] in eV/c
+
+    data['px'] = gpt_output_dict['GBx']*mec
+    data['py'] = gpt_output_dict['GBy']*mec
+    data['pz'] = gpt_output_dict['GBz']*mec
+
+    data['t'] = gpt_output_dict['t']
+    data['status'] = np.full(n_particle, 1)
+    data['id'] = gpt_output_dict['ID']
+
+    #print(c_light, e_charge, gpt_output_dict['m'][0], m_e)
+
+    data['weight'] = abs(gpt_output_dict['q']*gpt_output_dict['nmacro'])
+
+    if( np.all(data['weight'] == 0.0) ):
+        data['weight']= np.full(data['weight'].shape, 1/len(data['weight']))
+    
+    
     return data
 
 

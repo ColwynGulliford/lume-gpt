@@ -174,6 +174,14 @@ class Sectormagnet(SectorBend):
         for ii in range(len(self.p_screen_center[1,:])):
             ax.plot([self.p_screen_a[2,ii], self.p_screen_b[2,ii]], [self.p_screen_a[0,ii], self.p_screen_b[0,ii]], 'g')
 
+
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        
+
     def gpt_lines(self):
 
         lines = []
@@ -341,6 +349,58 @@ class Sectormagnet(SectorBend):
 
         return G
 
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        s = getattr(self,'s')
+        B = self.b_field(s)
+
+        if(normalize):
+            B = B/np.max(np.abs(B))
+
+        s = s+0.5*(self.s_beg+self._s_end)
+
+        ax.plot(s, B, self._color)
+        ax.set_xlabel('s (m)')
+
+        return ax
+
+    def is_inside_field(self, s):
+
+        if(self._b1!=0):
+            inside = (np.abs(s) - (self.arc_length/2+10*self._gap))<=0
+        else:
+            inside = (np.abs(s) - (self.arc_length/2))<=0
+
+        return inside
+
+    def ds(self, sin):
+        ds = np.abs(sin) - (self._dl + self.arc_length/2)
+        return ds
+
+    def b_field(self, s=None):
+
+        if(s is None):
+            s = getattr(self,'s')
+
+        B = np.zeros(s.shape)
+
+        # which z points are inside the field
+        inside = self.is_inside_field(s)   
+
+        p = self._b1*self.ds(s[inside])
+        f = np.exp(p)
+        B[inside] = self._B/(1+f)
+
+        return B
+
+    @property
+    def s(self):
+        return np.linspace(-self.arc_length, self.arc_length, 200)
+
+
 
 class QuadF(Quad):
 
@@ -384,6 +444,24 @@ class QuadF(Quad):
 
         return lines
 
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        z = getattr(self,'z')
+        G = getattr(self,'G')
+
+        if(normalize):
+            G = G/np.max(np.abs(G))
+
+        s = z+0.5*(self.s_beg+self._s_end)
+
+        ax.plot(s, G, self._color)
+        ax.set_xlabel('s (m)')
+
+        return ax
+
     def plot_fringe(self):
 
         if(self._b1!=0):
@@ -395,16 +473,6 @@ class QuadF(Quad):
             plt.plot(z, self._G/(1+np.exp(f)))
             plt.xlabel('$\\Delta z$ (m)')
             plt.ylabel('$G$ (T/m)')
-
-            #plt.subplots(1, 2, constrained_layout=True)
-
-            #ax[0].plot(z, Bz)
-            #ax[0].set_xlabel('z (m)')
-            #ax[0].set_ylabel('$G$ (T/m)')
-
-            #ax[1].plot(z, By)
-            #ax[1].set_xlabel('z (m)')
-            #ax[1].set_ylabel('$B_y$ (T)')
 
         else:
             print('No fringe specified, skipping plot.')

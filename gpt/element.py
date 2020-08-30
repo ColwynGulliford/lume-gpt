@@ -12,6 +12,10 @@ from matplotlib import pyplot as plt
 
 from numpy.linalg import norm 
 
+def p_in_ccs(p, ccs_origin, ccs_M):
+
+    return np.matmul( np.linalg.inv(ccs_M),(cvector(p) - cvector(ccs_origin)) )
+
 def is_bend(element):
 
     if(element.type in ['SectorBend', 'Sectormagnet']):
@@ -141,6 +145,9 @@ class Element:
         if(axis=='equal'):
             ax.set_aspect('equal')
 
+    def plot_field_profile(self, ax=None, normalize=False):
+        pass
+
     def track1(self, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1, status=1, species='electron', s=None):
         pass
 
@@ -190,6 +197,22 @@ class Element:
     @property
     def p_beg(self):
         return self._p_beg
+
+    @property
+    def z_beg(self):
+        return self._z_beg
+
+    @property
+    def z_beg_ccs(self):
+        return p_in_ccs(self.p_beg, self._ccs_beg_origin, self._M_beg)[2,0]
+    
+    @property
+    def z_end_ccs(self):
+        return p_in_ccs(self.p_end, self._ccs_beg_origin, self._M_beg)[2,0]
+
+    @property
+    def z_end(self):
+        return self._z_end
 
     @property
     def p(self):
@@ -246,6 +269,23 @@ class Element:
     @property
     def color(self):
         return self._color
+
+    @property
+    def momentum_beg(self):
+        return self._momentum_beg
+
+    @property
+    def momentum_end(self):
+        return self._momentum_end
+
+    @property
+    def t_beg(self):
+        return self._t_end
+
+    @property
+    def t_beg(self):
+        return self._t_end
+    
 
     def gpt_lines(self):
         return []
@@ -391,7 +431,7 @@ class SectorBend(Element):
 
         self._p_end = self.p_beg +np.sign(self._theta)*self._R*(e1-np.matmul(dM,e1))
         self._M_end = np.matmul(dM, M)
-        self._s_end = s + ds + self._length
+        self._s_end = self._s_beg + np.abs(rad(self._theta))*self._R
 
         self._ds = np.linalg.norm(self._p_beg - self.ccs_beg_origin)
 
@@ -464,6 +504,11 @@ class SectorBend(Element):
     def angle(self):
         return self._theta
 
+    @property
+    def arc_length(self):
+        return self.s_end-self.s_beg
+    
+
 
 class Lattice():
 
@@ -480,7 +525,11 @@ class Lattice():
 
     #def get_element_ds(self, ds, ref_origin, p_beg_ref, p_end_ref, element_origin, element_length):
 
-        
+    def element_index(self, name):
+        for ii, element in enumerate(self._elements):
+            if(element.name == name):
+                return ii
+        return []
 
     def sort(self):
 
@@ -490,6 +539,9 @@ class Lattice():
 
 
     def add(self, element, ds, ref_element=None, ref_origin='end', element_origin='beg'):
+
+        for ele in self._elements:
+            assert ele.name != element.name, 'Lattice.add Error: cannot add elemnt with name = "{element.name}" to lattice, name already exists.'
 
         if(ref_element is None):
 
@@ -613,6 +665,19 @@ class Lattice():
 
         return ax
 
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        for ele in self._elements:
+            ele.plot_field_profile(ax=ax, normalize=normalize)
+
+        if(normalize):
+            ax.set_ylabel('Field Profile (arb.)')
+
+        return ax
+
     def __str__(self):
 
         ostr = f'Lattice: {self._name}\ns-start: {self.s_beg} m.\ns-stop: {self.s_end}'
@@ -666,6 +731,12 @@ class Lattice():
                     fid.write(line)
 
         return lines
+
+
+
+
+
+
 
 
 
