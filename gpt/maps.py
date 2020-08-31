@@ -422,7 +422,8 @@ class Map1D_TM(Map1D):
         column_names={'z':'z', 'Ez':'Ez'}, 
         kinetic_energy=float('Inf'), 
         color='darkorange',
-        field_pos='center'):
+        field_pos='center',
+        legacy_phasing_lines=False):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'])
 
@@ -505,6 +506,8 @@ class Map1D_TM(Map1D):
         ax.plot(zs, Ez, self._color)
         ax.set_xlabel('s (m)')
 
+        return ax
+
 
     def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
         return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
@@ -552,10 +555,12 @@ class Map2D(GDFFieldMap):
     def plot_floor(self, axis=None, alpha=1.0, ax=None):
 
         f = 0.01
-        zs = getattr(self,'z')
-        Fz = getattr(self,self.fieldstr)
+        zs = getattr(self, 'z')
+        Fz = getattr(self, self.fieldstr)
 
         maxF = max(np.abs(Fz))
+
+        print(maxF)
 
         for ii,z in enumerate(zs):
             if(np.abs(Fz[ii]) >= f*maxF):
@@ -637,6 +642,7 @@ class Map2D(GDFFieldMap):
             ax.set_xlabel('z (m)')
             ax.set_ylabel('$E_z$ (V/m)')
     
+        return ax
 
 class Map2D_E(Map2D):
     
@@ -652,6 +658,8 @@ class Map2D_E(Map2D):
         self._field_pos = field_pos
 
         self.fieldstr='Ez'
+
+        self.place()
 
     def z(self):
         return np.squeeze(self.z[self.r==0])
@@ -687,6 +695,8 @@ class Map2D_E(Map2D):
         ax.plot(zs, Fz, self._color)
         ax.set_xlabel('s (m)')
 
+        return ax
+
 class Map2D_B(Map2D):
 
     def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}, field_pos='center'):
@@ -700,6 +710,8 @@ class Map2D_B(Map2D):
         self._height = self._width
         self._color = '#2ca02c'
         self._field_pos = field_pos
+
+        self.place()
 
     @property
     def on_axis_Bz(self):
@@ -722,7 +734,8 @@ class Map25D_TM(Map2D):
         kinetic_energy=float('Inf'),
         field_pos='center',
         k=0,
-        color='darkorange'):
+        color='darkorange',
+        legacy_phasing_lines=False):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
 

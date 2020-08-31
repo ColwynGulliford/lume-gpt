@@ -186,11 +186,19 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles'][:self.output['n_tout']]
 
+    def tout_stat(self, key=None):
+        """ Returns array of stats for key from tout particle groups """
+        return self.stat(key, data_type='tout')
+
     @property
     def screen(self):
         """ Returns output particle groups for screens """
         if('particles' in self.output):
             return self.output['particles'][self.output['n_tout']:]
+
+    def screen_stat(self, key):
+        """ Returns array of stats for key from screen particle groups """
+        return self.stat(key, data_type='screen')
 
     @property
     def particles(self):

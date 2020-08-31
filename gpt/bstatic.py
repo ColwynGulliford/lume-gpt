@@ -44,7 +44,7 @@ class Sectormagnet(SectorBend):
         b1=0,
         b2=0,
         dl=0,
-        n_screens=0,
+        n_screen=0,
         species='electron',
         plot_pole_faces=True,
         color='r',
@@ -57,7 +57,7 @@ class Sectormagnet(SectorBend):
         assert np.abs(phi_in) <= 90, 'Entrance edge angle must be < 90'
         assert np.abs(phi_out) <= 90, 'Entrance edge angle must be < 90'
         assert width < R, 'Dipole width must be < R'
-        assert n_screens>=0, 'Number of extra screens must be >= 0.'
+        assert n_screen>=0, 'Number of extra screens must be >= 0.'
 
         super().__init__(name, R, angle, width=width, height=0, phi_in=phi_in, phi_out=phi_out, M=np.identity(3), plot_pole_faces=True, color=color)
 
@@ -85,7 +85,7 @@ class Sectormagnet(SectorBend):
         self._b2 = b2
         self._dl = dl
 
-        self._n_screens = n_screens
+        self._n_screen = n_screen
         self._theta_screen=None
         self._s_screen=None
 
@@ -152,21 +152,21 @@ class Sectormagnet(SectorBend):
 
         e1 = self.e1_beg
 
-        thetas = np.linspace(0, self._theta, self._n_screens)
+        thetas = np.linspace(0, self._theta, self._n_screen)
 
         p_screen_a = np.zeros( (3,len(thetas)) )
         p_screen_b = np.zeros( (3,len(thetas)) )
 
         arc1_beg = self.p_beg + np.sign(self._theta)*(self._width/2)*cvector(self.e1_beg)
-        self._p_screen_a = get_arc(self._R-self._width/2, arc1_beg, self.e1_beg, self._theta, npts=self._n_screens)
+        self._p_screen_a = get_arc(self._R-self._width/2, arc1_beg, self.e1_beg, self._theta, npts=self._n_screen)
 
         arc2_beg = self.p_beg - np.sign(self._theta)*(self._width/2)*cvector(self.e1_beg)
-        self._p_screen_b = get_arc(self._R+self._width/2, arc2_beg, self.e1_beg, self._theta, npts=self._n_screens )
+        self._p_screen_b = get_arc(self._R+self._width/2, arc2_beg, self.e1_beg, self._theta, npts=self._n_screen)
 
-        self._p_screen_center = get_arc(self._R, self.p_beg, self.e1_beg, self._theta, npts=self._n_screens )
+        self._p_screen_center = get_arc(self._R, self.p_beg, self.e1_beg, self._theta, npts=self._n_screen)
 
         self._theta_screen = thetas
-        self._s_screen = self.s_beg + np.linspace(0, self._length, self._n_screens)
+        self._s_screen = self.s_beg + np.linspace(0, self._length, self._n_screen)
 
     def plot_floor(self, axis='equal', ax=None):
 
@@ -179,8 +179,6 @@ class Sectormagnet(SectorBend):
 
         if(ax == None):
             ax = plt.gca()
-
-        
 
     def gpt_lines(self):
 
@@ -245,11 +243,10 @@ class Sectormagnet(SectorBend):
 
         lines = lines + [bend_line]
         
-        """
         p_end_ccs_beg = in_ecs(self.p_end, self._ccs_beg_origin, self.M_beg)
 
         for ii, theta in enumerate(self._theta_screen):
-
+        
             dM = rotation_matrix(theta)
             pii_ccs_beg = in_ecs(cvector(self.p_screen_center[:,ii]), self._ccs_beg_origin, self.M_beg)
 
@@ -279,11 +276,11 @@ class Sectormagnet(SectorBend):
                 #print(pii.T, cvector(Mii[:,0]).T, cvector(Mii[:,2]).T)
 
                 ccs_line = f'ccs("{self.ccs_end}", {write_ecs(pii_ccs_end, Mii)}"{self.name}_scr_ccs_{ii+1}");'
-                #lines.append(ccs_line)
+                lines.append(ccs_line)
 
                 scr_line = f'screen("{self.ccs_end}", {write_ecs(pii_ccs_end, Mii/2.0)}0, "{self.name}_scr_ccs_{ii+1}");'
-                #lines.append(scr_line)
-                """
+                lines.append(scr_line)
+
                 
         return lines
 
