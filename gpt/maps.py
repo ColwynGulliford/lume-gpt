@@ -420,6 +420,7 @@ class Map1D_TM(Map1D):
         frequency, 
         scale=1,
         relative_phase=0,
+        oncrest_phase=0,
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'z':'z', 'Ez':'Ez'}, 
         kinetic_energy=float('Inf'), 
@@ -447,7 +448,7 @@ class Map1D_TM(Map1D):
             self._beta=np.sqrt(1 - 1/gamma**2)
 
         self._field_pos=field_pos
-        self._oncrest_phase=0
+        self._oncrest_phase=oncrest_phase
         self._scale=1
         self._relative_phase=relative_phase
         self._scale=scale

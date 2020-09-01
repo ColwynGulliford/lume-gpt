@@ -544,7 +544,7 @@ class Lattice():
     def add(self, element, ds, ref_element=None, ref_origin='end', element_origin='beg'):
 
         for ele in self._elements:
-            assert ele.name != element.name, 'Lattice.add Error: cannot add elemnt with name = "{element.name}" to lattice, name already exists.'
+            assert ele.name != element.name, f'Lattice.add Error: cannot add elemnt with name = "{element.name}" to lattice, name already exists.'
 
         if(ref_element is None):
 
