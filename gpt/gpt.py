@@ -750,12 +750,11 @@ def track1_in_ccs(gpt_object,
 
     assert n_screen >= 1, 'n_screen must be >= 1'
 
-    settings = {'time':t0, 'xacc':xacc, 'GBacc':GBacc, 'ZSTART':z_beg, 'ZSTOP':z_end}
+    settings = {'time':t0, 'xacc':xacc, 'GBacc':GBacc, 'ZSTART':z_beg-0.1, 'ZSTOP':z_end}
 
     gpt_object.initial_particles = single_particle(x=x0, px=px0, y=y0, py=py0, z=z_beg, pz=pz0, t=t0, weight=weight, status=status, species=species)
 
     gpt_object.set_variables(settings)
-    gpt_object.get_zminmax_line(z_beg, z_end)
 
     if(n_screen==1):
         gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end, s_beg=s_beg))

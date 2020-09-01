@@ -407,6 +407,8 @@ class Map1D_B(Map1D):
         ax.plot(zs, Bz, self._color)
         ax.set_xlabel('s (m)')
 
+        return ax
+
         
 
 
@@ -509,13 +511,13 @@ class Map1D_TM(Map1D):
         return ax
 
 
-    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+    def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
         return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
 
-    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
+    def autophase_track1(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
         return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase, workdir=workdir, n_screen=n_screen)
 
-    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
+    def autophase(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen)
 
     def gpt_lines(self):
@@ -560,12 +562,12 @@ class Map2D(GDFFieldMap):
 
         maxF = max(np.abs(Fz))
 
-        print(maxF)
-
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zL = z
-                break
+        zL = zs[0]
+        if(abs(Fz[0])<f*maxF):
+            for ii, z in enumerate(zs):
+                if(np.abs(Fz[ii]) >= f*maxF):
+                    zL = z
+                    break
 
         zs = np.flip(zs)
         Fz = np.flip(Fz)
@@ -598,7 +600,12 @@ class Map2D(GDFFieldMap):
 
         max_radius = np.max(self['R'])
 
-        p1 = pc + (self._width/2)*self.e1_beg - (effective_plot_length/2.0)*self.e3_beg
+        if(self._field_pos=='center'):
+            p0=pc
+        elif(self._field_pos=='end'):
+            p0=self.p_beg + cvector([0,0,effective_plot_length/2.0])
+
+        p1 = p0 + (self._width/2)*self.e1_beg - (effective_plot_length/2.0)*self.e3_beg
         p2 = p1 - (self._width)*self.e1_beg
         p3 = p2 + (effective_plot_length)*self.e3_beg
         p4 = p3 + (self._width)*self.e1_beg
@@ -644,9 +651,12 @@ class Map2D(GDFFieldMap):
     
         return ax
 
+    def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
+
 class Map2D_E(Map2D):
     
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}, field_pos='center'):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}, field_pos='center', scale=1):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez'])
         self._name = name
@@ -658,6 +668,7 @@ class Map2D_E(Map2D):
         self._field_pos = field_pos
 
         self.fieldstr='Ez'
+        self._scale=scale
 
         self.place()
 
@@ -837,20 +848,16 @@ class Map25D_TM(Map2D):
 
         return lines
 
-
-    def track_on_axis(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
-        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
-
-    def autophase_track1(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
+    def autophase_track1(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
         return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase, workdir=workdir, n_screen=n_screen)
 
-    def autophase(self, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
+    def autophase(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen)
 
 
 
 
-def track_on_axis(element, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+def track_on_axis(element, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
 
     if(workdir is None):
         tempdir = tempfile.TemporaryDirectory(dir=workdir)  
@@ -883,7 +890,7 @@ def track_on_axis(element, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, n
 
     return G
 
-def autophase_track1(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
+def autophase_track1(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
 
     cavity._oncrest_phase = oncrest_phase
 
@@ -900,7 +907,7 @@ def autophase_track1(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8,
     else:
         return 8e88
 
-def autophase(cavity, t, p, xacc=6.5, GBacc=6.5, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
+def autophase(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
 
     """ Auto phases a cavity for a particle entering the fieldmap at time = t with total momentum = p """
 
