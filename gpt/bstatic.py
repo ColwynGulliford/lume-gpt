@@ -141,6 +141,16 @@ class Sectormagnet(SectorBend):
     @property
     def species(self):
         return self._species
+
+    @property
+    def momentum(self):
+        return self._p
+
+    @momentum.setter
+    def momentum(self, p):
+        self._p = p
+        self._B = p/self._R/c
+    
     
     
     def place(self, previous_element=Beg(), ds=0):
