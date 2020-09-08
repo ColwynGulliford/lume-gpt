@@ -90,7 +90,7 @@ def energy_gain(z, Ez, w, phi, beta=1):
 class GDFFieldMap(Element):
     """ General class for holding GDF field map data """
 
-    def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN', use_temp_file=True):
+    def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN', use_temp_file=False):
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
         self.source_data_file = source_data
