@@ -90,12 +90,16 @@ def energy_gain(z, Ez, w, phi, beta=1):
 class GDFFieldMap(Element):
     """ General class for holding GDF field map data """
 
-    def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN'):
+    def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN', use_temp_file=True):
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
-
         self.source_data_file = source_data
-        temp_ascii_file = f'{self.source_data_file}.temp.txt'
+
+        if(use_temp_file):
+            temp_ascii_file = tempfile.NamedTemporaryFile().name
+        else:
+            temp_ascii_file = f'{self.source_data_file}.temp.txt'
+        
         os.system(f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}')
 
         with open(temp_ascii_file, 'r') as fp:
@@ -107,7 +111,7 @@ class GDFFieldMap(Element):
         self.column_names = column_names
         ndata = np.loadtxt(temp_ascii_file, skiprows=1)
 
-        os.system(f'rm {temp_ascii_file}')
+        os.remove(temp_ascii_file)
 
         self.coordinates = [name for name in columns if(name.lower() in ['r', 'x', 'y', 'z'])]
         self.field_components = [name for name in columns if(name.lower() not in ['r', 'x', 'y', 'z'])]
