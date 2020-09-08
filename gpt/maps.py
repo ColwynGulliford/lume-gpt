@@ -96,7 +96,7 @@ class GDFFieldMap(Element):
         self.source_data_file = source_data
 
         if(use_temp_file):
-            temp_ascii_file = tempfile.NamedTemporaryFile().name
+            temp_ascii_file = tempfile.NamedTemporaryFile().name + '.txt'
         else:
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
         
