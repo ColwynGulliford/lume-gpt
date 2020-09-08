@@ -100,6 +100,8 @@ class GDFFieldMap(Element):
         else:
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
         
+        print(temp_ascii_file)
+
         os.system(f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}')
 
         with open(temp_ascii_file, 'r') as fp:
