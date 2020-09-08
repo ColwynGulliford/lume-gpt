@@ -16,13 +16,13 @@ from matplotlib import pyplot as plt
 from pmd_beamphysics import single_particle
 
 from scipy.optimize import brent
+import scipy.constants
 
-c = 299792458
-mc2 = 0.51e6
+MC2 = scipy.constants.value('electron mass energy equivalent in MeV')*1e6
 
 def gamma_to_beta(gamma):
     """ Converts relativistic gamma to beta"""
-    return np.sqrt(1 - 1/gamm**2)
+    return np.sqrt(1 - 1/gamma**2)
 
 def beta_to_gamma(beta):
     """ Converts relativistic beta to gamma """
@@ -43,6 +43,13 @@ def KE_to_beta(KE):
 def beta_to_KE(beta):
     """ Converts relativists beta to kinetic energy """
     return gamma_to_KE(beta_to_gamma(beta))
+
+def p2e(p):
+    return np.sqrt(p**2 + MC2**2)
+
+def e2p(E):
+    return np.sqrt(E**2 - MC2**2)
+
 
 def get_gdf_header(gdf_file, gdf2a_bin=os.path.expandvars('$GDF2A_BIN')):
 
@@ -872,7 +879,7 @@ def track_on_axis(element, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_
     else:
 
         gpt_file = os.path.join(workdir, f'{element.name}.gpt.in' )
- 
+
     element.write_element_to_gpt_file(ztrack1_template(gpt_file))
 
     G = GPT(gpt_file, ccs_beg=element.ccs_beg, workdir=workdir, use_tempdir=False)
@@ -905,12 +912,14 @@ def autophase_track1(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, 
         dtmin=dtmin, 
         dtmax=dtmax,
         workdir=workdir,
-        n_screen=n_screen)
+        n_screen=1)
 
-    if(G.n_screen>=1):
-        return -G.screen[-1]['mean_energy']
+    if(G.n_screen>=1 and len(G.screen[-1]['x'])==1):
+        energy_gain = G.screen[-1]['mean_energy']-p2e(p)
     else:
-        return 8e88
+        energy_gain = -8e88
+
+    return -energy_gain
 
 def autophase(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
 
@@ -931,9 +940,9 @@ def autophase(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir
         dtmax=dtmax,
         oncrest_phase=x,
         workdir=workdir,
-        n_screen=1), )
+        n_screen=1), brack=(-180, 180))
 
-    cavity._oncrest_phase = oncrest_phase
+    cavity._oncrest_phase =  (oncrest_phase +180) % (360) - 180
 
     G = cavity.track_on_axis(t, p,  
         xacc=xacc, 

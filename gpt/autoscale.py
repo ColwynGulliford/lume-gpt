@@ -78,10 +78,10 @@ def autophase1(lattice, t=0, p=1e-15, workdir=None, ztrack1_through=True, verbos
         ts.append(current_t)
         ps.append(current_p)
         zs.append(current_z)
-    
+
         # phase
         t1 = time.time()
-        run = rf_element.autophase(t=current_t, p=current_p)
+        run = rf_element.autophase(t=current_t, p=current_p, workdir=workdir)
         t2 = time.time()
     
         runs.append(run)
@@ -93,7 +93,7 @@ def autophase1(lattice, t=0, p=1e-15, workdir=None, ztrack1_through=True, verbos
         if(verbose):
             print(f'\n   t_end = {current_t} m.')
             print(f'   s_end = {rf_element.s_end} m.')
-            print(f'   oncrest phase = {rf_element.oncrest_phase}')
+            print(f'   oncrest phase = {rf_element._oncrest_phase}')
             print(f'   energy gain =  {p2e(current_p)-p2e(ps[-1]):0.3f} eV.')
             print(f'\n   Ellapsed time =  {t2-t1:0.3f} sec.')
     
