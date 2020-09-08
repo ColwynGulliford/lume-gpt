@@ -99,8 +99,6 @@ class GDFFieldMap(Element):
             temp_ascii_file = tempfile.NamedTemporaryFile().name + '.txt'
         else:
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
-        
-        print(temp_ascii_file)
 
         os.system(f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}')
 
