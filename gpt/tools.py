@@ -316,3 +316,9 @@ def in_ecs(p, ecs_origin, M_ecs):
 
 
 
+def transform_to_centroid_coordinates(particles, e2=cvector([0,1,0])):
+
+    print(particles['x'])
+
+
+
