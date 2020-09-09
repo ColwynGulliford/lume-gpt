@@ -2,6 +2,7 @@ from gpt import tools, parsers
 from gpt.particles import particle_stats, raw_data_to_particle_groups
 from gpt.parsers import parse_gpt_string
 from .plot import plot_stats_with_layout
+from gpt.tools import transform_to_centroid_coordinates
 
 import gpt.archive 
 
@@ -188,9 +189,19 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles'][:self.output['n_tout']]
 
+    @property
+    def tout_ccs(self):
+        """ Returns output particle groups for touts transformed into centroid coordinate system """
+        if('particles' in self.output):
+            return [transform_to_centroid_coordinates(tout) for tout in self.tout]
+    
     def tout_stat(self, key=None):
         """ Returns array of stats for key from tout particle groups """
         return self.stat(key, data_type='tout')
+
+    def tout_ccs_stat(self, key=None):
+        """ Returns array of stats for key from tout particle groups """
+        return self.stat(key, data_type='tout_ccs')
 
     @property
     def screen(self):
@@ -389,9 +400,8 @@ class GPT:
         elif(data_type=='tout'):
             particle_groups = self.tout
 
-        elif(data_type=='tout_ref'):
-            particle_groups = self.tout
-            particle_groups = [transform_to_centroid_coordinates(tout) for tout in particle_groups]
+        elif(data_type=='tout_ccs'):
+            particle_groups = self.tout_ccs
 
         elif(data_type=='screen'):
             particle_groups = self.screen
