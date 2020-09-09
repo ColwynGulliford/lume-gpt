@@ -1,6 +1,10 @@
 import numpy as np
 import os
 import math, cmath
+from matplotlib import pyplot as plt
+from numpy.linalg import norm 
+import copy
+
 from gpt.tools import rotation_matrix
 from gpt.tools import cvector
 from gpt.tools import rad, deg
@@ -8,9 +12,6 @@ from gpt.tools import get_arc
 
 from gpt.template import BASIC_TEMPLATE
 
-from matplotlib import pyplot as plt
-
-from numpy.linalg import norm 
 
 def p_in_ccs(p, ccs_origin, ccs_M):
 
@@ -307,7 +308,7 @@ class Screen(Element):
 
     def __init__(self, name, color='k', width=0.2, n_screen=1, fix_s_position=True, s_range=0):
 
-        assert n_screens>0, 'Number of screens must be > 0.'
+        assert n_screen>0, 'Number of screens must be > 0.'
 
         super().__init__(name, length=0, width=width, height=0, angles=[0, 0, 0], color=color)
         self._n_screen=n_screen
@@ -703,25 +704,35 @@ class Lattice():
 
     def combine(self, lattice, ds=0):
 
+        new_lattice = copy.deepcopy(self)
+
+        new_lattice._name = new_lattice._name + '_and_' + lattice._name
+
         if(len(lattice._elements)<=1):
             return
 
-        
-        elements =lattice._elements[1:]
+        elements = lattice._elements[1:]
+        ref_element = self._elements[-1]
+
+        s_offset = ref_element.s_end
 
         for ii, element in enumerate(elements):
 
-            ref_element = self._elements[-1]
+            if(ii>0):
+                ds = s_offset + element.s_beg - ref_element.s_end
+            else:
+                ds = element.s_beg + ds
+
+            new_element = copy.deepcopy(element)
+
+            new_lattice.add(new_element, ds)
+            ref_element = new_element
+
+        return new_lattice
             
-            ds = element.s_beg - ref_element.s_end
 
-            self.add(element, ds)
-
-            ref_element = element
-            
-
-
-
+    def __add__(self, lattice):
+        return self.combine(lattice)
 
     def write_gpt_lines(self, template_file=None, output_file=None, slices=None):
 
