@@ -389,6 +389,10 @@ class GPT:
         elif(data_type=='tout'):
             particle_groups = self.tout
 
+        elif(data_type=='tout_ref'):
+            particle_groups = self.tout
+            particle_groups = [transform_to_centroid_coordinates(tout) for tout in particle_groups]
+
         elif(data_type=='screen'):
             particle_groups = self.screen
 
