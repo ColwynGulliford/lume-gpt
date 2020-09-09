@@ -226,7 +226,7 @@ class GPT:
 
             current_tout = next_tout
 
-        return s
+        return np.array(s)
     
     
     def tout_stat(self, key=None):

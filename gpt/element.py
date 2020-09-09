@@ -315,6 +315,7 @@ class Screen(Element):
         self._s_range=s_range
         self._fix_s_position=fix_s_position
         self._type='screen'
+        
 
     def gpt_lines(self):
 
