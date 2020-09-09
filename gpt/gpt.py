@@ -194,6 +194,19 @@ class GPT:
         """ Returns output particle groups for touts transformed into centroid coordinate system """
         if('particles' in self.output):
             return [transform_to_centroid_coordinates(tout) for tout in self.tout]
+
+    @property
+    def s_ccs(self):
+
+        
+        s0 = np.sqrt(self.tout[0]['mean_x']**2+self.tout[0]['mean_y']**2+self.tout[0]['mean_z']**2 )
+
+
+        for tout_ccs in self.tout[1:]
+            pass
+
+        return s0
+    
     
     def tout_stat(self, key=None):
         """ Returns array of stats for key from tout particle groups """
