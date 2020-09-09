@@ -199,13 +199,34 @@ class GPT:
     def s_ccs(self):
 
         
-        s0 = np.sqrt(self.tout[0]['mean_x']**2+self.tout[0]['mean_y']**2+self.tout[0]['mean_z']**2 )
+        s = [np.sqrt(self.tout[0]['mean_x']**2+self.tout[0]['mean_y']**2+self.tout[0]['mean_z']**2 )]
 
+        current_tout = self.tout[0]
+        current_p = current_tout['mean_p']
 
-        for tout_ccs in self.tout[1:]:
-            pass
+        for next_tout in self.tout[1:]:
 
-        return s0
+            next_p = next_tout['mean_p'] 
+
+            if(np.abs(current_p - next_p)/current_p < 1e-5 ):  # Beam drifting
+
+                beta = current_tout['mean_beta']
+                dt = next_tout['mean_t']-current_tout['mean_t']
+                ds = dt*beta*c
+
+            else:  # Assume straight line acceleration
+
+                dx = next_tout['mean_x'] - current_tout['mean_x']
+                dy = next_tout['mean_y'] - current_tout['mean_y']
+                dz = next_tout['mean_z'] - current_tout['mean_z']
+
+                ds = np.sqrt( dx**2 + dy**2 + dz**2 )
+
+            s.append( s[-1] + ds )
+
+            current_tout = next_tout
+
+        return s
     
     
     def tout_stat(self, key=None):
