@@ -202,7 +202,7 @@ class GPT:
         s0 = np.sqrt(self.tout[0]['mean_x']**2+self.tout[0]['mean_y']**2+self.tout[0]['mean_z']**2 )
 
 
-        for tout_ccs in self.tout[1:]
+        for tout_ccs in self.tout[1:]:
             pass
 
         return s0
