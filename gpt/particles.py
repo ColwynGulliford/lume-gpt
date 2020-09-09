@@ -1,6 +1,8 @@
 from pmd_beamphysics import ParticleGroup
 from pmd_beamphysics.units import c_light, e_charge, m_e
 
+
+from gpt.tools import transform_to_centroid_coordinates
 import numpy as np
 
 def identify_species(mass, charge):
@@ -83,14 +85,24 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     return data
 
 
-def raw_data_to_particle_groups(touts, screens, verbose=False):
+def raw_data_to_particle_groups(touts, screens, verbose=False, ref_ccs=False):
+
     """
     Coverts a list of touts to a list of ParticleGroup objects
     """
     if(verbose):
         print('   Converting tout and screen data to ParticleGroup(s)')
 
-    return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
+    if(ref_ccs):
+
+        pg_touts = [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts ]
+        pg_screens = [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in screens ]
+        new_touts = [transform_to_centroid_coordinates(tout) for tout in pg_touts]
+        
+        return new_touts + pg_screens     
+
+    else:
+        return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
 
 

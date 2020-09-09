@@ -44,7 +44,8 @@ class GPT:
                  workdir=None,
                  timeout=None,
                  verbose=False,
-                 ccs_beg='wcs'):
+                 ccs_beg='wcs',
+                 ref_ccs=False):
 
         # Save init
         self.original_input_file = input_file
@@ -73,6 +74,7 @@ class GPT:
         self.using_tempdir = False
 
         self.ccs_beg = ccs_beg
+        self.ref_ccs = ref_ccs
       
         # Call configure
         if input_file:
@@ -166,7 +168,7 @@ class GPT:
         self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
         touts, screens=parsers.read_gdf_file(file, self.verbose)  # Raw GPT data
 
-        self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose) 
+        self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose, ref_ccs=self.ref_ccs) 
         self.output['n_tout'] = len(touts)
         self.output['n_screen'] = len(screens)
 

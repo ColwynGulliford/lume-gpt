@@ -305,12 +305,13 @@ class Element:
 
 class Screen(Element):
 
-    def __init__(self, name, color='k', width=0.2, n_screens=1, fix_s_position=True):
+    def __init__(self, name, color='k', width=0.2, n_screen=1, fix_s_position=True, s_range=0):
 
         assert n_screens>0, 'Number of screens must be > 0.'
 
         super().__init__(name, length=0, width=width, height=0, angles=[0, 0, 0], color=color)
-        self._n_screens=n_screens
+        self._n_screen=n_screen
+        self._s_range=s_range
         self._fix_s_position=fix_s_position
         self._type='screen'
 
@@ -325,9 +326,17 @@ class Screen(Element):
 
         ds = np.linalg.norm( 0.5*(self.p_end + self.p_beg) - self._ccs_beg_origin) 
 
-        if(self._n_screens == 1):
+        if(self._n_screen == 1):
 
             lines.append(f'screen("{self._ccs_beg}", 0, 0, {ds-s}, 1, 0, 0, 0, 1, 0, {s});')
+
+        else:
+
+            dzs = np.linspace(0, self._s_range, self._n_screen)
+
+            for dz in dzs:
+                lines.append(f'screen("{self._ccs_beg}", 0, 0, {ds-(s+dz)}, 1, 0, 0, 0, 1, 0, {s+dz});')
+
 
         return lines
 
@@ -691,6 +700,27 @@ class Lattice():
 
     def get_M_at_s(self, s):
         pass
+
+    def combine(self, lattice, ds=0):
+
+        if(len(lattice._elements)<=1):
+            return
+
+        
+        elements =lattice._elements[1:]
+
+        for ii, element in enumerate(elements):
+
+            ref_element = self._elements[-1]
+            
+            ds = element.s_beg - ref_element.s_end
+
+            self.add(element, ds)
+
+            ref_element = element
+            
+
+
 
 
     def write_gpt_lines(self, template_file=None, output_file=None, slices=None):

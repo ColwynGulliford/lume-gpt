@@ -13,6 +13,8 @@ import importlib
 from math import pi
 import math
 
+from pmd_beamphysics import ParticleGroup
+
 def execute(cmd):
     """
     
@@ -214,6 +216,7 @@ def cvector(rvector):
     elif(rvector.shape==(3,)):
         return np.array([np.array(rvector)]).T
 
+    print(rvector.shape)
     print('wooooooops')
 
 def rotation_matrix(theta=0, phi=0, psi=0, units='deg'):
@@ -318,7 +321,43 @@ def in_ecs(p, ecs_origin, M_ecs):
 
 def transform_to_centroid_coordinates(particles, e2=cvector([0,1,0])):
 
-    print(particles['x'])
+    names = ['x', 'y', 'z', 'px', 'py',   'pz', 't']
 
+    centroid = {name:particles[f'mean_{name}'] for name in names}
 
+    p0 = cvector([particles['mean_px'], particles['mean_py'], particles['mean_pz']]) 
+    e3 = p0/np.linalg.norm(p0)
+    e1 = cvector(np.cross(e2.T, e3.T).T )
+
+    data = {'n_particle':particles['n_particle'],
+            'species':particles['species'],
+            'weight':particles['weight'],
+            'status':particles['status'],
+            'id':particles['id']
+    }
+
+    M = np.linalg.inv(np.concatenate( (e1, e2, e3), axis=1))
+
+    r = np.zeros( (3, len(particles['x']) ) )
+    r[0,:] = particles['x'] - centroid['x']
+    r[1,:] = particles['y'] - centroid['y']
+    r[2,:] = particles['z'] - centroid['z']
+
+    p = np.zeros( (3, len(particles['x']) ) )
+    p[0,:] = particles['px']
+    p[1,:] = particles['py']
+    p[2,:] = particles['pz']
+
+    new_r = np.matmul(M, r)
+    new_p = np.matmul(M, p)
+
+    data['t']=particles['t']
+
+    for ii, name in enumerate(['x','y','z']):
+        data[name] = new_r[ii,:]
+        data['p'+name] = new_p[ii,:]
+        
+    return ParticleGroup(data=data)
+
+    
 
