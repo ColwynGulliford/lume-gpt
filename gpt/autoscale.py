@@ -77,6 +77,8 @@ def autophase1(lattice, t=0, p=1e-15, z=None, workdir=None, ztrack1_through=True
     current_p = p
     current_z = lattice[0].z_beg_ccs
 
+    z_start = current_z
+
     if(current_z < rf_elements[0].z_beg_ccs):
 
         if(verbose):
@@ -163,12 +165,12 @@ def autophase1(lattice, t=0, p=1e-15, z=None, workdir=None, ztrack1_through=True
 
         else:
 
-            gpt_file = os.path.join(workdir, f'gpt.temp.in' )
+            gpt_file = os.path.join(workdir, f'track_lattice.gpt.in' )
 
         lattice.write_gpt_lines(ztrack1_template(gpt_file), output_file=gpt_file)
 
         G = GPT(gpt_file, workdir=workdir, use_tempdir=False)
-        G = G.track1_in_ccs(zs[0], lattice[-1].z_end_ccs, pz0=p, t0=t, n_screen=n_screen)
+        G = G.track1_in_ccs(z_start, lattice[-1].z_end_ccs, pz0=p, t0=t, n_screen=n_screen)
     
     return  (ts, ps, zs, runs, G)
 
@@ -211,8 +213,6 @@ def ztrack1_to_autoscale_element(lattice, t, p, z, autoscale_element=None, workd
         gpt_file = os.path.join(workdir, f'track_to_{stop_name}.gpt.in' )
 
     lat_temp.write_gpt_lines(ztrack1_template(gpt_file), output_file=gpt_file)
-
-    #print(z, z_stop, ccs, gpt_file)
 
     G = GPT(gpt_file, workdir=workdir, use_tempdir=False, ccs_beg=ccs)
     return G.track1_in_ccs(z, z_stop, pz0=p, t0=t, ccs=ccs)
