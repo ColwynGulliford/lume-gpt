@@ -114,7 +114,7 @@ def autophase1(lattice, t=0, p=1e-15, z=None, workdir=None, ztrack1_through=True
 
         # phase
         t1 = time.time()
-        run = rf_element.autophase(t=current_t, p=current_p, workdir=workdir)
+        run = rf_element.autophase(t=current_t, p=current_p, workdir=workdir, verbose=verbose)
         t2 = time.time()
     
         runs.append(run)
