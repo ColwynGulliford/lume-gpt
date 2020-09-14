@@ -1,9 +1,0 @@
-@logo      B&M-General Particle Tracer
-numderivs           7
-cputime     0.000e+00
-position    3.950e+00
-            x           y           z         rxy          Bx          By          Bz           G           t           m           q      nmacro      rmacro          ID 
-                                                                                                                                              
-position    8.450e+00
-            x           y           z         rxy          Bx          By          Bz           G           t           m           q      nmacro      rmacro          ID 
-                                                                                                                                              
