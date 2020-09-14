@@ -212,7 +212,7 @@ def ztrack1_to_autoscale_element(lattice, t, p, z, autoscale_element=None, workd
 
     lat_temp.write_gpt_lines(ztrack1_template(gpt_file), output_file=gpt_file)
 
-    print(z, z_stop, ccs, gpt_file)
+    #print(z, z_stop, ccs, gpt_file)
 
     G = GPT(gpt_file, workdir=workdir, use_tempdir=False, ccs_beg=ccs)
     return G.track1_in_ccs(z, z_stop, pz0=p, t0=t, ccs=ccs)
