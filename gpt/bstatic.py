@@ -2,6 +2,7 @@ import numpy as np
 import os
 import math, cmath
 from scipy.integrate import cumtrapz
+from scipy.optimize import brent
 from gpt.tools import is_floatable
 from gpt.tools import cvector
 from gpt.tools import rotation_matrix
@@ -9,6 +10,7 @@ from gpt.tools import deg, rad
 from gpt.tools import get_arc
 from gpt.tools import write_ecs
 from gpt.tools import in_ecs
+from gpt.element import p_in_ccs
 from gpt.template import basic_template
 
 from matplotlib import pyplot as plt
@@ -151,8 +153,6 @@ class Sectormagnet(SectorBend):
         self._p = p
         self._B = p/self._R/c
     
-    
-    
     def place(self, previous_element=Beg(), ds=0):
 
         super().place(previous_element=previous_element, ds=ds)
@@ -183,6 +183,25 @@ class Sectormagnet(SectorBend):
         ax = super().plot_floor(axis=axis, ax=ax)
         for ii in range(len(self.p_screen_center[1,:])):
             ax.plot([self.p_screen_a[2,ii], self.p_screen_b[2,ii]], [self.p_screen_a[0,ii], self.p_screen_b[0,ii]], 'g')
+
+        if(self._b1>0):
+
+            M_fringe_beg  = rotation_matrix(+np.sign(self.angle)*self._phi_in)
+            M_fringe_end  = rotation_matrix(-np.sign(self.angle)*self._phi_out)
+
+            e1_fringe_beg = np.matmul(M_fringe_beg, self.e1_beg)
+            e1_fringe_end = np.matmul(M_fringe_end, self.e1_end)
+
+            p_fringe_beg_a = self.p_fringe_beg + (self._width/2.0)*e1_fringe_beg
+            p_fringe_beg_b = self.p_fringe_beg - (self._width/2.0)*e1_fringe_beg
+
+            p_fringe_end_a = self.p_fringe_end + (self._width/2.0)*e1_fringe_end
+            p_fringe_end_b = self.p_fringe_end - (self._width/2.0)*e1_fringe_end
+
+            ax.plot([p_fringe_beg_a[2,0], p_fringe_beg_b[2,0]], [p_fringe_beg_a[0,0], p_fringe_beg_b[0,0]], color='k', alpha=0.25)
+            ax.plot([p_fringe_end_a[2,0], p_fringe_end_b[2,0]], [p_fringe_end_a[0,0], p_fringe_end_b[0,0]], color='k', alpha=0.25)
+
+            #print(self.p_fringe_beg.T)
 
 
     def plot_field_profile(self, ax=None, normalize=False):
@@ -328,7 +347,7 @@ class Sectormagnet(SectorBend):
         else:
             print('No fringe specified, skipping plot.')
 
-    def track_ref(self, p0=1e-15, xacc=6.5, GBacc=5.5, dtmin=1e-14, dtmax=1e-10, Ntout=100):
+    def track_ref(self, t0=0, p0=1e-15, xacc=6.5, GBacc=5.5, dtmin=1e-14, dtmax=1e-8, Ntout=100, workdir=None):
 
         dz_ccs_beg = np.linalg.norm( self.p_beg - self._ccs_beg_origin )
 
@@ -343,18 +362,82 @@ class Sectormagnet(SectorBend):
 
         particle = single_particle(z=dz_ccs_beg-dz_fringe, pz=p0, t=0, weight=1, status=1, species=self.species)
 
-        tfile = tempfile.NamedTemporaryFile()
-        gpt_file = tfile.name
+        if(workdir is None):
+            tempdir = tempfile.TemporaryDirectory(dir=workdir)  
+            gpt_file = os.path.join(tempdir.name, f'track_to_{self.name}.gpt.in')
+            workdir = tempdir.name
+
+        else:
+
+            gpt_file = os.path.join(workdir, f'{self.name}.gpt.in' )
 
         self.write_element_to_gpt_file(basic_template(gpt_file))
 
-        G = GPT(gpt_file, initial_particles=particle, ccs_beg=self.ccs_beg)
+        G = GPT(gpt_file, initial_particles=particle, ccs_beg=self.ccs_beg, workdir=workdir, use_tempdir=False)
         G.set_variables(settings)
-        G.track1_to_z(z_end=dz_fringe, ds=self.length + 2*dz_fringe, ccs_beg=self.ccs_beg, ccs_end=self.ccs_end, z0=dz_ccs_beg-dz_fringe, pz0=p0, species=self.species)
+        G.track1_to_z(z_end=dz_fringe, 
+            ds=self.length + 2*dz_fringe, 
+            ccs_beg=self.ccs_beg, 
+            ccs_end=self.ccs_end, 
+            z0=dz_ccs_beg-dz_fringe, 
+            t0=t0,
+            pz0=p0, 
+            species=self.species,
+            s_screen=self.s_end+dz_fringe)
 
         #os.remove(gpt_file)
 
         return G
+
+    def exit_error(self, B, t0=0, p0=1e-15, xacc=6.5, GBacc=5.5, dtmin=1e-14, dtmax=1e-8, Ntout=100, workdir=None):
+
+        self._B = B
+
+        G = self.track_ref(p0=p0, t0=t0, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir)
+
+        assert G.n_screen > 0
+
+        x_offset = G.screen[-1]['mean_x']
+        x_angle = G.screen[-1]['mean_px']/G.screen[-1]['mean_pz']
+
+        return np.abs(x_offset)
+
+    def autoscale(self, t0=0, p0=None, xacc=6.5, GBacc=5.5, dtmin=1e-14, dtmax=1e-10, Ntout=100, workdir=None, track_through=True, verbose=True):
+
+        if(p0 is None):
+            p0 = self._p
+
+        if(verbose):
+
+            print(f'\n> Scaling: {self.name}')
+            print(f'   t_beg = {t0} sec.')
+            print(f'   s_beg = {self.s_beg} m.')
+            print(f'   B-field = {self._B} T.')
+            print(f'   momentum = {p0} eV/c.')
+        
+        if(p0 is None):
+            p0 = self.momentum
+
+        B0 = self._B
+        f=0.1
+        B = brent(lambda x: self.exit_error(x, t0=0, p0=p0, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, Ntout=Ntout, workdir=workdir), brack=( (1-f)*B0, (1+f)*B0))
+
+        self._B = B
+
+        if(track_through):
+
+            G = self.track_ref(t0=0, p0=p0, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir)
+
+            position_err = np.sqrt( G.screen[-1]['mean_x']**2 + G.screen[-1]['mean_y']**2 )
+            angle_err = np.sqrt( G.screen[-1]['mean_px']**2 + G.screen[-1]['mean_py']**2 )/G.screen[-1]['mean_pz']
+
+            if(verbose):
+                print(f'\n   B-field = {self._B} T.')
+                print(f'   position error = {position_err*1e6} um.')
+                print(f'   angle error = {angle_err*1e6} urad.')
+
+            return G
+
 
     def plot_field_profile(self, ax=None, normalize=False):
 
@@ -406,6 +489,41 @@ class Sectormagnet(SectorBend):
     @property
     def s(self):
         return np.linspace(-self.arc_length, self.arc_length, 200)
+
+
+    @property
+    def p_fringe_beg(self):
+
+        if(self._b1>0):  
+            return self.p_beg - 10/self._b1*self.e3_beg
+        else:
+            return self.p_beg
+
+
+    @property
+    def p_fringe_end(self):
+
+        if(self._b1>0):  
+            return self.p_end + 10/self._b1*self.e3_end
+        else:
+            return self.p_end
+
+    @property
+    def z_fringe_beg_ccs(self):
+        return p_in_ccs(self.p_fringe_beg, self._ccs_beg_origin, self._M_beg)[2,0]
+
+    @property
+    def z_fringe_end_ccs(self):
+        return p_in_ccs(self.p_fringe_end, self.p_end, self._M_end)[2,0]
+
+    @property
+    def s_fringe_beg(self):
+        return self.s_beg - self.z_fringe_beg_ccs
+
+    @property
+    def s_fringe_end(self):
+        return self.s_beg + self.z_fringe_end_ccs
+    
 
 
 
@@ -619,6 +737,8 @@ class QuadF(Quad):
     @property
     def d2Gdz2(self):
         return self.d2grad_dz2()
+
+
 
 
 

@@ -100,7 +100,7 @@ class GDFFieldMap(Element):
     def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN', use_temp_file=False):
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
-        self.source_data_file = source_data
+        self.source_data_file = os.path.abspath(source_data)
 
         if(use_temp_file):
             temp_ascii_file = tempfile.NamedTemporaryFile().name + '.txt'
@@ -897,8 +897,7 @@ def track_on_axis(element, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_
     species='electron',
     xacc=xacc,
     GBacc=GBacc,
-    n_screen=n_screen, 
-    s_beg=element.s_beg)
+    n_screen=n_screen)
 
     return G
 
@@ -921,9 +920,17 @@ def autophase_track1(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, 
 
     return -energy_gain
 
-def autophase(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100):
+def autophase(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100, verbose=True):
 
     """ Auto phases a cavity for a particle entering the fieldmap at time = t with total momentum = p """
+
+    if(verbose):
+
+        print(f'\n> Phasing: {cavity.name}')
+        print(f'   t_beg = {t} sec.')
+        print(f'   s_beg = {cavity.s_beg} m.')
+        print(f'   scale = {cavity._scale}.')
+        print(f'   relative phase = {cavity._relative_phase} deg.')
 
     cavity._oncrest_phase=0
     cavity._momentum_beg=p
@@ -976,6 +983,12 @@ def autophase(cavity, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir
 
     cavity._momentum_end=G.screen[-1]['mean_p']
     cavity._t_end=G.screen[-1]['mean_t']
+
+    if(verbose):
+        print(f'\n   t_end = {cavity._t_end} m.')
+        print(f'   s_end = {cavity.s_end} m.')
+        print(f'   oncrest phase = {cavity._oncrest_phase}')
+        print(f'   energy gain =  {p2e(cavity._momentum_end)-p2e(p):0.3f} eV.')
 
     return G   
 

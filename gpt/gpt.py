@@ -606,8 +606,8 @@ class GPT:
     def track1(self, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, s=None, species='electron', output='tout'):
         return track1(self, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, species=species, s=s, output=output)
 
-    def track1_to_z(self, z_end, ds=0, ccs_beg='wcs', ccs_end='wcs', x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1, status=1, species='electron'):
-        return track1_to_z(self, z_end=z_end, ds=ds, ccs_beg=ccs_beg, ccs_end=ccs_end, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, weight=weight, status=status, species=species)
+    def track1_to_z(self, z_end, ds=0, ccs_beg='wcs', ccs_end='wcs', x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1, status=1, species='electron', s_screen=0):
+        return track1_to_z(self, z_end=z_end, ds=ds, ccs_beg=ccs_beg, ccs_end=ccs_end, x0=x0, px0=px0, y0=y0, py0=py0, z0=z0, pz0=pz0, t0=t0, weight=weight, status=status, species=species, s_screen=s_screen)
 
     def track1_in_ccs(self, 
         z_beg=0, 
@@ -649,8 +649,8 @@ class GPT:
             n_screen=n_screen,
             s_beg=s_beg)
 
-    def get_zminmax_line(self, z_beg, z_end):
-        return get_zminmax_line(self, z_beg, z_end)
+    def get_zminmax_line(self, z_beg, z_end, ccs='wcs'):
+        return get_zminmax_line(self, z_beg, z_end, ccs=ccs)
 
     def copy(self):
         """
@@ -736,6 +736,7 @@ def track1_to_z(gpt_object,
     ds=None, 
     ccs_beg='wcs', 
     ccs_end='wcs', 
+    s_screen=0,
     x0=0, 
     px0=0, 
     y0=0, 
@@ -750,7 +751,7 @@ def track1_to_z(gpt_object,
     xacc=6.5,
     GBacc=6.5):
 
-    """ Tracks a single particle up to z_end in "ccs" curvilinear coordinate system"""
+    """ Tracks a single particle starting in ccs_beg to a point in ccs_end """
 
     particle = single_particle(x=x0, px=px0, y=y0, py=py0, z=z0, pz=pz0, t=t0, weight=weight, status=status, species=species)
 
@@ -765,18 +766,17 @@ def track1_to_z(gpt_object,
     
     delta_t = ds/c/particle['mean_beta_z']
 
-    settings = {'time':time, 'tmax':time+1.2*delta_t, 'Ntout':Ntout, 'xacc':xacc, 'GBacc':GBacc, 'ZSTOP':z_end+2*ds}
+    settings = {'time':time, 'tmax':time+1.2*delta_t, 'Ntout':Ntout, 'xacc':xacc, 'GBacc':GBacc, 'ZSTART':z0-0.1, 'ZSTOP':500}
 
     gpt_object.initial_particles = particle
     gpt_object.set_variables(settings)
 
-    gpt_object.input['lines'].append(get_screen_line(ccs_end, z=z_end))
-    gpt_object.run()
+    gpt_object.input['lines'].append(get_screen_line(ccs_end, z=z_end, s=s_screen))
+ 
+    gpt_object.get_zminmax_line(-10, z_end, ccs=ccs_end)
 
-    if(gpt_object.n_screen>0):
-        return gpt_object.screen[-1]
-    else:
-        return None
+    gpt_object.run()
+    return gpt_object
 
 def track1_in_ccs(gpt_object, 
     z_beg=0, 
@@ -807,12 +807,12 @@ def track1_in_ccs(gpt_object,
     gpt_object.set_variables(settings)
 
     if(n_screen==1):
-        gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end, s_beg=s_beg))
+        gpt_object.input['lines'].append(get_screen_line(ccs, z=z_end, s=s_beg))
 
     else:
         zs = np.linspace(z_beg, z_end, n_screen)
         for z in zs:
-            gpt_object.input['lines'].append(get_screen_line(ccs, z=z, s_beg=s_beg))
+            gpt_object.input['lines'].append(get_screen_line(ccs, z=z, s=s_beg))
 
     gpt_object.run()
 
@@ -836,19 +836,17 @@ def track1(gpt_object, x0=0, px0=0, y0=0, py0=0, z0=0, pz0=1e-15, t0=0, weight=1
     return track(gpt_object, particles, s=s)
 
 
-def get_screen_line(ccs='wcs', r=[0,0,0], e1=[1,0,0], e2=[0,1,0], z=0, s_beg=0):
-
-    scr_line = f'screen("{ccs}", {r[0]}, {r[1]}, {r[2]}, {e1[0]}, {e1[1]}, {e1[2]}, {e2[0]}, {e2[1]}, {e2[2]}, {z});'
-
-    return f'screen("{ccs}", {r[0]}, {r[1]}, {r[2]}, {e1[0]}, {e1[1]}, {e1[2]}, {e2[0]}, {e2[1]}, {e2[2]}, {z});'
+def get_screen_line(ccs='wcs', r=[0,0,0], e1=[1,0,0], e2=[0,1,0], z=0, s=0):
+    return f'screen("{ccs}", {r[0]}, {r[1]}, {r[2]-s}, {e1[0]}, {e1[1]}, {e1[2]}, {e2[0]}, {e2[1]}, {e2[2]}, {z+s});'
 
 def get_zminmax_line(gpt_object, z_beg, z_end, ccs='wcs'):
 
     zminmax_line = f'zminmax("{ccs}", "I", {z_beg}, {z_end});'
 
-    for ii,line in enumerate(gpt_object.input['lines']):
-        if('zminmax' in line):
-            gpt_object.input[ii]=zminmax_line
+    #for ii, line in enumerate(gpt_object.input['lines']):
+        #print(ii,line)
+    gpt_object.input['lines'].append(zminmax_line)
+            #print(gpt_object.input[ii])
 
     
 

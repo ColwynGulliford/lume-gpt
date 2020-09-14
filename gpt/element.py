@@ -367,6 +367,8 @@ class Beg(Element):
         self._ccs_beg = 'wcs'
         self._ccs_end = 'wcs'
 
+        self._ccs_beg_origin = cvector(origin)
+
     @property
     def ccs_beg_origin(self):
         return self._p_end
