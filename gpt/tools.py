@@ -65,10 +65,10 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
     log = []
 
     kill_on_warning = len(kill_msgs)>1
-
+    
     try:
 
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
         while(process.poll() is None):
 
