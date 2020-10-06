@@ -66,8 +66,6 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
 
     kill_on_warning = len(kill_msgs)>1
 
-    print(timeout)
-
     try:
 
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout)
