@@ -723,7 +723,7 @@ class Map2D_E(Map2D):
 
 class Map2D_B(Map2D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}, field_pos='center'):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}, field_pos='center', scale=1):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Br', 'Bz'])
 
@@ -736,6 +736,8 @@ class Map2D_B(Map2D):
         self._field_pos = field_pos
 
         self.fieldstr='Bz'
+
+        self._scale=scale
 
         self.place()
 
