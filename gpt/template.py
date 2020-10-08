@@ -23,9 +23,9 @@ BASIC_TEMPLATE=[
 '\n', 
 '    if (space_charge_type == 1) {\n', 
 '        if(cathode == 1) {\n'
-'            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n', 
-'        } else {\n'
 '            spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n',
+'        } else {\n'
+'            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n', 
 '        }' 
 '    }\n', 
 '    if (space_charge_type == 2) {\n', 
