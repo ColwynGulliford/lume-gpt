@@ -648,7 +648,7 @@ class Map2D(GDFFieldMap):
             zoff = 0
 
         zs = self.z
-        Fz = self.on_axis_Ez
+        Fz = getattr(self, self.fieldstr)[self.r==0]
 
         zs = self.s_beg + zoff + self['z']
 
@@ -735,6 +735,8 @@ class Map2D_B(Map2D):
         self._color = '#2ca02c'
         self._field_pos = field_pos
 
+        self.fieldstr='Bz'
+
         self.place()
 
     @property
@@ -744,6 +746,35 @@ class Map2D_B(Map2D):
     @property
     def on_axis_integral(self):
         return np.trapz(self.on_axis_Bz, self.z[self.r==0])
+
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        if(self._field_pos=='center'):
+            zoff = self._length/2.0
+        elif(self._field_pos=='end'):
+            zoff = self._length
+        else:
+            zoff = 0
+
+        zs = self.z
+        Fz = getattr(self, self.fieldstr)[self.r==0]
+
+        zs = self.s_beg + zoff + self['z']
+
+        if(normalize):
+            Fz = np.abs(Fz/np.max(np.abs(Fz)))
+
+        ax.plot(zs, Fz, self._color)
+        ax.set_xlabel('s (m)')
+
+        if(not normalize):
+            ax.set_xlabel('z (m)')
+            ax.set_ylabel('$B_z$ (V/m)')
+    
+        return ax
 
 class Map25D_TM(Map2D):
 
