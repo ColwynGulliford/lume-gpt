@@ -21,9 +21,9 @@ if (space_charge == 1) {
 
     if (space_charge_type == 1) {
         if(cathode == 1) {
-            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
-        } else {
             spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        } else {
+            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
         }    }
     if (space_charge_type == 2) {
         setrmacrodist("beam","u",tree_code_R,0) ;
