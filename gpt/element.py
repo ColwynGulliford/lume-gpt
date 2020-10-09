@@ -780,10 +780,10 @@ class Lattice():
 
                 if(element._type in ['Map25D_TM' or 'Map1D_TM']):
 
-                    lines.appen(f'phasing_amplitude_{count} = {element._name}_scale;\n')
-                    lines.appen(f'phasing_on_crest_{count} = {element._name}_oncrest_phase;\n')
-                    lines.appen(f'phasing_relative_{count} = {element._name}_relative_phase;\n')
-                    lines.appen(f'phasing_gamma_{count} = {element._name}_gamma;\n\n')
+                    lines.append(f'phasing_amplitude_{count} = {element._name}_scale;\n')
+                    lines.append(f'phasing_on_crest_{count} = {element._name}_oncrest_phase;\n')
+                    lines.append(f'phasing_relative_{count} = {element._name}_relative_phase;\n')
+                    lines.append(f'phasing_gamma_{count} = {element._name}_gamma;\n\n')
                     
                     count=count+1
 
