@@ -548,6 +548,7 @@ class Map1D_TM(Map1D):
         map_line = map_line + f', {name}_phase, '
 
         extra_lines.append(f'{name}_frequency = {self._frequency};');
+        extra_lines.append(f'{name}_gamma = 1;')
         map_line = map_line + f'2*pi*{name}_frequency);'
 
         return extra_lines + [map_line]
@@ -885,6 +886,7 @@ class Map25D_TM(Map2D):
         extra_lines.append(f'{name}_relative_phase = {relative_phase};')
         extra_lines.append(f'{name}_phase = ({name}_oncrest_phase + {name}_relative_phase)*pi/180;')
         extra_lines.append(f'{name}_k = {self._k};')
+        extra_lines.append(f'{name}_gamma = 1;')
 
         map_line = map_line + f', {name}_k, {name}_phase, '
         extra_lines.append(f'{name}_frequency = {self._frequency};')

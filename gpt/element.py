@@ -737,7 +737,7 @@ class Lattice():
     def __add__(self, lattice):
         return self.combine(lattice)
 
-    def write_gpt_lines(self, template_file=None, output_file=None, slices=None):
+    def write_gpt_lines(self, template_file=None, output_file=None, slices=None, legacy_phasing=False):
 
         file_lines = []
         element_lines = []
@@ -770,6 +770,24 @@ class Lattice():
                     file_lines.append(line)
 
         lines = file_lines + element_lines
+
+        if(legacy_phasing):
+
+            lines.append('\n#Legacy Phasing Lines\n')
+
+            count=0
+            for element in self._elements:
+
+                if(element._type in ['Map25D_TM' or 'Map1D_TM']):
+
+                    lines.appen(f'phasing_amplitude_{count} = {element._name}_scale;\n')
+                    lines.appen(f'phasing_on_crest_{count} = {element._name}_oncrest_phase;\n')
+                    lines.appen(f'phasing_relative_{count} = {element._name}_relative_phase;\n')
+                    lines.appen(f'phasing_gamma_{count} = {element._name}_gamma;\n\n')
+                    
+                    count=count+1
+
+
 
         if(output_file is not None):
 
