@@ -767,6 +767,8 @@ class Map2D_B(Map2D):
 
         zs = self.s_beg + zoff + self['z']
 
+        print(max(Fz))
+
         if(normalize):
             Fz = np.abs(Fz/np.max(np.abs(Fz)))
 
