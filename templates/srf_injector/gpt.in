@@ -1,11 +1,11 @@
 setfile("beam", "gpt_particles.gdf");
 time=0.0;
 auto_phase=0.0;
-space_charge=1.0;
-cathode=1.0;
+space_charge=0.0;
+cathode=0.0;
 space_charge_type=1.0;
 RadiusMax=0.04;
-GBacc=6.5;
+GBacc=5.5;
 xacc=6.5;
 accuracy(GBacc, xacc);
 dtmin=1e-16;
@@ -40,9 +40,13 @@ if(Ntout>0) {
     tout(time, tmax, tmax/Ntout);
 }
 
+
+# beg
+
+# swifel
 swifel_x = 0.0;
 swifel_y = 0.0;
-swifel_z = 0.0; #115;
+swifel_z = 0.0;
 swifel_scale = 1;
 swifel_oncrest_phase = 0;
 swifel_relative_phase = 0;
@@ -50,17 +54,19 @@ swifel_phase = (swifel_oncrest_phase + swifel_relative_phase)*pi/180;
 swifel_k = 0;
 swifel_gamma = 1;
 swifel_frequency = 185916496.0;
-Map25D_TM("wcs", swifel_x, swifel_y, swifel_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/swifel.fix.gdf", "R", "Z", "Er", "Ez", "Bphi", swifel_scale, swifel_k, swifel_phase, 2*pi*swifel_frequency);
+Map25D_TM("wcs", swifel_x, swifel_y, swifel_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/swifel_gun_7_cm_gap_2_cm_pipe.gdf", "R", "Z", "Er", "Ez", "Bphi", swifel_scale, swifel_k, swifel_phase, 2*pi*swifel_frequency);
 
-sol1_x = 0.0;
-sol1_y = 0.0;
-sol1_z = 0.17321817913611793;
+# sol1
+sol1_x = -0.0;
+sol1_y = -0.0;
+sol1_z = 0.17321817913611792;
 sol1_scale = 1;
-Map2D_B("wcs", sol1_x, sol1_y, sol1_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/sol1.gdf", "R", "Z", "Br", "Bz", sol1_scale);
+Map2D_B("wcs", sol1_x, sol1_y, sol1_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/solenoid_12cm_distance.gdf", "R", "Z", "Br", "Bz", sol1_scale);
 
+# c91
 c91_x = 0.0;
 c91_y = 0.0;
-c91_z = 1.9471379962147757; #1.2736379962147757
+c91_z = 1.9471379962147757;
 c91_scale = 13745260.538205162;
 c91_oncrest_phase = 0;
 c91_relative_phase = 0;
@@ -68,17 +74,19 @@ c91_phase = (c91_oncrest_phase + c91_relative_phase)*pi/180;
 c91_k = 0;
 c91_gamma = 1;
 c91_frequency = 1300000000.0;
-Map25D_TM("wcs", c91_x, c91_y, c91_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c91_scale, c91_k, c91_phase, 2*pi*c91_frequency);
+Map25D_TM("wcs", c91_x, c91_y, c91_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c91_scale, c91_k, c91_phase, 2*pi*c91_frequency);
 
+# sol12
 sol12_x = 0.0;
 sol12_y = 0.0;
 sol12_z = 4.0;
 sol12_scale = 1;
-Map2D_B("wcs", sol12_x, sol12_y, sol12_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/sol2.gdf", "R", "Z", "Br", "Bz", sol12_scale);
+Map2D_B("wcs", sol12_x, sol12_y, sol12_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/wifel_solenoid.gdf", "R", "Z", "Br", "Bz", sol12_scale);
 
+# c92
 c92_x = 0.0;
 c92_y = 0.0;
-c92_z = 6.0; #5.3265
+c92_z = 6.0;
 c92_scale = 11946233.551708557;
 c92_oncrest_phase = 0;
 c92_relative_phase = 0;
@@ -86,11 +94,12 @@ c92_phase = (c92_oncrest_phase + c92_relative_phase)*pi/180;
 c92_k = 0;
 c92_gamma = 1;
 c92_frequency = 1300000000.0;
-Map25D_TM("wcs", c92_x, c92_y, c92_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c92_scale, c92_k, c92_phase, 2*pi*c92_frequency);
+Map25D_TM("wcs", c92_x, c92_y, c92_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c92_scale, c92_k, c92_phase, 2*pi*c92_frequency);
 
+# c93
 c93_x = 0.0;
 c93_y = 0.0;
-c93_z = 7.3836; #6.710100000000001
+c93_z = 7.3836;
 c93_scale = 25384865.363246165;
 c93_oncrest_phase = 0;
 c93_relative_phase = 0;
@@ -98,11 +107,12 @@ c93_phase = (c93_oncrest_phase + c93_relative_phase)*pi/180;
 c93_k = 0;
 c93_gamma = 1;
 c93_frequency = 1300000000.0;
-Map25D_TM("wcs", c93_x, c93_y, c93_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c93_scale, c93_k, c93_phase, 2*pi*c93_frequency);
+Map25D_TM("wcs", c93_x, c93_y, c93_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c93_scale, c93_k, c93_phase, 2*pi*c93_frequency);
 
+# c94
 c94_x = 0.0;
 c94_y = 0.0;
-c94_z = 8.767199999999999; #8.093699999999998
+c94_z = 8.767199999999999;
 c94_scale = 12152605.998968443;
 c94_oncrest_phase = 0;
 c94_relative_phase = 0;
@@ -110,11 +120,12 @@ c94_phase = (c94_oncrest_phase + c94_relative_phase)*pi/180;
 c94_k = 0;
 c94_gamma = 1;
 c94_frequency = 1300000000.0;
-Map25D_TM("wcs", c94_x, c94_y, c94_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c94_scale, c94_k, c94_phase, 2*pi*c94_frequency);
+Map25D_TM("wcs", c94_x, c94_y, c94_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c94_scale, c94_k, c94_phase, 2*pi*c94_frequency);
 
+# c95
 c95_x = 0.0;
 c95_y = 0.0;
-c95_z = 10.1508; #9.4773
+c95_z = 10.1508;
 c95_scale = 8918661.237543773;
 c95_oncrest_phase = 0;
 c95_relative_phase = 0;
@@ -122,11 +133,12 @@ c95_phase = (c95_oncrest_phase + c95_relative_phase)*pi/180;
 c95_k = 0;
 c95_gamma = 1;
 c95_frequency = 1300000000.0;
-Map25D_TM("wcs", c95_x, c95_y, c95_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c95_scale, c95_k, c95_phase, 2*pi*c95_frequency);
+Map25D_TM("wcs", c95_x, c95_y, c95_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c95_scale, c95_k, c95_phase, 2*pi*c95_frequency);
 
+# c96
 c96_x = 0.0;
 c96_y = 0.0;
-c96_z = 11.5344; #10.860899999999999
+c96_z = 11.5344;
 c96_scale = 32000000.0;
 c96_oncrest_phase = 0;
 c96_relative_phase = 0;
@@ -134,11 +146,12 @@ c96_phase = (c96_oncrest_phase + c96_relative_phase)*pi/180;
 c96_k = 0;
 c96_gamma = 1;
 c96_frequency = 1300000000.0;
-Map25D_TM("wcs", c96_x, c96_y, c96_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c96_scale, c96_k, c96_phase, 2*pi*c96_frequency);
+Map25D_TM("wcs", c96_x, c96_y, c96_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c96_scale, c96_k, c96_phase, 2*pi*c96_frequency);
 
+# c97
 c97_x = 0.0;
 c97_y = 0.0;
-c97_z = 12.918; #12.244499999999999
+c97_z = 12.918;
 c97_scale = 32000000.0;
 c97_oncrest_phase = 0;
 c97_relative_phase = 0;
@@ -146,11 +159,12 @@ c97_phase = (c97_oncrest_phase + c97_relative_phase)*pi/180;
 c97_k = 0;
 c97_gamma = 1;
 c97_frequency = 1300000000.0;
-Map25D_TM("wcs", c97_x, c97_y, c97_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c97_scale, c97_k, c97_phase, 2*pi*c97_frequency);
+Map25D_TM("wcs", c97_x, c97_y, c97_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c97_scale, c97_k, c97_phase, 2*pi*c97_frequency);
 
+# c98
 c98_x = 0.0;
 c98_y = 0.0;
-c98_z = 14.301599999999997; #13.628099999999996; 
+c98_z = 14.301599999999997;
 c98_scale = 32000000.0;
 c98_oncrest_phase = 0;
 c98_relative_phase = 0;
@@ -158,11 +172,12 @@ c98_phase = (c98_oncrest_phase + c98_relative_phase)*pi/180;
 c98_k = 0;
 c98_gamma = 1;
 c98_frequency = 1300000000.0;
-Map25D_TM("wcs", c98_x, c98_y, c98_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c98_scale, c98_k, c98_phase, 2*pi*c98_frequency);
+Map25D_TM("wcs", c98_x, c98_y, c98_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c98_scale, c98_k, c98_phase, 2*pi*c98_frequency);
 
+# c99
 c99_x = 0.0;
 c99_y = 0.0;
-c99_z = 15.6852; #15.0117;
+c99_z = 15.6852;
 c99_scale = 32000000.0;
 c99_oncrest_phase = 0;
 c99_relative_phase = 0;
@@ -170,8 +185,9 @@ c99_phase = (c99_oncrest_phase + c99_relative_phase)*pi/180;
 c99_k = 0;
 c99_gamma = 1;
 c99_frequency = 1300000000.0;
-Map25D_TM("wcs", c99_x, c99_y, c99_z, 1, 0, 0, 0, 1, 0, "/home/cg248/git/lume-gpt/templates/srf_injector/fields/tesla9cell.gdf", "R", "Z", "Er", "Ez", "Bphi", c99_scale, c99_k, c99_phase, 2*pi*c99_frequency);
+Map25D_TM("wcs", c99_x, c99_y, c99_z, 1, 0, 0, 0, 1, 0, "/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/srf_injector/fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c99_scale, c99_k, c99_phase, 2*pi*c99_frequency);
 
+# scr1
 screen("wcs", 0, 0, 0.0, 1, 0, 0, 0, 1, 0, 16.5);
 
 #Legacy Phasing Lines

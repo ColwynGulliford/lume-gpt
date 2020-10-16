@@ -63,66 +63,64 @@ class Element:
                 self._p_ref = np.concatenate( (self._p_ref, ps) , axis=1)
 
         else:
+
             self._s_ref = np.array([self._s_beg, self._s_end])
             self._p_ref = np.concatenate( (self._p_beg, self._p_end) , axis=1)
 
-    def place(self, ref_element=None, ds=0):
-
-        """ Places an element with respect to a reference element, shifted by ds
-            If ds >= 0, the this is the distance from ref_element.p_end to self.p_beg 
-            If ds < 0, then this is the distance from self.p_end to ref_element.p_beg
-        """
+    def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
 
         if(ref_element is None):
             ref_element=Beg()
 
-        if(ds>=0):
+        self._ccs_beg_origin = ref_element.ccs_beg_origin
 
-            s = ref_element.s_end
-            M = ref_element.M_end
-            p = ref_element.p_end
+        e3 = ref_element.e3_beg
 
-            if(is_bend(ref_element)):
-                self._ccs_beg_origin = p
-            else:
-                self._ccs_beg_origin = ref_element.ccs_beg_origin
+        self._M_beg = ref_element.M_beg
+        self._M_end = ref_element.M_end
 
-            e3 = cvector(M[:,2])
- 
-            self._ccs_beg = ref_element.ccs_end
-            self._ccs_end = ref_element.ccs_end  # Straight line, no ccs flips
+        if(ref_element=='end'):
 
-            self._s_beg = s + ds
-            self._p_beg = p + ds*e3
-            self._M_beg = M
+            s_ref = ref_element.s_end
+            p_ref = ref_element.p_end
 
-            self._p_end = self.p_beg + self._length*e3
-            self._M_end = M
-            self._s_end = s + ds + self._length
+
+
+        elif(ref_origin=='center'):
+
+            s_ref = ref_element.s_beg + ref_element.length/2.0
+            p_ref = ref_element.p_beg + (ref_element.length/2.0)*e3 
 
         else:
 
-            s = ref_element.s_beg
-            M = ref_element.M_beg
-            p = ref_element.p_beg
+            s_ref = ref_element.s_beg
+            p_ref = ref_element.p_beg
 
-            self._ccs_beg_origin = ref_element.ccs_beg_origin
+        if(element_origin=='beg'):
 
-            e3 = cvector(M[:,2])
+            self._s_beg = s_ref + ds
+            self._s_end = self.s_beg + self.length
 
-            self._ccs_beg = ref_element.ccs_beg
-            self._ccs_end = ref_element.ccs_beg  # Straight line, no ccs flips
+            self._p_beg = p_ref + ds*e3
+            self._p_end = self.p_beg + self.length*e3
 
-            self._s_end = s + ds
-            self._p_end = p + ds*e3
+        elif(element_origin=='center'):
 
-            self._p_beg = self.p_end - self._length*e3
-            self._s_beg= s + ds - self._length
+            self._s_beg = s_ref + ds - self.length/2.0
+            self._s_end = self.s_beg + self.length
+
+            self._p_beg = p_ref + (ds - self.length/2.0)*e3
+            self._p_end = self.p_beg + self.length*e3 
+
+        else:
+
+            self._s_end = s_ref + ds
+            self._s_beg = self.s_end - self.length
+
+            self._p_end = p_ref + ds*e3
+            self._p_beg = self.p_end - self.length*e3
 
         self._ccs_end = ref_element.ccs_end  # Straight line, no ccs flips
-
-        self._M_beg = M
-        self._M_end = M
 
         self._ds = np.linalg.norm(self._p_beg - self._ccs_beg_origin)
         self.set_ref_trajectory()
@@ -286,7 +284,6 @@ class Element:
     @property
     def t_beg(self):
         return self._t_end
-    
 
     def gpt_lines(self):
         return []
@@ -294,8 +291,6 @@ class Element:
     def write_element_to_gpt_file(self, gptfile):
 
         assert os.path.exists(gptfile)
-
-        #print(self._relative_phase, self._oncrest_phase)
 
         with open(gptfile, 'a') as fid:
             lines = self.gpt_lines()
@@ -418,11 +413,10 @@ class SectorBend(Element):
         ostr = f'{ostr}\nCCS into dipole: "{self._ccs_beg}"'
         return ostr
 
-    def place(self, previous_element=Beg(), ds=0):
-
-        """ This functin sets the element in the correct position in the lattice """
+    def place(self, previous_element=Beg(), ds=0, ref_origin='end', element_origin='beg'):
 
         assert ds>=0, "Bending magnets must be added in beamline order (ds>=0)."
+        assert ref_origin=='end' and element_origin=='beg', "Benging magnets are places wrt end of reference element to beg of bending element."
 
         self._ccs_beg = previous_element.ccs_end
         self._ccs_end = f'{self.name}_ccs_end'
@@ -549,10 +543,9 @@ class Lattice():
 
     def sort(self):
 
-        s = [ele.s_beg for ele in self._elements]
+        s = [0.5*(ele.s_beg+ele.s_end) for ele in self._elements]
         sorted_indices = sorted(range(len(s)), key=lambda k: s[k])
         self._elements = [self._elements[sindex] for sindex in sorted_indices]
-
 
     def add(self, element, ds, ref_element=None, ref_origin='end', element_origin='beg'):
 
@@ -560,57 +553,14 @@ class Lattice():
             assert ele.name != element.name, f'Lattice.add Error: cannot add elemnt with name = "{element.name}" to lattice, name already exists.'
 
         if(ref_element is None):
-
-            element.place(self._elements[-1], ds=ds)
-            self._elements.append(element)
+            ref_element = self._elements[-1]
 
         else:
-
             ref_element = self[ref_element]
-        
-            if(ds>=0):
-                if(element_origin =='beg' ):
-                    element_delta = 0
-                elif(element_origin == 'center'):
-                    element_delta = -np.sign(ds)*element.length/2.0
-                elif(element_origin == 'end' ):
-                    element_delta = -np.sign(ds)*element.length
 
-                if(ref_origin =='beg' ):
-                    ref_delta = -ref_element.length
-                elif(ref_origin == 'center'):
-                    ref_delta = -ref_element.length/2.0
-                elif(ref_origin == 'end' ):
-                    ref_delta = 0
-
-            elif(ds<0):
-
-                if(element_origin =='beg' ):
-                    element_delta = element.length
-                elif(element_origin == 'center'):
-                    element_delta = element.length/2.0
-                elif(element_origin == 'end' ):
-                    element_delta = 0
-
-                if(ref_origin =='beg' ):
-                    ref_delta = 0
-                elif(ref_origin == 'center'):
-                    ref_delta = ref_element.length/2.0
-                elif(ref_origin == 'end' ):
-                    ref_delta = ref_element.length
-
-            ref_index = self._elements.index(ref_element)
-
-            #print(element.name, ds, ref_delta, element_delta)
-
-            element.place(ref_element, ds=ds+element_delta+ref_delta)
-
-            if(ds<0):
-                self._elements.insert(ref_index, element)
-            else:
-                self._elements.insert(ref_index+1, element)
-
-            self.sort()
+        element.place(ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
+        self._elements.append(element)
+        self.sort()
 
     def __getitem__(self, identity):
 
@@ -708,7 +658,6 @@ class Lattice():
     def combine(self, lattice, ds=0):
 
         new_lattice = copy.deepcopy(self)
-
         new_lattice._name = new_lattice._name + '_and_' + lattice._name
 
         if(len(lattice._elements)<=1):
@@ -732,7 +681,6 @@ class Lattice():
             ref_element = new_element
 
         return new_lattice
-            
 
     def __add__(self, lattice):
         return self.combine(lattice)
@@ -750,11 +698,13 @@ class Lattice():
         # Write all the bend elements first
         for element in elements:
             if(is_bend(element)):
+                element_lines.append(f'\n# {element.name}\n')
                 for line in element.gpt_lines():
                     element_lines.append(line+'\n')
 
         for element in elements:
             if(not is_bend(element)):
+                element_lines.append(f'\n# {element.name}\n')
                 for line in element.gpt_lines():
                     element_lines.append(line+'\n')
 
@@ -786,8 +736,6 @@ class Lattice():
                     lines.append(f'phasing_gamma_{count} = {element._name}_gamma;\n\n')
                     
                     count=count+1
-
-
 
         if(output_file is not None):
 

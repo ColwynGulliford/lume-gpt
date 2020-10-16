@@ -7,7 +7,9 @@ import tempfile
 from gpt import GPT
 from gpt import tools
 from gpt.tools import cvector
+from gpt.tools import in_ecs
 from gpt.element import Element
+from gpt.element import Beg
 from gpt.template import basic_template
 from gpt.template import ztrack1_template
 
@@ -20,6 +22,7 @@ import scipy.constants
 
 MC2 = scipy.constants.value('electron mass energy equivalent in MeV')*1e6
 c = scipy.constants.c
+
 
 def gamma_to_beta(gamma):
     """ Converts relativistic gamma to beta"""
@@ -51,7 +54,6 @@ def p2e(p):
 def e2p(E):
     return np.sqrt(E**2 - MC2**2)
 
-
 def get_gdf_header(gdf_file, gdf2a_bin=os.path.expandvars('$GDF2A_BIN')):
 
     """Reads the header (column names) of gdf_file and returns them"""
@@ -67,41 +69,14 @@ def get_gdf_header(gdf_file, gdf2a_bin=os.path.expandvars('$GDF2A_BIN')):
     os.system(f'rm {temp_ascii_file}')
     return columns
 
-def scale_field_map(in_gdf_file, out_gdf_file):
-    pass
-
-def integrate_Ez(z, Ez, w, phi, beta=1):
-
-        """Integrates a complex field map on axis:
-        z  = vector of z points of on axis field map 
-        Ez = vector of Ez(z)
-        w  = cavity angular frequency [rad*Hz]
-        phi = phase offset
-        beta = relativistic beta, defaults to 1
-
-        Computes: Integral ( Ez(z) * exp(iwz /cbeta + phi) dz)
-        """
-
-        phi = phi*math.pi/180
-
-        if(beta==1):
-            phase = (w/c)*z + phi
-            return np.trapz(Ez*np.exp(np.complex(0,1)*phase), z)
-
-def energy_gain(z, Ez, w, phi, beta=1):
-
-        if(isinstance(phi, float)):
-            return np.real(integrate_Ez(z, Ez, w, phi, beta))
-        else:
-            return np.array( list(map(lambda p: np.real(integrate_Ez(z, Ez, w, p, beta=beta)), phi)) )
-
 class GDFFieldMap(Element):
+
     """ General class for holding GDF field map data """
 
-    def __init__(self, source_data, column_names = None, gdf2a_bin='$GDF2A_BIN', use_temp_file=False):
+    def __init__(self, source_data_file, gdf2a_bin='$GDF2A_BIN', use_temp_file=False):
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
-        self.source_data_file = os.path.abspath(source_data)
+        self.source_data_file = os.path.abspath(source_data_file)
 
         if(use_temp_file):
             temp_ascii_file = tempfile.NamedTemporaryFile().name + '.txt'
@@ -111,41 +86,41 @@ class GDFFieldMap(Element):
         os.system(f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}')
 
         with open(temp_ascii_file, 'r') as fp:
-            columns = fp.readline().split()
-        
-        if(column_names is None):
-            column_names = {c:c for c in columns}
+            column_names = fp.readline().split()
 
         self.column_names = column_names
         ndata = np.loadtxt(temp_ascii_file, skiprows=1)
 
         os.remove(temp_ascii_file)
 
-        self.coordinates = [name for name in columns if(name.lower() in ['r', 'x', 'y', 'z'])]
-        self.field_components = [name for name in columns if(name.lower() not in ['r', 'x', 'y', 'z'])]
+        self.coordinates = [name for name in column_names if(name.lower() in ['r', 'x', 'y', 'z'])]
+        self.field_components = [name for name in column_names if(name.lower() not in ['r', 'x', 'y', 'z'])]
 
-        assert len(columns)==len(self.coordinates) + len(self.field_components)
+        assert len(column_names)==len(self.coordinates) + len(self.field_components)
+
         for name in column_names:
-            assert name in self.coordinates or name in self.field_components, name
+            assert name in self.coordinates or name in self.field_components, f'Unknown variable: "{name}".'
 
         coordinate_sizes = {}
         coordinate_count_step = {}
             
+        self.data={}
+
         # Get the coordinate vectors:
         for var in self.coordinates:
-            name = column_names[var]
  
-            v0 = ndata[0, columns.index(var)]
-            for ii,v in enumerate(ndata[:, columns.index(var)]):
+            v0 = ndata[0, column_names.index(var)]
+            for ii, v in enumerate(ndata[:, column_names.index(var)]):
                 if(v!=v0):
                     coordinate_count_step[var] = ii
                     break
 
-            value = ndata[:, columns.index(var)] 
-            setattr(self, name, value ) 
-            #self.__setitem__(name, value)
+            value = ndata[:, column_names.index(var)] 
+            #setattr(self, var, value ) 
+            #setattr(self, var, value)
+            self.data[var]=value
 
-            coordinate_sizes[var] = len(np.unique(ndata[:, columns.index(var)]))
+            coordinate_sizes[var] = len(np.unique(ndata[:, column_names.index(var)]))
 
         coordinate_names = list(coordinate_count_step.keys())
         coordinate_steps = list(coordinate_count_step.values())
@@ -160,48 +135,57 @@ class GDFFieldMap(Element):
         self.data_shape = data_shape
 
         for component in self.field_components:
-            setattr(self, column_names[component], ndata[:,columns.index(component)])
-
-    def invert_column_names(self, var):
-        pass
+            #setattr(self, component, ndata[:,column_names.index(component)])
+            self.data[component]=ndata[:,column_names.index(component)]
 
     def __getitem__(self, key):
 
-        if(key in self.coordinates):
-            return np.unique(getattr(self, self.column_names[key]))
-        elif(key in self.field_components):
-            return np.transpose(np.reshape(getattr(self, self.column_names[key]), self.data_shape, 'F'), self.ordering)
+        column_names = [name.lower() for name in self.column_names]
+
+        if(key.lower() in column_names):
+            return self.data[self.column_names[column_names.index(key.lower())]]
+            #return getattr(self, self.column_names[column_names.index(key.lower())])
         else:
-
-            for k, v in self.column_names.items():
-                
-                if(key==v):
-                    
-                    if(k in self.coordinates):
-                        return np.unique(getattr(self, self.column_names[k]))
-                    elif(k in self.field_components):
-                        return np.transpose(np.reshape(getattr(self, self.column_names[k]), self.data_shape, 'F'), self.ordering)
-
             print(f'Field map does not contain item "{key}"')
 
+    def is_in_map(self, var):
+
+        column_names = [name.lower() for name in self.column_names]
+        if(var.lower() in column_names):
+            return True
+        else:
+            return False
+
+        #return np.transpose(np.reshape(getattr(self, v), self.data_shape, 'F'), self.ordering)
+
+
     def scale_coordinates(self, scale):
+        """ Scales all position coordinates in field map data by scale """
+ 
         for coordinate in self.coordinates:
-            setattr(self, coordinate, scale*getattr(self, coordinate))
+            #setattr(self, coordinate, scale*getattr(self, coordinate))
+            self.data[coordinate]=scale*self.data[coordinate]
 
     def scale_fields(self, scale):
+        """ Scales all field components in field map data by scale """
+
         for component in self.field_components:
-            setattr(self, component, scale*getattr(self, component))
+            #setattr(self, component, scale*getattr(self, component))
+            self.data[component]=scale*self.data[component]
 
     def write_gdf(self, new_gdf_file, asci2gdf_bin='$ASCI2GDF_BIN', verbose=True):
 
+        """ Writes a new GDF file"""
+
         temp_ascii_file = new_gdf_file + '.txt'
 
-        data = np.zeros( (len(getattr(self, self.field_components[0])), len(self.column_names)) )
+        data = np.zeros( (len(self.data[self.field_components[0]]), len(self.column_names)) )
 
         headers = []
         for ii, var in enumerate(self.coordinates+self.field_components):
             headers.append(var)
-            data[:,ii] = getattr(self, self.column_names[var])
+            #data[:,ii] = getattr(self, self.column_names[var])
+            data[:,ii] = self.data[self.column_names.index(var)]
 
         headers = '     '.join(headers)
         np.savetxt(temp_ascii_file, data, header=headers, comments=' ')
@@ -211,31 +195,26 @@ class GDFFieldMap(Element):
 
     def gpt_lines(self, ccs=None, gdf_file=None, e1=[1, 0, 0], e2=[0, 1, 0], scale =None, user_vars=[]):
 
-        element = self._name
+        """ Creates ASCII lines defininig field map element in GPT syntax """
 
-        inverse_column_names = {value:key for key,value in self.column_names.items()}
+        element = self._name
 
         if(ccs is None):
             ccs = self.ccs_beg
 
-        ds = np.linalg.norm((self._p_beg - self._ccs_beg_origin))
+        ds = in_ecs(self._p_beg, self._ccs_beg_origin, self.M_beg)[2]
+ 
         ccs_beg_e3 = cvector([0,0,1])
         r = ds*ccs_beg_e3
 
         map_line = f'{self.type}("{self.ccs_beg}", '
         extra_lines={}
 
-        if(self._field_pos=='center'):
-            zoff = self._length/2.0
-        elif(self._field_pos=='end'):
-            zoff = self._length
-        else:
-            zoff = 0
-
         for ii, coordinate in enumerate(['x', 'y','z']):
             #if(coordinate in user_vars):
             if(coordinate=='z'):
-                val = r[ii][0]+zoff
+                val = r[ii][0]-self['z'][0]
+                #print(self['z'][0])
             else:
                 val = r[ii][0]
             extra_lines[coordinate] = f'{element}_{coordinate} = {val};'
@@ -262,6 +241,8 @@ class GDFFieldMap(Element):
 
         map_line = map_line + f'"{gdf_file}", '
 
+        inverse_column_names = {rname:self.column_names[index] for index,rname in enumerate(self.required_columns)}
+
         for ii, rc in enumerate(self.required_columns):
             map_line = map_line + f'"{inverse_column_names[rc]}", '
         
@@ -276,92 +257,62 @@ class GDFFieldMap(Element):
 
         return [extra_line for extra_line in extra_lines.values()] + [map_line]
 
+    
+
 
 class Map1D(GDFFieldMap):
 
     """ Class for storing 1D GDF field maps, derives from GDFfieldMap """
 
-    def __init__(self, source_data, required_columns, gdf2a_bin='$GDF2A_BIN', column_names=None, zpos=0):
+    def __init__(self, source_data, required_columns, gdf2a_bin='$GDF2A_BIN'):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names)
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin)
 
-        self.zpos = zpos
         self._type = 'Map1D'
 
         self.required_columns = required_columns
         assert 'z' in required_columns
-        assert len(column_names)==len(self.required_columns)
-        for k,v in column_names.items():
-            assert v in self.required_columns, f'User defined column names must have a key name for {v}'
-            if(v!='z'):
-                self.fieldstr = v
-    @property
-    def on_axis_integral(self):
-        return np.trapz(getattr(self, self.fieldstr), self.zpos + getattr(self, 'z'))
 
-    def cum_on_axis_integral(self):
-        return cumptrapz(getattr(self, self.fieldstr), self.zpos + getattr(self, 'z'), initial=0)
+        if('Ez' in required_columns):
+            self.Fz_str='Ez'
+            self.Fz_unit='V/m'
+        else:
+            self.Fz_str='Bz'
+            self.Fz_unit='T'
 
     def plot_floor(self, axis=None, alpha=1.0, ax=None):
+        """ Plots the bounding box of the field map in z-x floor coordinates """
+        plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax)
 
-        f = 0.01
-        zs = getattr(self, 'z')
-        Fz = getattr(self, self.fieldstr)
+    def plot_field_profile(self, ax=None, normalize=False):
+        """ Plots the z, Fz field profile on axis """
+        plot_clyindrical_map_field_profile(self, ax=ax, normalize=normalize)
 
-        maxF = max(np.abs(Fz))
+    @property
+    def field_integral(self):
+        """ Returns the on axis integral of the Fz """
+        return np.trapz(self.Fz, self.z)
 
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zL = z
-                break
+    @property
+    def z(self):
+        """ Returns the vector of unique z points in map"""
+        return self['z']
 
-        zs = np.flip(zs)
-        Fz = np.flip(Fz)
-
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zR = z
-                break
-
-        effective_plot_length = zR-zL
-
-        if(ax == None):
-            ax = plt.gca()
-
-        pc = 0.5*(self.p_beg + self.p_end)
-
-        p1 = self.p_beg + (self._width/2)*self.e1_beg
-        p2 = self.p_beg - (self._width/2)*self.e1_beg
-        p3 = self.p_end + (self._width/2)*self.e1_beg
-        p4 = self.p_end - (self._width/2)*self.e1_beg
-
-        ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
-
-        p1 = pc + (self._width/2)*self.e1_beg - (effective_plot_length/2.0)*self.e3_beg
-        p2 = p1 - (self._width)*self.e1_beg
-        p3 = p2 + (effective_plot_length)*self.e3_beg
-        p4 = p3 + (self._width)*self.e1_beg
-
-        ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
-
-        ax.plot(ps1[2], ps1[0], self.color, alpha=0.2)
-        ax.plot(ps2[2], ps2[0], self.color, alpha=alpha)
-        ax.set_xlabel('z (m)')
-        ax.set_ylabel('x (m)')
-
-        if(axis=='equal'):
-            ax.set_aspect('equal')
-
-    #@property
-    #def z(self):
-    #    return self._z
+    @property
+    def Fz(self):
+        """ Returns the on axis field z component """
+        return self[self.Fz_str]
     
 
 class Map1D_E(Map1D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Ez':'Ez'}, zpos=0, width=0.2):
+    """
+    Defines a 1D [z, Ez] cylindrically electric symmetric field map object
+    """
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'], zpos=zpos)
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.2, scale=1):
+
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Ez'])
        
         self._name = name
         self._type = 'Map1D_E'
@@ -369,20 +320,27 @@ class Map1D_E(Map1D):
         self._width = 0.2
         self._height = self._width
         self._color = '#1f77b4'
+        self._scale = scale
+
+        self.place() 
+
+    def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
+        place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
     @property
-    def energy_gain(self, r=0, field_order =1):
+    def Ez(self):
+        return self.Fz
 
-        if(r==0):  # integrate on-axis -> trapz field map
-            return np.trapz(getattr(self, 'Ez'), self.zpos+getattr(self, 'z'))
-        else:
-            print('wtf?')
 
 class Map1D_B(Map1D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'Bz':'Bz'}, zpos=0, width=0.2, field_pos='center', scale=1):
+    """
+    Defines a 1D [z, Bz] cylindrically electric symmetric field map object
+    """
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Bz'], zpos=zpos)
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.2, scale=1):
+
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Bz'])
         
         self._name = name
         self._type = 'Map1D_B'
@@ -390,38 +348,20 @@ class Map1D_B(Map1D):
         self._width = width
         self._height = self._width
         self._color = '#2ca02c'
-        self._field_pos = 'center'
         self._scale=scale
 
         self.place()
 
-    def plot_field_profile(self, ax=None, normalize=False):
+    def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
+        place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
-        if(ax == None):
-            ax = plt.gca()
+    @property
+    def Bz(self):
+        return self.Fz
 
-        if(self._field_pos=='center'):
-            zoff = self._length/2.0
-        elif(self._field_pos=='end'):
-            zoff = self._length
-        else:
-            zoff = 0
-
-        zs = self.s_beg + zoff + self['z']
-
-        Bz = self['Bz']
-
-        if(normalize):
-            Bz = Bz/np.max(np.abs(Bz))
-        else:
-            Bz = self._scale*Bz
-
-        ax.plot(zs, Bz, self._color)
-        ax.set_xlabel('s (m)')
-
-        return ax
-
-        
+    @property
+    def larmor_angle(self, p):
+        return larmor_angle(self, p)
 
 
 class Map1D_TM(Map1D):
@@ -434,13 +374,10 @@ class Map1D_TM(Map1D):
         relative_phase=0,
         oncrest_phase=0,
         gdf2a_bin='$GDF2A_BIN', 
-        column_names={'z':'z', 'Ez':'Ez'}, 
-        kinetic_energy=float('Inf'), 
-        color='darkorange',
-        field_pos='center',
-        legacy_phasing_lines=False):
+        color='darkorange'
+        ):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['z', 'Ez'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Ez'])
 
         self._name = name
         self._type='Map1D_TM'
@@ -451,78 +388,21 @@ class Map1D_TM(Map1D):
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency
-        self._kinetic_energy = kinetic_energy
-
-        if(self._kinetic_energy==float('Inf')):
-            self._beta = 1
-        else:
-            gamma = 1+self._kinetic_energy/mc2
-            self._beta=np.sqrt(1 - 1/gamma**2)
-
-        self._field_pos=field_pos
         self._oncrest_phase=oncrest_phase
-        self._scale=1
         self._relative_phase=relative_phase
         self._scale=scale
 
         self.place()
 
-    def integrate_Ez(self, phi):
-        return integrate_Ez(self.z, self.Ez, self._w, phi, self._beta)
-
-    def energy_gain(self, phi):
-        return energy_gain(self.z, self.Ez, self._w, phi, self._beta)
+    def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
+        place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
     @property
-    def oncrest_phase(self):
-        return (-cmath.phase(self.integrate_Ez(0))*180/math.pi)%360
-
-    @property
-    def oncrest_energy_gain(self):
-        return self.energy_gain(self.oncrest_phase)
-
-    @property
-    def beta(self):
-        return self._beta
-
-    @beta.setter
-    def beta(self, beta):
-        self._beta = beta
-        self._kinetic_energy = beta_to_KE(beta)
-
-    @property
-    def kinetic_energy(self):
-        return self._kinetic_energy
-
-    @kinetic_energy.setter
-    def kinetic_energy(self, kinetic_energy):
-        self._kinetic_energy = kinetic_energy
-        self._beta = KE_to_beta(kinetic_energy)
+    def Ez(self):
+        return self.Fz
 
     def plot_field_profile(self, ax=None, normalize=False):
-
-        if(ax == None):
-            ax = plt.gca()
-
-        if(self._field_pos=='center'):
-            zoff = self._length/2.0
-        elif(self._field_pos=='end'):
-            zoff = self._length
-        else:
-            zoff = 0
-
-        zs = self.s_beg + zoff + self['z']
-
-        Ez = self['Ez']
-
-        if(normalize):
-            Ez = Ez/np.max(np.abs(Ez))
-
-        ax.plot(zs, Ez, self._color)
-        ax.set_xlabel('s (m)')
-
-        return ax
-
+        return plot_clyindrical_map_field_profile(self, ax=ax, normalize=False)
 
     def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
         return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
@@ -556,177 +436,87 @@ class Map1D_TM(Map1D):
 
 class Map2D(GDFFieldMap):
 
-    def __init__(self, source_data, required_columns, gdf2a_bin='$GDF2A_BIN', column_names=None, zpos=0):
+    """ Base class for all 2D cylindrically symmetric fields pointed along z """
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names)
-    
-        self.required_columns = required_columns
+    def __init__(self, source_data_file, required_columns, gdf2a_bin='$GDF2A_BIN'):
+
+        super().__init__(source_data_file, gdf2a_bin=gdf2a_bin)
+
+        self.required_columns=required_columns
+
         assert 'z' in required_columns
         assert 'r' in required_columns
-        assert len(column_names)>=len(self.required_columns)
 
-        for rc in required_columns:
-            assert rc in column_names.values(),f'User must specify a key name for required column {rc}'
+        if('Ez' in required_columns):
+            self.Fz_str='Ez'
+            self.Fz_unit='V/m'
+        else:
+            self.Fz_str='Bz'
+            self.Fz_unit='T'
 
     def plot_floor(self, axis=None, alpha=1.0, ax=None):
-
-        f = 0.01
-        zs = getattr(self, 'z')
-        Fz = getattr(self, self.fieldstr)
-
-        maxF = max(np.abs(Fz))
-
-        zL = zs[0]
-        if(abs(Fz[0])<f*maxF):
-            for ii, z in enumerate(zs):
-                if(np.abs(Fz[ii]) >= f*maxF):
-                    zL = z
-                    break
-
-        zs = np.flip(zs)
-        Fz = np.flip(Fz)
-
-        for ii,z in enumerate(zs):
-            if(np.abs(Fz[ii]) >= f*maxF):
-                zR = z
-                break
-
-        effective_plot_length = zR-zL
-
-        if(ax == None):
-            ax = plt.gca()
-
-        pc = 0.5*(self.p_beg + self.p_end)
-
-        max_radius = np.max(self['R'])
-
-        if(max_radius is None):
-            max_radius = np.max(self['r'])
-
-        pc = 0.5*(self.p_beg + self.p_end)
-
-        p1 = self.p_beg + (self._width/2)*self.e1_beg
-        p2 = self.p_beg - (self._width/2)*self.e1_beg
-        p3 = self.p_end + (self._width/2)*self.e1_beg
-        p4 = self.p_end - (self._width/2)*self.e1_beg
-
-        ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
-
-        max_radius = np.max(self['R'])
-
-        if(self._field_pos=='center'):
-            p0=pc
-        elif(self._field_pos=='end'):
-            p0=self.p_beg + cvector([0,0,effective_plot_length/2.0])
-
-        p1 = p0 + (self._width/2)*self.e1_beg - (effective_plot_length/2.0)*self.e3_beg
-        p2 = p1 - (self._width)*self.e1_beg
-        p3 = p2 + (effective_plot_length)*self.e3_beg
-        p4 = p3 + (self._width)*self.e1_beg
-
-        ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
-
-        ax.plot(ps1[2], ps1[0], self.color, alpha=0.2)
-        ax.plot(ps2[2], ps2[0], self.color, alpha=alpha)
-        ax.set_xlabel('z (m)')
-        ax.set_ylabel('x (m)')
-
-        if(axis=='equal'):
-            ax.set_aspect('equal')
-
-        return ax
+        return plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax)
 
     def plot_field_profile(self, ax=None, normalize=False):
+        return plot_clyindrical_map_field_profile(self, ax=ax, normalize=normalize)
 
-        if(ax == None):
-            ax = plt.gca()
+    @property
+    def field_integral(self):
+        return np.trapz(self.Fz, self.z)
 
-        if(self._field_pos=='center'):
-            zoff = self._length/2.0
-        elif(self._field_pos=='end'):
-            zoff = self._length
-        else:
-            zoff = 0
+    @property
+    def z(self):
 
-        zs = self.z
-        Fz = getattr(self, self.fieldstr)[self.r==0]
+        z = self['z']
+        r = self['r']
 
-        zs = self.s_beg + zoff + self['z']
+        return np.squeeze(z[r==0])
 
-        if(normalize):
-            Fz = np.abs(Fz/np.max(np.abs(Fz)))
+    @property
+    def r(self):
+        return np.unique(self['r'])
 
-        ax.plot(zs, Fz, self._color)
-        ax.set_xlabel('s (m)')
+    @property
+    def Fz(self):
+        return np.squeeze(self[self.Fz_str][self['r']==0])
 
-        if(not normalize):
-            ax.set_xlabel('z (m)')
-            ax.set_ylabel('$E_z$ (V/m)')
-    
-        return ax
-
-    def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
-        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
+    #def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+    #    return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
 
 class Map2D_E(Map2D):
-    
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er'}, field_pos='center', scale=1):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez'])
+    """
+    Defines a 2D (r,z), (Er, Ez) cylindrically electric symmetric field map object
+    """
+    
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', scale=1, r=[0,0,0]):
+
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez'])
+
         self._name = name
         self._type = 'Map2D_E'
         self._length = self.z[-1]-self.z[0]
         self._width = 0.2
         self._height = self._width
         self._color = '#1f77b4'
-        self._field_pos = field_pos
-
-        self.fieldstr='Ez'
         self._scale=scale
 
-        self.place()
+        self.place() 
 
-    def z(self):
-        return np.squeeze(self.z[self.r==0])
+    def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
+        place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
-    @property
-    def on_axis_Ez(self):
-        return np.squeeze(self.Ez[self.r==0])
 
-    @property
-    def on_axis_integral(self):
-        return np.trapz(self.on_axis_Ez, self.z[self.r==0])
-
-    def plot_field_profile(self, ax=None, normalize=False):
-
-        if(ax == None):
-            ax = plt.gca()
-
-        if(self._field_pos=='center'):
-            zoff = self._length/2.0
-        elif(self._field_pos=='end'):
-            zoff = self._length
-        else:
-            zoff = 0
-
-        zs = self.z
-        Fz = self.on_axis_Ez
-
-        zs = self.s_beg + zoff + self['z']
-
-        if(normalize):
-            Fz = np.abs(Fz/np.max(np.abs(Fz)))
-
-        ax.plot(zs, Fz, self._color)
-        ax.set_xlabel('s (m)')
-
-        return ax
 
 class Map2D_B(Map2D):
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', column_names={'z':'z', 'r':'r', 'Bz':'Bz', 'Br':'Br'}, field_pos='center', scale=1):
+    """
+    Defines a 2D (r,z), (Br, Bz) cylindrically magnetic symmetric field map object
+    """
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Br', 'Bz'])
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', field_pos='center', scale=1):
+
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Br', 'Bz'])
 
         self._type='Map2D_B'
         self._name = name
@@ -734,52 +524,16 @@ class Map2D_B(Map2D):
         self._width = 0.2
         self._height = self._width
         self._color = '#2ca02c'
-        self._field_pos = field_pos
-
-        self.fieldstr='Bz'
-
         self._scale=scale
 
         self.place()
 
-    @property
-    def on_axis_Bz(self):
-        return np.squeeze(self.Bz[self.r==0])
+    def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
+        place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
-    @property
-    def on_axis_integral(self):
-        return np.trapz(self.on_axis_Bz, self.z[self.r==0])
+    def larmor_angle(self, p):
+        return larmor_angle(self, p)
 
-    def plot_field_profile(self, ax=None, normalize=False):
-
-        if(ax == None):
-            ax = plt.gca()
-
-        if(self._field_pos=='center'):
-            zoff = self._length/2.0
-        elif(self._field_pos=='end'):
-            zoff = self._length
-        else:
-            zoff = 0
-
-        zs = self.z
-        Fz = getattr(self, self.fieldstr)[self.r==0]
-
-        zs = self.s_beg + zoff + self['z']
-
-        print(max(Fz))
-
-        if(normalize):
-            Fz = np.abs(Fz/np.max(np.abs(Fz)))
-
-        ax.plot(zs, Fz, self._color)
-        ax.set_xlabel('s (m)')
-
-        if(not normalize):
-            ax.set_xlabel('z (m)')
-            ax.set_ylabel('$B_z$ (V/m)')
-    
-        return ax
 
 class Map25D_TM(Map2D):
 
@@ -791,13 +545,11 @@ class Map25D_TM(Map2D):
         relative_phase=0,
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, 
-        kinetic_energy=float('Inf'),
-        field_pos='center',
         k=0,
-        color='darkorange',
-        legacy_phasing_lines=False):
+        color='darkorange'
+        ):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, column_names=column_names, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
 
         self._name=name
         self._type='Map25D_TM'
@@ -807,15 +559,7 @@ class Map25D_TM(Map2D):
 
         self._frequency = frequency
         self._w = 2*math.pi*frequency
-        self._kinetic_energy = kinetic_energy
 
-        if(self._kinetic_energy==float('Inf')):
-            self._beta = 1
-        else:
-            gamma = 1+self._kinetic_energy/mc2
-            self._beta=np.sqrt(1 - 1/gamma**2)
-
-        self._field_pos=field_pos
         self._oncrest_phase=0
 
         self._length = self.z[-1]-self.z[0]
@@ -825,46 +569,49 @@ class Map25D_TM(Map2D):
 
         self._k=k
 
-        self.fieldstr='Ez'
-        self.rstr = 'r'
+        self.Fz_str='Ez'
+        self.Fz_unit='V/m'
 
         self.place()
 
-    @property
-    def on_axis_Ez(self):
-        return np.squeeze(self.Ez[self.r==0])
+    def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
+        place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
-    def integrate_Ez(self, phi):
-        return integrate_Ez(self['z'], self.on_axis_Ez, self._w, phi, self._beta)
+    #@property
+    #def on_axis_Ez(self):
+    #    return np.squeeze(self.Ez[self.r==0])
 
-    def energy_gain(self, phi):
-        return energy_gain(self['z'], self.on_axis_Ez, self._w, phi, self._beta)
+    #def integrate_Ez(self, phi):
+    #    return integrate_Ez(self['z'], self.on_axis_Ez, self._w, phi, self._beta)
 
-    @property
-    def oncrest_phase(self):
-        return (-cmath.phase(self.integrate_Ez(0))*180/math.pi)%360
+    #def energy_gain(self, phi):
+    #    return energy_gain(self['z'], self.on_axis_Ez, self._w, phi, self._beta)
 
-    @property
-    def oncrest_energy_gain(self):
-        return self.energy_gain(self.oncrest_phase)
+    #@property
+    #def oncrest_phase(self):
+    #    return (-cmath.phase(self.integrate_Ez(0))*180/math.pi)%360
 
-    @property
-    def beta(self):
-        return self._beta
+    #@property
+    #def oncrest_energy_gain(self):
+    #    return self.energy_gain(self.oncrest_phase)
 
-    @beta.setter
-    def beta(self, beta):
-        self._beta = beta
-        self._kinetic_energy = beta_to_KE(beta)
+    #@property
+    #def beta(self):
+    #    return self._beta
 
-    @property
-    def kinetic_energy(self):
-        return self._kinetic_energy
+    #@beta.setter
+    #def beta(self, beta):
+    #    self._beta = beta
+    #    self._kinetic_energy = beta_to_KE(beta)
 
-    @kinetic_energy.setter
-    def kinetic_energy(self, kinetic_energy):
-        self._kinetic_energy = kinetic_energy
-        self._beta = KE_to_beta(kinetic_energy)
+    #@property
+    #def kinetic_energy(self):
+    #    return self._kinetic_energy
+
+    #@kinetic_energy.setter
+    #def kinetic_energy(self, kinetic_energy):
+    #    self._kinetic_energy = kinetic_energy
+    #    self._beta = KE_to_beta(kinetic_energy)
 
     @property
     def scale(self):
@@ -898,6 +645,9 @@ class Map25D_TM(Map2D):
 
         return lines
 
+    def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
+        return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
+
     def autophase_track1(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, oncrest_phase=0, workdir=None, n_screen=1):
         return autophase_track1(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, oncrest_phase=oncrest_phase, workdir=workdir, n_screen=n_screen)
 
@@ -905,7 +655,184 @@ class Map25D_TM(Map2D):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen, verbose=verbose)
 
 
+def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
 
+        if(ref_element is None):
+            ref_element=Beg()
+
+        ele._ccs_beg_origin = ref_element.ccs_beg_origin
+
+        e3 = ref_element.e3_beg
+
+        ele._M_beg = ref_element.M_beg
+        ele._M_end = ref_element.M_end
+
+        if(ref_element=='end'):
+
+            s_ref = ref_element.s_end
+            p_ref = ref_element.p_end
+
+        elif(ref_origin=='center'):
+
+            s_ref = ref_element.s_beg + ref_element.length/2.0
+            p_ref = ref_element.p_beg + (ref_element.length/2.0)*e3 
+
+        else:
+
+            s_ref = ref_element.s_beg
+            p_ref = ref_element.p_beg
+
+        if(element_origin=='beg'):
+
+            ele._s_beg = s_ref + ds
+            ele._s_end = ele.s_beg + ele.length
+
+            ele._p_beg = p_ref + ds*e3
+            ele._p_end = ele.p_beg + ele.length*e3
+
+        elif(element_origin=='center'):
+
+            ele._s_beg = s_ref + ds - ele.length/2.0
+            ele._s_end = ele.s_beg + ele.length
+
+            ele._p_beg = p_ref + (ds - ele.length/2.0)*e3
+            ele._p_end = ele.p_beg + ele.length*e3 
+
+        elif(element_origin=='origin'):
+
+            ele._s_beg = s_ref + ds + ele['z'][0]
+            ele._s_end = ele.s_beg + ele.length
+
+            ele._p_beg = p_ref + (ds + ele['z'][0])*e3
+            ele._p_end = ele.p_beg + ele.length*e3 
+
+        ele._ccs_beg = ref_element.ccs_end
+        ele._ccs_end = ref_element.ccs_end  # Straight line, no ccs flips
+
+        ele._ds = np.linalg.norm(ele._p_beg - ele._ccs_beg_origin)
+        ele.set_ref_trajectory()
+
+
+def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
+
+    """ 
+    Function for plotting the Ez or Bz on axis profile for cylindrically symmetric field map
+    Inputs: 
+        lement (object, Map1D_* or Map2D_* or Map25D_TM)
+        axis: None or str('equal') to set axex to same scale
+        alpha: alpha parameter to matplotlib pyplot.plot
+        ax: matplotlib axis object, if None provided usess gca().
+    Outputs:
+        ax: returns current axis handle being used
+    """
+
+    f = 0.01
+    zs = element.z
+    Fz = element.Fz
+
+    maxF = max(np.abs(Fz))
+
+    zL = zs[0]
+    if(abs(Fz[0])<f*maxF):
+        for ii, z in enumerate(zs):
+            if(np.abs(Fz[ii]) >= f*maxF):
+                zL = z
+                break
+
+    zs = np.flip(zs)
+    Fz = np.flip(Fz)
+
+    for ii,z in enumerate(zs):
+        if(np.abs(Fz[ii]) >= f*maxF):
+            zR = z
+            break
+
+    effective_plot_length = zR-zL
+
+    if(ax == None):
+        ax = plt.gca()
+
+    pc = 0.5*(element.p_beg + element.p_end)
+
+    p1 = element.p_beg + (element._width/2)*element.e1_beg
+    p2 = element.p_beg - (element._width/2)*element.e1_beg
+    p3 = element.p_end + (element._width/2)*element.e1_beg
+    p4 = element.p_end - (element._width/2)*element.e1_beg
+
+    ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
+
+    p0 = cvector([0, 0, zL-element.z[0]]) + element.p_beg
+
+    p1 = p0 + (element._width/2)*element.e1_beg 
+    p2 = p1 + effective_plot_length*element.e3_beg
+    p3 = p2 - (element._width)*element.e1_beg
+    p4 = p3 - effective_plot_length*element.e3_beg
+
+    ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
+
+    ax.plot(ps1[2], ps1[0], element.color, alpha=0.2)
+    ax.plot(ps2[2], ps2[0], element.color, alpha=alpha)
+    ax.set_xlabel('z (m)')
+    ax.set_ylabel('x (m)')
+
+    if(axis=='equal'):
+        ax.set_aspect('equal')
+
+    return ax
+
+
+def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
+  
+    """ 
+    Function for plotting the Ez or Bz on axis profile for cylindrically symmetric field map
+    Inputs: 
+        lement (object, Map1D_* or Map2D_* or Map25D_TM)
+        ax: matplotlib axis object, if None provided usess gca().
+        normalize: boolean, normalize field to 1 or not
+    Outputs:
+        ax: returns current axis handle being used
+    """
+
+    if(ax == None):
+        ax = plt.gca()
+
+    Fz = element.Fz
+
+    zs = element.s_beg + element.z - element.z[0]
+
+    if(normalize):
+        Fz = np.abs(Fz/np.max(np.abs(Fz)))
+
+    ax.plot(zs, Fz, element._color)
+    ax.set_xlabel('s (m)')
+
+    if(not normalize):
+        ax.set_xlabel('z (m)')
+        ax.set_ylabel(f'{element.Fz_str} ({element.Fz_unit})')
+    
+    return ax
+
+def larmor_angle(solenoid, p):
+    '''
+    Computs the Larmor angle through a solenoid field map 
+    Inputs:
+        solenoid: Map[1,2]D_B object
+        p: float, particle momentum
+    Outputs:
+        theta: float, larmor angle [rad]
+    '''
+    pass
+
+def electrostatic_energy_gain(efield):
+    '''
+    Computs the Larmor angle through a solenoid field map 
+    Inputs:
+        solenoid: Map[1,2]D_B object
+        p: float, particle momentum
+    Outputs:
+        theta: float, larmor angle [rad]
+    '''
+    pass
 
 def track_on_axis(element, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
 
