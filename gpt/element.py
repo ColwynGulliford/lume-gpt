@@ -74,17 +74,17 @@ class Element:
 
         self._ccs_beg_origin = ref_element.ccs_beg_origin
 
+        print(ref_origin, element_origin)
+
         e3 = ref_element.e3_beg
 
         self._M_beg = ref_element.M_beg
         self._M_end = ref_element.M_end
 
-        if(ref_element=='end'):
+        if(ref_origin=='end'):
 
             s_ref = ref_element.s_end
             p_ref = ref_element.p_end
-
-
 
         elif(ref_origin=='center'):
 
@@ -97,6 +97,8 @@ class Element:
             p_ref = ref_element.p_beg
 
         if(element_origin=='beg'):
+
+            print('woof')
 
             self._s_beg = s_ref + ds
             self._s_end = self.s_beg + self.length

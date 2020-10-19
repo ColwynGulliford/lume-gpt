@@ -193,6 +193,13 @@ class GDFFieldMap(Element):
         os.system(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}')
         os.system(f'rm {temp_ascii_file}')
 
+    def gpt_label_to_fieldmap_label(self, name):
+
+        if(name in self.required_columns): 
+            for cn in self.column_names:
+                if(name.lower()==cn.lower()):
+                    return cn
+
     def gpt_lines(self, ccs=None, gdf_file=None, e1=[1, 0, 0], e2=[0, 1, 0], scale =None, user_vars=[]):
 
         """ Creates ASCII lines defininig field map element in GPT syntax """
@@ -241,10 +248,10 @@ class GDFFieldMap(Element):
 
         map_line = map_line + f'"{gdf_file}", '
 
-        inverse_column_names = {rname:self.column_names[index] for index,rname in enumerate(self.required_columns)}
-
         for ii, rc in enumerate(self.required_columns):
-            map_line = map_line + f'"{inverse_column_names[rc]}", '
+
+            name = self.gpt_label_to_fieldmap_label (rc)
+            map_line = map_line + f'"{name}", '
         
         if(scale is None):
             scale = self._scale
@@ -667,7 +674,7 @@ def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
         ele._M_beg = ref_element.M_beg
         ele._M_end = ref_element.M_end
 
-        if(ref_element=='end'):
+        if(ref_origin=='end'):
 
             s_ref = ref_element.s_end
             p_ref = ref_element.p_end
