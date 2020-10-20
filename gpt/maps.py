@@ -264,8 +264,6 @@ class GDFFieldMap(Element):
 
         return [extra_line for extra_line in extra_lines.values()] + [map_line]
 
-    
-
 
 class Map1D(GDFFieldMap):
 
@@ -314,7 +312,7 @@ class Map1D(GDFFieldMap):
 class Map1D_E(Map1D):
 
     """
-    Defines a 1D [z, Ez] cylindrically electric symmetric field map object
+    Defines a 1D [z, Ez] cylindrically symmetric electric field map object
     """
 
     def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.2, scale=1):
@@ -342,7 +340,7 @@ class Map1D_E(Map1D):
 class Map1D_B(Map1D):
 
     """
-    Defines a 1D [z, Bz] cylindrically electric symmetric field map object
+    Defines a 1D [z, Bz] cylindrically symmetric magnetic field map object
     """
 
     def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.2, scale=1):
@@ -372,6 +370,10 @@ class Map1D_B(Map1D):
 
 
 class Map1D_TM(Map1D):
+
+    """
+    Defines a 1D [z, Ez] cylindrically symmetric TM cavity field map object
+    """
 
     def __init__(self, 
         name, 
@@ -462,13 +464,36 @@ class Map2D(GDFFieldMap):
             self.Fz_unit='T'
 
     def plot_floor(self, axis=None, alpha=1.0, ax=None):
+        """ 
+        Function for plotting the relevant field/object region for cylindrically symmetric map object
+        Inputs: 
+            axis: None or str('equal') to set axes to same scale
+            alpha: alpha parameter to matplotlib pyplot.plot
+            ax: matplotlib axis object, if None provided usess gca().
+        Outputs:
+            ax: returns current axis handle being used
+        """
         return plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax)
 
     def plot_field_profile(self, ax=None, normalize=False):
+        """ 
+        Function for plotting the Ez or Bz on axis profile for cylindrically symmetric field map
+        Inputs: 
+            element (object, Map2D_* )
+            ax: matplotlib axis object, if None provided usess gca().
+            normalize: boolean, normalize field to 1 or not
+        Outputs:
+            ax: returns current axis handle being used
+        """
         return plot_clyindrical_map_field_profile(self, ax=ax, normalize=normalize)
 
     @property
     def field_integral(self):
+        """
+        Computs the on axis field integral through a cylindrically symmetric field map 
+        Outputs:
+            float, integral ( Fz(r=0) dz)
+        """
         return np.trapz(self.Fz, self.z)
 
     @property
@@ -539,7 +564,16 @@ class Map2D_B(Map2D):
         place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
     def larmor_angle(self, p):
+        """ 
+        Computs the Larmor angle through a solenoid field map 
+        Inputs: 
+            p: float, momentum in [eV/c]
+        Outputs:
+            float, larmor angle in [rad]
+        """
         return larmor_angle(self, p)
+
+    #def plot_field_profile(self):
 
 
 class Map25D_TM(Map2D):
@@ -662,71 +696,83 @@ class Map25D_TM(Map2D):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen, verbose=verbose)
 
 
-def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
+def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='origin'):
 
-        if(ref_element is None):
-            ref_element=Beg()
+    if(ref_element is None):
+        ref_element=Beg()
 
-        ele._ccs_beg_origin = ref_element.ccs_beg_origin
+    if(ds>=0):
+
+        e3 = ref_element.e3_end
+        M = ref_element.M_end
+        ele._ccs_beg = ref_element.ccs_end 
+        ele._ccs_beg_origin = ref_element.p_end
+
+    else:
 
         e3 = ref_element.e3_beg
+        M = ref_element.M_beg
+        ele._ccs_beg = ref_element.ccs_beg  
+        ele._ccs_beg_origin = ref_element.p_beg
 
-        ele._M_beg = ref_element.M_beg
-        ele._M_end = ref_element.M_end
+    ele._M_beg = M
+    ele._M_end = M
 
-        if(ref_origin=='end'):
+    if(ref_origin=='end'):
 
-            s_ref = ref_element.s_end
-            p_ref = ref_element.p_end
+        s_ref = ref_element.s_end
+        p_ref = ref_element.p_end
 
-        elif(ref_origin=='center'):
+    elif(ref_origin=='center'):
 
-            s_ref = ref_element.s_beg + ref_element.length/2.0
-            p_ref = ref_element.p_beg + (ref_element.length/2.0)*e3 
+        s_ref = ref_element.s_beg + ref_element.length/2.0
+        p_ref = ref_element.p_beg + (ref_element.length/2.0)*e3 
 
-        else:
+    else:
 
-            s_ref = ref_element.s_beg
-            p_ref = ref_element.p_beg
+        s_ref = ref_element.s_beg
+        p_ref = ref_element.p_beg
 
-        if(element_origin=='beg'):
+    if(element_origin=='beg'):
 
-            ele._s_beg = s_ref + ds
-            ele._s_end = ele.s_beg + ele.length
+        ele._s_beg = s_ref + ds
+        ele._s_end = ele.s_beg + ele.length
 
-            ele._p_beg = p_ref + ds*e3
-            ele._p_end = ele.p_beg + ele.length*e3
+        ele._p_beg = p_ref + ds*e3
+        ele._p_end = ele.p_beg + ele.length*e3
 
-        elif(element_origin=='center'):
+    elif(element_origin=='center'):
 
-            ele._s_beg = s_ref + ds - ele.length/2.0
-            ele._s_end = ele.s_beg + ele.length
+        ele._s_beg = s_ref + ds - ele.length/2.0
+        ele._s_end = ele.s_beg + ele.length
 
-            ele._p_beg = p_ref + (ds - ele.length/2.0)*e3
-            ele._p_end = ele.p_beg + ele.length*e3 
+        ele._p_beg = p_ref + (ds - ele.length/2.0)*e3
+        ele._p_end = ele.p_beg + ele.length*e3 
 
-        elif(element_origin=='origin'):
+    elif(element_origin=='origin'):
 
-            ele._s_beg = s_ref + ds + ele['z'][0]
-            ele._s_end = ele.s_beg + ele.length
+        ele._s_beg = s_ref + ds + ele['z'][0]
+        ele._s_end = ele.s_beg + ele.length
 
-            ele._p_beg = p_ref + (ds + ele['z'][0])*e3
-            ele._p_end = ele.p_beg + ele.length*e3 
+        ele._p_beg = p_ref + (ds + ele['z'][0])*e3
+        ele._p_end = ele.p_beg + ele.length*e3 
 
-        ele._ccs_beg = ref_element.ccs_end
-        ele._ccs_end = ref_element.ccs_end  # Straight line, no ccs flips
+    ele._ccs_beg = ref_element.ccs_end
+    ele._ccs_end = ref_element.ccs_end  # Straight line, no ccs flips
 
-        ele._ds = np.linalg.norm(ele._p_beg - ele._ccs_beg_origin)
-        ele.set_ref_trajectory()
+    #print(ele._ccs_beg)
+
+    ele._ds = np.linalg.norm(ele._p_beg - ele._ccs_beg_origin)
+    ele.set_ref_trajectory()
 
 
 def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
 
     """ 
-    Function for plotting the Ez or Bz on axis profile for cylindrically symmetric field map
+    Function for plotting the relevant field/object region for cylindrically symmetric map object
     Inputs: 
-        lement (object, Map1D_* or Map2D_* or Map25D_TM)
-        axis: None or str('equal') to set axex to same scale
+        element (object, Map1D_* or Map2D_* or Map25D_TM)
+        axis: None or str('equal') to set axes to same scale
         alpha: alpha parameter to matplotlib pyplot.plot
         ax: matplotlib axis object, if None provided usess gca().
     Outputs:
@@ -768,7 +814,7 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
 
     ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
 
-    p0 = cvector([0, 0, zL-element.z[0]]) + element.p_beg
+    p0 = (zL-element.z[0])*element.e3_beg + element.p_beg
 
     p1 = p0 + (element._width/2)*element.e1_beg 
     p2 = p1 + effective_plot_length*element.e3_beg
@@ -828,7 +874,8 @@ def larmor_angle(solenoid, p):
     Outputs:
         theta: float, larmor angle [rad]
     '''
-    pass
+
+    return -c*solenoid.field_integral/p/2.0
 
 def electrostatic_energy_gain(efield):
     '''

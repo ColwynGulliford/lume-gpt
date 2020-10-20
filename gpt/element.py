@@ -72,14 +72,25 @@ class Element:
         if(ref_element is None):
             ref_element=Beg()
 
-        self._ccs_beg_origin = ref_element.ccs_beg_origin
+        if(ds>=0):
 
-        print(ref_origin, element_origin)
+            e3 = ref_element.e3_end
+            M = ref_element.M_end
+            self._ccs_beg = ref_element.ccs_end 
+            self._ccs_beg_origin = ref_element.p_end
 
-        e3 = ref_element.e3_beg
+        else:
 
-        self._M_beg = ref_element.M_beg
-        self._M_end = ref_element.M_end
+            e3 = ref_element.e3_beg
+            M = ref_element.M_beg
+            self._ccs_beg = ref_element.ccs_beg  
+            self._ccs_beg_origin = ref_element.p_beg
+
+        self._M_beg = M
+        self._M_end = M
+
+        self._ccs_end = self._ccs_beg
+        
 
         if(ref_origin=='end'):
 
@@ -97,8 +108,6 @@ class Element:
             p_ref = ref_element.p_beg
 
         if(element_origin=='beg'):
-
-            print('woof')
 
             self._s_beg = s_ref + ds
             self._s_end = self.s_beg + self.length
@@ -121,8 +130,6 @@ class Element:
 
             self._p_end = p_ref + ds*e3
             self._p_beg = self.p_end - self.length*e3
-
-        self._ccs_end = ref_element.ccs_end  # Straight line, no ccs flips
 
         self._ds = np.linalg.norm(self._p_beg - self._ccs_beg_origin)
         self.set_ref_trajectory()

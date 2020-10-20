@@ -153,9 +153,13 @@ class Sectormagnet(SectorBend):
         self._p = p
         self._B = p/self._R/c
     
-    def place(self, previous_element=Beg(), ds=0):
+    def place(self, previous_element=Beg(), ds=0, ref_origin='end', element_origin='beg'):
 
-        super().place(previous_element=previous_element, ds=ds)
+        """
+        Places a sector bend in lattice, setting up required CCS
+        """
+
+        super().place(previous_element=previous_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
         self.set_screens()
   
     def set_screens(self):
