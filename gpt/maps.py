@@ -497,7 +497,7 @@ class Map2D(GDFFieldMap):
         return np.trapz(self.Fz, self.z)
 
     @property
-    def z(self):
+    def z0(self):
 
         z = self['z']
         r = self['r']
@@ -538,6 +538,9 @@ class Map2D_E(Map2D):
     def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
         place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
+    @property
+    def Ez0(self):
+        return self.Fz
 
 
 class Map2D_B(Map2D):
@@ -573,7 +576,9 @@ class Map2D_B(Map2D):
         """
         return larmor_angle(self, p)
 
-    #def plot_field_profile(self):
+    @property
+    def Bz0(self):
+        return self.Fz
 
 
 class Map25D_TM(Map2D):

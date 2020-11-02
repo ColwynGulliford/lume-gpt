@@ -19,6 +19,8 @@ from copy import deepcopy
 
 c = 299792458
 
+DEFAULT_KILL_MSGS = ["gpt: Spacecharge3Dmesh:", 'Error:', 'gpt: No valid GPT license', 'malloc', 'Segmentation fault']
+
 class GPT:
     """ 
     GPT simulation object. Essential methods:
@@ -46,7 +48,9 @@ class GPT:
                  timeout=None,
                  verbose=False,
                  ccs_beg='wcs',
-                 ref_ccs=False):
+                 ref_ccs=False,
+                 kill_msgs=DEFAULT_KILL_MSGS
+                 ):
 
         # Save init
         self.original_input_file = input_file
@@ -76,7 +80,8 @@ class GPT:
 
         self.ccs_beg = ccs_beg
         self.ref_ccs = ref_ccs
-      
+        self.kill_msgs=[]
+
         # Call configure
         if input_file:
             self.load_input(input_file)
@@ -350,14 +355,8 @@ class GPT:
             if timeout:
                
                 self.vprint(f'   Running with timeout = {self.timeout} sec.')
-                kill_msgs = ["gpt: Spacecharge3Dmesh:", 
-                             'Error:',
-                             'gpt: No valid GPT license',
-                             'malloc',
-                             'Segmentation fault'
-                            ]
                 
-                run_time, exception, log = tools.execute3(runscript, kill_msgs=kill_msgs, timeout=timeout, verbose=gpt_verbose)
+                run_time, exception, log = tools.execute3(runscript, kill_msgs=self.kill_msgs, timeout=timeout, verbose=gpt_verbose)
                 
                 if(exception is not None):
                     self.error=True
@@ -462,7 +461,7 @@ class GPT:
         """ Write the initial particle data to file for use with GPT """
         if not fname:
             fname = os.path.join(self.path, 'gpt.particles.gdf')
-        self.initial_particles.write_gpt(fname,asci2gdf_bin='$ASCI2GDF_BIN', verbose=False)
+        self.initial_particles.write_gpt(fname, asci2gdf_bin='$ASCI2GDF_BIN', verbose=False)
         self.vprint(f'   Initial particles written to "{fname}"')
         return fname 
 
@@ -676,7 +675,8 @@ def run_gpt(settings=None,
             auto_phase=False,
             verbose=False,
             gpt_verbose=False,
-            asci2gdf_bin='$ASCI2GDF_BIN'):
+            asci2gdf_bin='$ASCI2GDF_BIN',
+            kill_msgs=DEFAULT_KILL_MSGS):
     """
     Run GPT. 
     
@@ -688,7 +688,12 @@ def run_gpt(settings=None,
     
 
     # Make GPT object
-    G = GPT(gpt_bin=gpt_bin, input_file=gpt_input_file, workdir=workdir, verbose=verbose, use_tempdir=use_tempdir)
+    G = GPT(gpt_bin=gpt_bin, 
+        input_file=gpt_input_file, 
+        workdir=workdir, 
+        verbose=verbose, 
+        use_tempdir=use_tempdir,
+        kill_msgs=kill_msgs)
     
     G.timeout=timeout
     G.verbose = verbose

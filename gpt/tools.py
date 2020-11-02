@@ -110,6 +110,14 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
 
     return run_time, exception, log
 
+def execute4(cmd, kill_msgs=[], verbose=False, timeout=1e6):
+    pass
+
+
+
+
+
+
 
 
 """UTC to ISO 8601 with Local TimeZone information without microsecond"""
