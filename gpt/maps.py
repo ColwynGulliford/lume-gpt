@@ -494,7 +494,7 @@ class Map2D(GDFFieldMap):
         Outputs:
             float, integral ( Fz(r=0) dz)
         """
-        return np.trapz(self.Fz, self.z)
+        return np.trapz(self.Fz, self.z0)
 
     @property
     def z0(self):
@@ -527,7 +527,7 @@ class Map2D_E(Map2D):
 
         self._name = name
         self._type = 'Map2D_E'
-        self._length = self.z[-1]-self.z[0]
+        self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
         self._color = '#1f77b4'
@@ -555,7 +555,7 @@ class Map2D_B(Map2D):
 
         self._type='Map2D_B'
         self._name = name
-        self._length = self.z[-1]-self.z[0]
+        self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
         self._color = '#2ca02c'

@@ -13,9 +13,21 @@ import importlib
 from math import pi
 import math
 
+from gpt.watcher import Watcher
+
 from pmd_beamphysics import ParticleGroup
 
-def execute(cmd):
+
+def execute(cmd, kill_msgs=[], verbose=False, timeout=1e6):
+
+    """ Function for execution of GPT """
+    w = Watcher(cmd=cmd, timeout=timeout, verbose=verbose )
+    w.run()
+
+    return w.run_time, w.exception, w.log
+
+
+def executeOld(cmd):
     """
     
     Constantly print Subprocess output while process is running

@@ -350,48 +350,27 @@ class GPT:
             
         runscript = self.get_run_script()
 
-        try:
-
-            if timeout:
-               
-                self.vprint(f'   Running with timeout = {self.timeout} sec.')
+        self.vprint(f'   Running with timeout = {self.timeout} sec.')
                 
-                run_time, exception, log = tools.execute3(runscript, kill_msgs=self.kill_msgs, timeout=timeout, verbose=gpt_verbose)
+        run_time, exception, log = tools.execute(runscript, kill_msgs=self.kill_msgs, timeout=timeout, verbose=gpt_verbose)
                 
-                if(exception is not None):
-                    self.error=True
-                    run_info["error"]=True
-                    run_info['why_error']=exception.strip()
-            else:
-                # Interactive output, for Jupyter
-                log = []
-                for path in tools.execute(runscript):
-                    self.vprint(path, end="")
-                    log.append(path)
+        if(exception is not None):
+            self.error=True
+            run_info["error"]=True
+            run_info['why_error']=exception.strip()
     
-            self.log = log
+        self.log = log
                     
-            if parse_output:
-                self.load_output(file=self.get_gpt_output_file())
+        if parse_output:
+            self.load_output(file=self.get_gpt_output_file())
 
-        except Exception as ex:
-            
-            print('Run Aborted:', ex)
-            self.error = True
-            run_info['why_error'] = str(ex)
-            
-        finally:
-  
-
-            run_info['run_time'] = time() - t1
-            run_info['run_error'] = self.error
-            self.vprint(f'   Run finished, total time ellapsed: {run_info["run_time"]:G} (sec)')
+        run_info['run_time'] = time() - t1
+        run_info['run_error'] = self.error
+        self.vprint(f'   Run finished, total time ellapsed: {run_info["run_time"]:G} (sec)')
 
             
-            # Add run_info
-            self.output.update(run_info)
-                     
-        
+        # Add run_info
+        self.output.update(run_info)
         self.finished = True
     
     def fingerprint(self):
