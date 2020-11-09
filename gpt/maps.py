@@ -299,7 +299,7 @@ class Map1D(GDFFieldMap):
         return np.trapz(self.Fz, self.z)
 
     @property
-    def z(self):
+    def z0(self):
         """ Returns the vector of unique z points in map"""
         return self['z']
 
@@ -333,7 +333,7 @@ class Map1D_E(Map1D):
         place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
     @property
-    def Ez(self):
+    def Ez0(self):
         return self.Fz
 
 
@@ -349,7 +349,7 @@ class Map1D_B(Map1D):
         
         self._name = name
         self._type = 'Map1D_B'
-        self._length = self.z[-1]-self.z[0]
+        self._length = self.z0[-1]-self.z0[0]
         self._width = width
         self._height = self._width
         self._color = '#2ca02c'
@@ -361,7 +361,7 @@ class Map1D_B(Map1D):
         place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
     @property
-    def Bz(self):
+    def Bz0(self):
         return self.Fz
 
     @property
@@ -390,7 +390,7 @@ class Map1D_TM(Map1D):
 
         self._name = name
         self._type='Map1D_TM'
-        self._length = self.z[-1]-self.z[0]
+        self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
         self._color = color
@@ -407,7 +407,7 @@ class Map1D_TM(Map1D):
         place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
 
     @property
-    def Ez(self):
+    def Ez0(self):
         return self.Fz
 
     def plot_field_profile(self, ax=None, normalize=False):
@@ -441,6 +441,14 @@ class Map1D_TM(Map1D):
         map_line = map_line + f'2*pi*{name}_frequency);'
 
         return extra_lines + [map_line]
+
+    @property
+    def relative_phase(self):
+        return self._relative_phase
+
+    @relative_phase.setter
+    def relative_phase(self, phi):
+        self._relative_phase=phi
 
 
 class Map2D(GDFFieldMap):
@@ -608,7 +616,7 @@ class Map25D_TM(Map2D):
 
         self._oncrest_phase=0
 
-        self._length = self.z[-1]-self.z[0]
+        self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
         self._color = color
@@ -711,14 +719,14 @@ def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='origin'
         e3 = ref_element.e3_end
         M = ref_element.M_end
         ele._ccs_beg = ref_element.ccs_end 
-        ele._ccs_beg_origin = ref_element.p_end
+        ele._ccs_beg_origin = ref_element.ccs_end_origin
 
     else:
 
         e3 = ref_element.e3_beg
         M = ref_element.M_beg
         ele._ccs_beg = ref_element.ccs_beg  
-        ele._ccs_beg_origin = ref_element.p_beg
+        ele._ccs_beg_origin = ref_element.ccs_beg_origin
 
     ele._M_beg = M
     ele._M_end = M
@@ -785,7 +793,7 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
     """
 
     f = 0.01
-    zs = element.z
+    zs = element.z0
     Fz = element.Fz
 
     maxF = max(np.abs(Fz))
@@ -819,7 +827,7 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
 
     ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
 
-    p0 = (zL-element.z[0])*element.e3_beg + element.p_beg
+    p0 = (zL-element.z0[0])*element.e3_beg + element.p_beg
 
     p1 = p0 + (element._width/2)*element.e1_beg 
     p2 = p1 + effective_plot_length*element.e3_beg
@@ -856,7 +864,7 @@ def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
 
     Fz = element.Fz
 
-    zs = element.s_beg + element.z - element.z[0]
+    zs = element.s_beg + element.z0 - element.z0[0]
 
     if(normalize):
         Fz = np.abs(Fz/np.max(np.abs(Fz)))

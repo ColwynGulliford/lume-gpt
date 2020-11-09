@@ -72,19 +72,21 @@ class Element:
         if(ref_element is None):
             ref_element=Beg()
 
+        #print(ref_element.ccs_end_origin)
+
         if(ds>=0):
 
             e3 = ref_element.e3_end
             M = ref_element.M_end
             self._ccs_beg = ref_element.ccs_end 
-            self._ccs_beg_origin = ref_element.p_end
+            self._ccs_beg_origin = ref_element.ccs_end_origin
 
         else:
 
             e3 = ref_element.e3_beg
             M = ref_element.M_beg
             self._ccs_beg = ref_element.ccs_beg  
-            self._ccs_beg_origin = ref_element.p_beg
+            self._ccs_beg_origin = ref_element.ccs_beg_origin
 
         self._M_beg = M
         self._M_end = M
@@ -216,7 +218,7 @@ class Element:
     
     @property
     def z_end_ccs(self):
-        return p_in_ccs(self.p_end, self._ccs_beg_origin, self._M_beg)[2,0]
+        return p_in_ccs(self.p_end, self.ccs_beg_origin, self._M_beg)[2,0]
 
     @property
     def z_end(self):
@@ -274,6 +276,10 @@ class Element:
     def ccs_beg_origin(self):
         return self._ccs_beg_origin
 
+    @property
+    def ccs_end_origin(self):
+        return self._ccs_beg_origin
+    
     @property
     def color(self):
         return self._color
@@ -375,6 +381,10 @@ class Beg(Element):
 
     @property
     def ccs_beg_origin(self):
+        return self._p_end
+
+    @property 
+    def ccs_end_origin(self):
         return self._p_end
     
 
@@ -526,8 +536,14 @@ class SectorBend(Element):
     @property
     def arc_length(self):
         return self.s_end-self.s_beg
-    
 
+    @property
+    def ccs_beg_origin(self):
+        return self._ccs_beg_origin
+    
+    @property
+    def ccs_end_origin(self):
+        return self._p_end
 
 class Lattice():
 

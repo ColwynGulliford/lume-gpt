@@ -199,6 +199,7 @@ def ztrack1_to_autoscale_element(lattice, t, p, z, autoscale_element=None, workd
         stop_name = autoscale_element.name
         
     else:
+
         lat_temp._elements = lattice._elements
         z_stop = lattice[-1].z_end_ccs
         stop_name = 'END'    
@@ -305,10 +306,13 @@ def autoscale1(lattice, t=0, p=1e-15, workdir=None, ztrack1_through=True, verbos
 
     if(current_z < auto_elements[0].z_beg_ccs):
 
+        print(current_z, auto_elements[0].z_beg_ccs)
+
         if(verbose):
             print(f'\n> Tracking: BEG:{auto_elements[0].name}')
 
-        fparticle = ztrack1_to_autoscale_element(lattice, current_t, current_p, current_z, auto_elements[0], workdir=None)
+        fparticle = ztrack1_to_autoscale_element(lattice, current_t, current_p, current_z, auto_elements[0], workdir=workdir)
+        print(fparticle.screen[-1]['mean_z'], auto_elements[0].z_beg_ccs)
         assert fparticle is not None, f'Particle tracking from BEG to {auto_elements[0].name} failed.'
         assert np.abs( fparticle.screen[-1]['mean_z']-auto_elements[0].z_beg_ccs ) < 1e-14, f'Error tracking to {auto_elements[0].name}: particle was not located at cavity entrance.'
 
