@@ -184,8 +184,9 @@ class GDFFieldMap(Element):
         headers = []
         for ii, var in enumerate(self.coordinates+self.field_components):
             headers.append(var)
+
             #data[:,ii] = getattr(self, self.column_names[var])
-            data[:,ii] = self.data[self.column_names.index(var)]
+            data[:,ii] = self.data[var]
 
         headers = '     '.join(headers)
         np.savetxt(temp_ascii_file, data, header=headers, comments=' ')
