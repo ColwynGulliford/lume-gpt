@@ -521,6 +521,9 @@ class Map2D(GDFFieldMap):
     def Fz(self):
         return np.squeeze(self[self.Fz_str][self['r']==0])
 
+    def write_1d_map(self, filename=None):
+        write_1d_map(self, filename=filename)
+
     #def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
     #    return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
 
@@ -710,11 +713,11 @@ class Map25D_TM(Map2D):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen, verbose=verbose)
 
 
-def write_1d_map(element, filename=None):
+def write_1d_map(element, filename=None, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN')):
 
     if(element.type in ['Map2D_E', 'Map2D_B', 'Map25D_TM']):
 
-        data = np.zeros( len(element.z0), 2)
+        data = np.zeros( (len(element.z0), 2))
 
         data[:,0] = element.z0
         data[:,1] = element.Fz
@@ -729,9 +732,24 @@ def write_1d_map(element, filename=None):
         header = zstr+'     '+fstr
 
         if(filename is None):
-            filename = element.name+'1D.txt'
+            tempfile = element.name+'_1D.txt'
+            filename = tempfile.replace('.txt', '.gdf')
 
-        np.savetxt(filename, data, header=header)
+        elif(filename.endswith('.gdf')):
+            tempfile = filename.replace('.gdf', '.txt')
+
+        with open(tempfile, 'w') as fout:
+
+            NEWLINE_SIZE_IN_BYTES = 1
+
+            np.savetxt(tempfile, data, header=header, comments=' ')
+            fout.seek(0, os.SEEK_END) # Go to the end of the file.
+            # Go backwards one byte from the end of the file.
+            fout.seek(fout.tell() - NEWLINE_SIZE_IN_BYTES, os.SEEK_SET)
+            fout.truncate() # Truncate the file to this point.
+
+        os.system(f'{asci2gdf_bin} -o {filename} {tempfile}')
+        os.system(f'rm {tempfile}')
 
 
 
