@@ -561,6 +561,13 @@ class Lattice():
     #def get_element_ds(self, ds, ref_origin, p_beg_ref, p_end_ref, element_origin, element_length):
 
     def element_index(self, name):
+        """
+        Returns the array index of an element whose name is 'name':
+        Inputs:
+            name: str, desired element's name
+        Outputs:
+            integer, index of element in lattice._elements
+        """
         for ii, element in enumerate(self._elements):
             if(element.name == name):
                 return ii
@@ -600,6 +607,13 @@ class Lattice():
         return self._elements[identity]
 
     def index(self, element_name):
+        """
+        Returns the array index of an element whose name is 'element_name':
+        Inputs:
+            element_name: str, desired element's name
+        Outputs:
+            integer or None, index of element in lattice._elements if found
+        """
         for ii, element in enumerate(self._elements):
             if(element.name==element_name):
                 return ii
@@ -639,6 +653,15 @@ class Lattice():
 
     def plot_floor(self, axis='equal', ax=None):
 
+        """
+        Plots the lattice in z-x floor coordinates 
+        Inputs: 
+            axis: str, if 'equal' makes the z/x scales the same
+            ax: axes handle for plot, if None, generates new one
+        Outputs:
+            ax: axes handle used for plots
+        """
+
         if(ax == None):
             ax = plt.gca()
 
@@ -657,6 +680,15 @@ class Lattice():
         return ax
 
     def plot_field_profile(self, ax=None, normalize=False):
+
+        """
+        Plots on axis field profiles of the lattice 
+        Inputs: 
+            normalize: boolean - normalize all field to a max of 1
+            ax: axes handle for plot, if None, generates new one
+        Outputs:
+            ax: axes handle used for plots
+        """
 
         if(ax == None):
             ax = plt.gca()
@@ -769,6 +801,18 @@ class Lattice():
                     fid.write(line)
 
         return lines
+
+
+    @property
+    def names(self):
+        """
+        Returns a list of element names
+        """
+        return [ele.name for element in self._elements]
+
+    # Choose democracy
+    # Heather Cox Richardison
+    # 12/10 - Sigrid
 
 
 

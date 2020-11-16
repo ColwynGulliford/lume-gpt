@@ -297,7 +297,7 @@ class Map1D(GDFFieldMap):
     @property
     def field_integral(self):
         """ Returns the on axis integral of the Fz """
-        return np.trapz(self.Fz, self.z)
+        return np.trapz(self.Fz, self.z0)
 
     @property
     def z0(self):
@@ -412,7 +412,7 @@ class Map1D_TM(Map1D):
         return self.Fz
 
     def plot_field_profile(self, ax=None, normalize=False):
-        return plot_clyindrical_map_field_profile(self, ax=ax, normalize=False)
+        return plot_clyindrical_map_field_profile(self, ax=ax, normalize=normalize)
 
     def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
         return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
@@ -708,6 +708,32 @@ class Map25D_TM(Map2D):
 
     def autophase(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100, verbose=False):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen, verbose=verbose)
+
+
+def write_1d_map(element, filename=None):
+
+    if(element.type in ['Map2D_E', 'Map2D_B', 'Map25D_TM']):
+
+        data = np.zeros( len(element.z0), 2)
+
+        data[:,0] = element.z0
+        data[:,1] = element.Fz
+
+        fstr = element.Fz_str
+        zstr = 'z'
+
+        for column in element.column_names:
+            if(column.lower()=='z'):
+                zstr=column
+
+        header = zstr+'     '+fstr
+
+        if(filename is None):
+            filename = element.name+'1D.txt'
+
+        np.savetxt(filename, data, header=header)
+
+
 
 
 def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='origin'):
