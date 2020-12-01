@@ -322,7 +322,7 @@ class Map1D_E(Map1D):
        
         self._name = name
         self._type = 'Map1D_E'
-        self._length = self.z[-1]-self.z[0]
+        self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
         self._color = '#1f77b4'
