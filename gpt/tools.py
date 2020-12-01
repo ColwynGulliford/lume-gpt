@@ -17,11 +17,12 @@ from gpt.watcher import Watcher
 
 from pmd_beamphysics import ParticleGroup
 
+DEFAULT_KILL_MSGS = ["gpt: Spacecharge3Dmesh:", 'Error:', 'gpt: No valid GPT license', 'malloc', 'Segmentation fault']
 
 def execute(cmd, kill_msgs=[], verbose=False, timeout=1e6):
 
     """ Function for execution of GPT """
-    w = Watcher(cmd=cmd, timeout=timeout, verbose=verbose )
+    w = Watcher(cmd=cmd, timeout=timeout, verbose=verbose, kill_msgs=kill_msgs)
     w.run()
 
     return w.run_time, w.exception, w.log
@@ -380,4 +381,6 @@ def transform_to_centroid_coordinates(particles, e2=cvector([0,1,0])):
     return ParticleGroup(data=data)
 
     
+
+
 
