@@ -80,7 +80,7 @@ class GPT:
 
         self.ccs_beg = ccs_beg
         self.ref_ccs = ref_ccs
-        self.kill_msgs=[]
+        self.kill_msgs=kill_msgs
 
         # Call configure
         if input_file:
@@ -351,7 +351,6 @@ class GPT:
         runscript = self.get_run_script()
 
         self.vprint(f'   Running with timeout = {self.timeout} sec.')
-                
         run_time, exception, log = tools.execute(runscript, kill_msgs=self.kill_msgs, timeout=timeout, verbose=gpt_verbose)
                 
         if(exception is not None):
@@ -832,5 +831,6 @@ def get_zminmax_line(gpt_object, z_beg, z_end, ccs='wcs'):
             #print(gpt_object.input[ii])
 
     
+
 
 
