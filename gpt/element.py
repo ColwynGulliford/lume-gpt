@@ -313,6 +313,16 @@ class Element:
                 #print(line)
                 fid.write(line+'\n')
 
+    def to_dict(self):
+
+        desc = {'name':self._name,
+        'type':self._type, 
+        's_beg': float(self.s_beg), 
+        's_end': float(self.s_end), 
+        's': 0.5*(self.s_beg + self.s_end)}
+
+        return desc
+
 
 class Screen(Element):
 

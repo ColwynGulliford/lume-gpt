@@ -273,6 +273,8 @@ class GDFFieldMap(Element):
         's_end': float(self.s_end), 
         's': 0.5*(self.s_beg + self.s_end)}
 
+        return desc
+
 class Map1D(GDFFieldMap):
 
     """ Class for storing 1D GDF field maps, derives from GDFfieldMap """
@@ -595,6 +597,8 @@ class Map2D_E(Map2D):
         desc = super().to_dict()
         desc['max(|Ez|)'] = self.max_abs_Fz
 
+        return desc
+
 
 class Map2D_B(Map2D):
 
@@ -637,6 +641,8 @@ class Map2D_B(Map2D):
 
         desc = super().to_dict()
         desc['max(|Bz|)'] = self.max_abs_Fz
+
+        return desc
 
 
 class Map25D_TM(Map2D):
@@ -755,6 +761,8 @@ class Map25D_TM(Map2D):
         desc['max(|Ez|)'] = self.max_abs_Fz
         desc['frequency'] = self._frequency
         desc['relative_phase'] = self._relative_phase
+
+        return desc
 
     def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
         return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
