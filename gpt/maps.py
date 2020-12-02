@@ -270,7 +270,7 @@ class GDFFieldMap(Element):
         desc = {'type':self._type, 
         's_beg': float(self.s_beg), 
         's_end': float(self.s_end), 
-        's': 0.5*(self.s_beg + self.s_end),
+        's': float(0.5*(self.s_beg + self.s_end)),
         'fieldmap': os.path.basename(self.source_data_file)}
 
         return desc
@@ -353,7 +353,7 @@ class Map1D_E(Map1D):
     def to_dict(self):
 
         desc = super().to_dict()
-        desc['max(|Ez|)'] = self.max_abs_Fz
+        desc['max(|Ez|)'] = float(self.max_abs_Fz)
 
         return desc
 
@@ -391,7 +391,7 @@ class Map1D_B(Map1D):
     def to_dict(self):
 
         desc = super().to_dict()
-        desc['max(|Bz|)'] = self.max_abs_Fz
+        desc['max(|Bz|)'] = float(self.max_abs_Fz)
 
         return desc
 
@@ -480,7 +480,7 @@ class Map1D_TM(Map1D):
     def to_dict(self):
 
         desc = super().to_dict()
-        desc['max(|Ez|)'] = self.max_abs_Fz
+        desc['max(|Ez|)'] = float(self.max_abs_Fz)
 
         return desc
 
@@ -559,7 +559,7 @@ class Map2D(GDFFieldMap):
 
     @property
     def max_abs_Fz(self):
-        return np.max(np.abs(self._scale*self.Fz))
+        return float(np.max(np.abs(self._scale*self.Fz)))
     
 
     #def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
@@ -595,7 +595,7 @@ class Map2D_E(Map2D):
     def to_dict(self):
 
         desc = super().to_dict()
-        desc['max(|Ez|)'] = self.max_abs_Fz
+        desc['max(|Ez|)'] = float(self.max_abs_Fz)
 
         return desc
 
@@ -640,7 +640,7 @@ class Map2D_B(Map2D):
     def to_dict(self):
 
         desc = super().to_dict()
-        desc['max(|Bz|)'] = self.max_abs_Fz
+        desc['max(|Bz|)'] = float(self.max_abs_Fz)
 
         return desc
 
