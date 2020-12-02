@@ -822,7 +822,7 @@ class Lattice():
 
 
     def to_dict(self):
-        return desc = {ele._name:ele.to_dict() for ele in self._elements}
+        return {ele._name:ele.to_dict() for ele in self._elements}
 
     # Choose democracy
     # Heather Cox Richardison
