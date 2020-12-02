@@ -265,6 +265,13 @@ class GDFFieldMap(Element):
 
         return [extra_line for extra_line in extra_lines.values()] + [map_line]
 
+    def to_dict(self):
+
+        desc = {'name':self._name,
+        'type':self._type, 
+        's_beg': float(self.s_beg), 
+        's_end': float(self.s_end), 
+        's': 0.5*(self.s_beg + self.s_end)}
 
 class Map1D(GDFFieldMap):
 
@@ -308,6 +315,10 @@ class Map1D(GDFFieldMap):
     def Fz(self):
         """ Returns the on axis field z component """
         return self[self.Fz_str]
+
+    @property
+    def max_abs_Fz(self):
+        return np.max(np.abs(self._scale*self.Fz))
     
 
 class Map1D_E(Map1D):
@@ -337,6 +348,12 @@ class Map1D_E(Map1D):
     def Ez0(self):
         return self.Fz
 
+    def to_dict(self):
+
+        desc = super().to_dict()
+        desc['max(|Ez|)'] = self.max_abs_Fz
+
+        return desc
 
 class Map1D_B(Map1D):
 
@@ -368,6 +385,13 @@ class Map1D_B(Map1D):
     @property
     def larmor_angle(self, p):
         return larmor_angle(self, p)
+
+    def to_dict(self):
+
+        desc = super().to_dict()
+        desc['max(|Bz|)'] = self.max_abs_Fz
+
+        return desc
 
 
 class Map1D_TM(Map1D):
@@ -451,6 +475,13 @@ class Map1D_TM(Map1D):
     def relative_phase(self, phi):
         self._relative_phase=phi
 
+    def to_dict(self):
+
+        desc = super().to_dict()
+        desc['max(|Ez|)'] = self.max_abs_Fz
+
+        return desc
+
 
 class Map2D(GDFFieldMap):
 
@@ -524,6 +555,11 @@ class Map2D(GDFFieldMap):
     def write_1d_map(self, filename=None):
         write_1d_map(self, filename=filename)
 
+    @property
+    def max_abs_Fz(self):
+        return np.max(np.abs(self._scale*self.Fz))
+    
+
     #def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
     #    return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
 
@@ -553,6 +589,11 @@ class Map2D_E(Map2D):
     @property
     def Ez0(self):
         return self.Fz
+
+    def to_dict(self):
+
+        desc = super().to_dict()
+        desc['max(|Ez|)'] = self.max_abs_Fz
 
 
 class Map2D_B(Map2D):
@@ -591,6 +632,11 @@ class Map2D_B(Map2D):
     @property
     def Bz0(self):
         return self.Fz
+
+    def to_dict(self):
+
+        desc = super().to_dict()
+        desc['max(|Bz|)'] = self.max_abs_Fz
 
 
 class Map25D_TM(Map2D):
@@ -702,6 +748,13 @@ class Map25D_TM(Map2D):
         lines = extra_lines + [map_line]
 
         return lines
+
+    def to_dict(self):
+
+        desc = super().to_dict()
+        desc['max(|Ez|)'] = self.max_abs_Fz
+        desc['frequency'] = self._frequency
+        desc['relative_phase'] = self._relative_phase
 
     def track_on_axis(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
         return track_on_axis(self, t, p, xacc=xacc,  GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, n_screen=n_screen, workdir=workdir)
