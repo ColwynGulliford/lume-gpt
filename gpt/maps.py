@@ -270,8 +270,8 @@ class GDFFieldMap(Element):
         desc = {'type':self._type, 
         's_beg': float(self.s_beg), 
         's_end': float(self.s_end), 
-        's': 0.5*(self.s_beg + self.s_end)}
-        'fieldmap': os.path.basename(self.source_data_file)
+        's': 0.5*(self.s_beg + self.s_end),
+        'fieldmap': os.path.basename(self.source_data_file)}
 
         return desc
 
