@@ -820,6 +820,10 @@ class Lattice():
         """
         return [ele.name for element in self._elements]
 
+
+    def to_dict(self):
+        return desc = {ele._name:ele.to_dict() for ele in self._elements}
+
     # Choose democracy
     # Heather Cox Richardison
     # 12/10 - Sigrid
