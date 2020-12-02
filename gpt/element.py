@@ -315,8 +315,7 @@ class Element:
 
     def to_dict(self):
 
-        desc = {'name':self._name,
-        'type':self._type, 
+        desc = {'type':self._type, 
         's_beg': float(self.s_beg), 
         's_end': float(self.s_end), 
         's': 0.5*(self.s_beg + self.s_end)}
