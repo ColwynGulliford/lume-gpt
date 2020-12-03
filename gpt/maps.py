@@ -976,7 +976,7 @@ def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
 
         Fz0 = np.max(np.abs(Fz))
 
-        res = np.where( np.max(np.abs(Fz)) == Fz0 )
+        res = np.where( np.abs(Fz) == Fz0 )
 
         print(res[0][0])
 
