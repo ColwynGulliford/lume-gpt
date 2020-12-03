@@ -122,7 +122,7 @@ def gdf_to_particle_groups(gdffile, verbose=False):
 
     return (touts, screens)
 
-def initial_beam_to_particle_group(gdfile, verbose):
+def initial_beam_to_particle_group(gdfile, verbose=0):
 
     screen  = read_particle_gdf_file(gdffile, verbose=verbose)
     return ParticleGroup(data=raw_data_to_particle_data(screen))
