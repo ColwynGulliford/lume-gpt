@@ -123,9 +123,9 @@ def gdf_to_particle_groups(gdffile, verbose=False):
 
     return (touts, screens)
 
-def initial_beam_to_particle_group(gdffile, verbose=0):
+def initial_beam_to_particle_group(gdffile, verbose=0, extra_screen_keys=['q','nmacro','ID', 'm']):
 
-    screen  = read_particle_gdf_file(gdffile, verbose=verbose)
+    screen  = read_particle_gdf_file(gdffile, verbose=verbose, extra_screen_keys=extra_screen_keys)
     return ParticleGroup(data=raw_data_to_particle_data(screen))
 
 
