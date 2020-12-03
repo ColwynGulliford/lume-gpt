@@ -5,6 +5,8 @@ from pmd_beamphysics.units import c_light, e_charge, m_e
 from gpt.tools import transform_to_centroid_coordinates
 import numpy as np
 
+from gpt.parsers import 
+
 def identify_species(mass, charge):
     """
     Simple function to identify a species based on its mass in kg and charge in C.
@@ -105,6 +107,16 @@ def raw_data_to_particle_groups(touts, screens, verbose=False, ref_ccs=False):
         return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
 
+def gdf_to_particle_groups(gdffile, verbose=False):
+
+    (tdata, pdata) = read_gdf_file(gdffile, verbose=verbose)
+
+    all_pgs = raw_data_to_particle_groups(tdata, pdata, verbpse=verbose)
+
+    touts = all_pgs[:len(tdata)]
+    screens = all_pgs[len(tdata):]
+
+    return (touts, screens)
 
 
 def particle_stats(particle_groups, key):

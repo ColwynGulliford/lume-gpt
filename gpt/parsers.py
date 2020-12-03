@@ -140,7 +140,7 @@ def read_particle_gdf_file(gdffile,verbose=0):
 
     return screen
 
-def read_gdf_file(gdffile,verbose=False):
+def read_gdf_file(gdffile, verbose=False):
       
     # Read in file:
 
@@ -159,7 +159,10 @@ def read_gdf_file(gdffile,verbose=False):
     tdata = make_tout_dict(touts)
     pdata = make_screen_dict(screens)
 
-    return(tdata,pdata)
+    return(tdata, pdata)
+
+
+
 
 def make_tout_dict(touts):
 
