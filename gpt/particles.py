@@ -5,7 +5,7 @@ from pmd_beamphysics.units import c_light, e_charge, m_e
 from gpt.tools import transform_to_centroid_coordinates
 import numpy as np
 
-from gpt.parsers import 
+from gpt.parsers import read_gdf_file
 
 def identify_species(mass, charge):
     """
