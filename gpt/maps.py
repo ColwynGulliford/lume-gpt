@@ -973,6 +973,13 @@ def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
     zs = element.s_beg + element.z0 - element.z0[0]
 
     if(normalize):
+
+        Fz0 = np.max(np.abs(Fz))
+
+        res = np.where( np.max(np.abs()) == Fz0 )
+
+        print(res)
+
         Fz = np.abs(Fz/np.max(np.abs(Fz)))
 
     ax.plot(zs, Fz, element._color)
