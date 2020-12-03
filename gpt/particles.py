@@ -109,6 +109,10 @@ def raw_data_to_particle_groups(touts, screens, verbose=False, ref_ccs=False):
 
 def gdf_to_particle_groups(gdffile, verbose=False):
 
+    """
+    Read an output gdf file from GPT into a lists of tout and screen particle groups
+    """
+
     (tdata, pdata) = read_gdf_file(gdffile, verbose=verbose)
 
     all_pgs = raw_data_to_particle_groups(tdata, pdata, verbose=verbose)
@@ -117,6 +121,11 @@ def gdf_to_particle_groups(gdffile, verbose=False):
     screens = all_pgs[len(tdata):]
 
     return (touts, screens)
+
+def initial_beam_to_particle_group(gdfile, verbose):
+
+    screen  = read_particle_gdf_file(gdffile, verbose=verbose)
+    return ParticleGroup(data=raw_data_to_particle_data(screen))
 
 
 def particle_stats(particle_groups, key):
