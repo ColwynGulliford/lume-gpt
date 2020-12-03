@@ -976,11 +976,11 @@ def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
 
         Fz0 = np.max(np.abs(Fz))
 
-        res = np.where( np.abs(Fz) == Fz0 )
+        index = np.where( np.abs(Fz) == Fz0 )[0][0]
 
-        print(res[0][0])
+        signFz = np.sign(Fz[index])
 
-        Fz = np.abs(Fz/np.max(np.abs(Fz)))
+        Fz = signFz*Fz/Fz0
 
     ax.plot(zs, Fz, element._color)
     ax.set_xlabel('s (m)')
