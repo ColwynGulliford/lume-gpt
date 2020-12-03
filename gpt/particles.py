@@ -111,7 +111,7 @@ def gdf_to_particle_groups(gdffile, verbose=False):
 
     (tdata, pdata) = read_gdf_file(gdffile, verbose=verbose)
 
-    all_pgs = raw_data_to_particle_groups(tdata, pdata, verbpse=verbose)
+    all_pgs = raw_data_to_particle_groups(tdata, pdata, verbose=verbose)
 
     touts = all_pgs[:len(tdata)]
     screens = all_pgs[len(tdata):]
