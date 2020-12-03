@@ -108,10 +108,10 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
         if(ccs_beg!="wcs"):
             f.write(f'settransform("{ccs_beg}", 0,0,0, 1,0,0, 0,1,0, "beam");\n')
 
-def read_particle_gdf_file(gdffile,verbose=0):
+def read_particle_gdf_file(gdffile, verbose=0):
 
     with open(gdffile, 'rb') as f:
-      data = easygdf.load_initial_distribution(f,extra_screen_keys=['q','nmacro'])
+      data = easygdf.load_initial_distribution(f,extra_screen_keys=['q','nmacro',"ID","m"])
 
     screen = {}
     n = len(data[0,:])
