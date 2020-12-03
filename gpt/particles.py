@@ -6,6 +6,7 @@ from gpt.tools import transform_to_centroid_coordinates
 import numpy as np
 
 from gpt.parsers import read_gdf_file
+from gpt.parsers import read_particle_gdf_file
 
 def identify_species(mass, charge):
     """
