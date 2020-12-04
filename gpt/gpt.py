@@ -194,8 +194,7 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles'][:self.output['n_tout']]
 
-    @tout.setter
-    def tout(self, touts):
+    def set_tout(self, touts):
         self.tout=touts
 
     @property
@@ -252,8 +251,7 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles'][self.output['n_tout']:]
 
-    @screen.setter
-    def screen(self, scrs):
+    def set_screen(self, scrs):
         self.scrs=scrs
 
     def screen_stat(self, key):
