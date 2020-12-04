@@ -794,6 +794,8 @@ class Lattice():
             count=0
             for element in self._elements:
 
+                print(element)
+
                 if(element._type in ['Map25D_TM' or 'Map1D_TM']):
 
                     lines.append(f'phasing_amplitude_{count} = {element._name}_scale;\n')

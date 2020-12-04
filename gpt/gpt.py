@@ -194,9 +194,6 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles'][:self.output['n_tout']]
 
-    def set_tout(self, touts):
-        self.tout=touts
-
     @property
     def tout_ccs(self):
         """ Returns output particle groups for touts transformed into centroid coordinate system """
@@ -251,9 +248,6 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles'][self.output['n_tout']:]
 
-    def set_screen(self, scrs):
-        self.scrs=scrs
-
     def screen_stat(self, key):
         """ Returns array of stats for key from screen particle groups """
         return self.stat(key, data_type='screen')
@@ -263,6 +257,8 @@ class GPT:
         """ Returns output particle groups for touts + screens """
         if('particles' in self.output):
             return self.output['particles']
+
+    
 
     def trajectory(self, pid, data_type='tout'):
 
