@@ -796,7 +796,7 @@ class Lattice():
 
                 print(element)
 
-                if(element._type in ['Map25D_TM' or 'Map1D_TM']):
+                if(element._type in ['Map25D_TM', 'Map1D_TM']):
 
                     lines.append(f'phasing_amplitude_{count} = {element._name}_scale;\n')
                     lines.append(f'phasing_on_crest_{count} = {element._name}_oncrest_phase;\n')
