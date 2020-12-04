@@ -794,7 +794,7 @@ class Lattice():
             count=0
             for element in self._elements:
 
-                print(element)
+                #print(element)
 
                 if(element._type in ['Map25D_TM', 'Map1D_TM']):
 
