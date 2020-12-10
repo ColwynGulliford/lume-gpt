@@ -22,7 +22,7 @@ import scipy.constants
 
 MC2 = scipy.constants.value('electron mass energy equivalent in MeV')*1e6
 c = scipy.constants.c
-
+pi = scipy.constants.Pi
 
 def gamma_to_beta(gamma):
     """ Converts relativistic gamma to beta"""
@@ -483,7 +483,7 @@ class Map1D_TM(Map1D):
         desc['max(|Ez|)'] = float(self.max_abs_Fz)
 
         return desc
-        
+
     def cavity_voltage(self):
         return cavity_voltage(self)
 
