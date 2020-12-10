@@ -1030,9 +1030,9 @@ def cavity_voltage(cavity):
     f = cavity._frequency
     w = 2*pi*f
 
-    EField = cavity.Ez0*np.exp(1j*w*zs/c)
+    Ez = cavity.Ez0*np.exp(1j*w*zs/c)
 
-    return np.absolute(np.trapz(Efield, zs))
+    return np.absolute( np.trapz(Ez , zs) )
 
 
 def track_on_axis(element, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
