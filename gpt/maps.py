@@ -22,7 +22,7 @@ import scipy.constants
 
 MC2 = scipy.constants.value('electron mass energy equivalent in MeV')*1e6
 c = scipy.constants.c
-pi = scipy.constants.Pi
+from math import pi
 
 def gamma_to_beta(gamma):
     """ Converts relativistic gamma to beta"""
