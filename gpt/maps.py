@@ -727,6 +727,10 @@ class Map25D_TM(Map2D):
     #    self._beta = KE_to_beta(kinetic_energy)
 
     @property
+    def Ez0(self):
+        return self.Fz
+
+    @property
     def scale(self):
         return self._scale
 
