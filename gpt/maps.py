@@ -483,6 +483,9 @@ class Map1D_TM(Map1D):
         desc['max(|Ez|)'] = float(self.max_abs_Fz)
 
         return desc
+        
+    def cavity_voltage(self):
+        return cavity_voltage(self)
 
 
 class Map2D(GDFFieldMap):
@@ -773,6 +776,9 @@ class Map25D_TM(Map2D):
     def autophase(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100, verbose=False):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen, verbose=verbose)
 
+    def cavity_voltage(self):
+        return cavity_voltage(self)
+
 
 def write_1d_map(element, filename=None, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN')):
 
@@ -1013,6 +1019,17 @@ def electrostatic_energy_gain(efield):
         theta: float, larmor angle [rad]
     '''
     pass
+
+def cavity_voltage(cavity):
+
+    zs = cavity.z0
+    f = cavity._frequency
+    w = 2*pi*f
+
+    EField = cavity.Ez0*np.exp(1j*w*zs/c)
+
+    return np.absolute(np.trapz(Efield, zs))
+
 
 def track_on_axis(element, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):
 
