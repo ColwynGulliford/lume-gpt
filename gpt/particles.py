@@ -1,5 +1,5 @@
 from pmd_beamphysics import ParticleGroup
-from pmd_beamphysics.units import c_light, e_charge, m_e
+from pmd_beamphysics.units import c_light, e_charge, mec2
 
 
 from gpt.tools import transform_to_centroid_coordinates
@@ -67,7 +67,7 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     #data['py'] = gpt_output_dict['GBy']*gpt_output_dict['m']*factor
     #data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
 
-    mec = m_e #[mc] in eV/c
+    mec = mec2 #[mc] in eV/c
 
     data['px'] = gpt_output_dict['GBx']*mec
     data['py'] = gpt_output_dict['GBy']*mec
