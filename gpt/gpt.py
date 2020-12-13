@@ -19,7 +19,7 @@ from copy import deepcopy
 
 c = 299792458
 
-DEFAULT_KILL_MSGS = ["gpt: Spacecharge3Dmesh:", 'Error:', 'gpt: No valid GPT license', 'malloc', 'Segmentation fault']
+from gpt.tools import DEFAULT_KILL_MSGS 
 
 class GPT:
     """ 
