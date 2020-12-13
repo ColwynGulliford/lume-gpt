@@ -167,7 +167,7 @@ def evaluate_gpt_with_distgen(settings,
              verbose=False,
              gpt_verbose=False,
              asci2gdf_bin='$ASCI2GDF_BIN',
-             kill_msgs=['Error:', 'gpt: No valid GPT license', 'malloc', 'Segmentation fault']
+             kill_msgs=DEFAULT_KILL_MSGS
              ):    
     """
     Simple evaluate GPT.
