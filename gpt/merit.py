@@ -69,6 +69,10 @@ def default_gpt_merit(G):
             m['end_z_screen']=screen['mean_z']
             m['end_n_particle_loss'] = start_n_particle - m['end_n_particle']
             m['end_total_charge'] = screen['charge']
+
+            # Basic Custom paramters:
+            m['end_max[sigma_x, sigma_y]'] = max[m['end_sigma_x'], m['end_sigma_y']]
+            m['end_max[norm_emit_x, norm_emit_y]'] = max[m['end_norm_emit_x'], m['end_norm_emit_y']]
             
     except Exception as ex:
 
