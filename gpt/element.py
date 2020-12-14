@@ -687,7 +687,7 @@ class Lattice():
             ax.set_aspect('equal')
 
         if(not box_on):
-            ax.get_axis().set_visible(False)
+            ax.set_visible(False)
 
         if(not labels_on):
             ax.get_xaxis().set_ticks([])
