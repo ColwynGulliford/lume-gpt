@@ -686,10 +686,10 @@ class Lattice():
         if(axis=='equal'):
             ax.set_aspect('equal')
 
-        if(box_on):
-            ax.get_axis().set_visible()
+        if(not box_on):
+            ax.get_axis().set_visible(False)
 
-        if(labels_on):
+        if(not labels_on):
             ax.get_xaxis().set_ticks([])
             ax.get_yaxis().set_ticks([])
 
