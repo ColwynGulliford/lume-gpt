@@ -660,7 +660,7 @@ class Lattice():
     def s_end(self):
         return self._elements[-1].s_end
 
-    def plot_floor(self, axis='equal', ax=None, box_on=True, labels_off=True):
+    def plot_floor(self, axis='equal', ax=None, box_on=True, labels_on=True):
 
         """
         Plots the lattice in z-x floor coordinates 
