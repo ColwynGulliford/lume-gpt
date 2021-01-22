@@ -19,6 +19,7 @@ from pmd_beamphysics import single_particle
 
 from scipy.optimize import brent
 import scipy.constants
+from scipy.integrate import solve_ivp
 
 MC2 = scipy.constants.value('electron mass energy equivalent in MeV')*1e6
 c = scipy.constants.c
@@ -53,6 +54,15 @@ def p2e(p):
 
 def e2p(E):
     return np.sqrt(E**2 - MC2**2)
+
+def e2g(E):
+    return E/MC2
+
+def e2b(E):
+    return g2b(e2g(E))
+
+def g2b(gamma):
+    return np.sqrt(1-1/gamma**2)
 
 def get_gdf_header(gdf_file, gdf2a_bin=os.path.expandvars('$GDF2A_BIN')):
 
@@ -356,6 +366,46 @@ class Map1D_E(Map1D):
         desc['max(|Ez|)'] = float(self.max_abs_Fz)
 
         return desc
+
+    def fields(self, x, y, s, t):
+        fields = np.zeros( (6, len(s)) )
+        fields[2,:] = np.interp(s, self.z0, self.Ez0)
+        return fields
+
+    def track_on_axis_rk45(self, t, p):
+
+        pass
+
+
+
+    def energy_gain(self, t, E):
+
+        zspan = (self.z0[0],  self.z0[-1])
+        z = np.linspace(zspan[0], zspan[-1], 100)
+
+        dat = solve_ivp(fun, zspan, [t, E], t_eval=z)
+
+        z = dat['t']
+        u = dat['y']
+
+        t = u[0,:]
+        E = u[1,:]
+
+        return (z, t, E)
+
+
+def fun(z, u):
+
+    t = u[0]
+    E = u[1]
+
+    b = E2b(E)
+    dtdz = 1/b/c
+    dEdz = 500e3
+
+    return [dtdz, dEdz]
+
+
 
 class Map1D_B(Map1D):
 

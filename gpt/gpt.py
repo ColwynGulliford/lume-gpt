@@ -4,11 +4,14 @@ from gpt.parsers import parse_gpt_string
 from .plot import plot_stats_with_layout
 from gpt.tools import transform_to_centroid_coordinates
 
+from gpt.gpt_phasing import gpt_phasing
+
 import gpt.archive 
 
 from pmd_beamphysics.units import pg_units
 from pmd_beamphysics.particles import single_particle
 from pmd_beamphysics import ParticleGroup
+#from pmd_beamphysics.interfaces import write_gpt
 
 import h5py
 import os
@@ -665,7 +668,11 @@ def run_gpt(settings=None,
     if verbose:
         print('run_gpt') 
 
-    
+    if(initial_particles is None and auto_phase):
+        raise ValueError('User must specify the initial particles (either particle group or distgen file) when auto phasing.')
+
+    if( isinstance(initial_particles, str) ):
+        raise ValueError('Intial particles must be particle group or None when using run_gpt method.')
 
     # Make GPT object
     G = GPT(gpt_bin=gpt_bin, 
@@ -673,7 +680,9 @@ def run_gpt(settings=None,
         workdir=workdir, 
         verbose=verbose, 
         use_tempdir=use_tempdir,
-        kill_msgs=kill_msgs)
+        kill_msgs=kill_msgs,
+        initial_particles=initial_particles,
+        )
     
     G.timeout=timeout
     G.verbose = verbose
@@ -686,15 +695,29 @@ def run_gpt(settings=None,
 
         if(verbose):
             print('\nAuto Phasing >------\n')
-        t1 = time.time()
+        t1 = time()
 
         # Create the distribution used for phasing
         if(verbose):
             print('****> Creating intiial distribution for phasing...')
 
-        phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+        if(initial_particles):
+
+            phasing_beam = single_particle(x=initial_particles['mean_x'], 
+                y=initial_particles['mean_y'], 
+                z=initial_particles['mean_z'],
+                px=initial_particles['mean_px'], 
+                py=initial_particles['mean_py'], 
+                pz=initial_particles['mean_pz'],
+                t=initial_particles['mean_t'])
+
+        #phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+
         phasing_particle_file = os.path.join(G.path, 'gpt_particles.phasing.gdf')
-        write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
+
+        phasing_beam.write_gpt(phasing_particle_file, asci2gdf_bin=asci2gdf_bin, verbose=verbose)
+
+        #write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
         if(verbose):
             print('<**** Created intiial distribution for phasing.\n')    
@@ -703,7 +726,7 @@ def run_gpt(settings=None,
 
         phased_file_name, phased_settings = gpt_phasing(G.input_file, path_to_gpt_bin=G.gpt_bin[:-3], path_to_phasing_dist=phasing_particle_file, verbose=verbose)
         G.set_variables(phased_settings)
-        t2 = time.time()
+        t2 = time()
 
         if(verbose):
             print(f'Time Ellapsed: {t2-t1} sec.')
