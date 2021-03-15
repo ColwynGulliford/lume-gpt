@@ -148,7 +148,7 @@ class Element:
 
         ps = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
 
-        ax.plot(ps[2], ps[0], self.color )
+        ax.plot(ps[2], ps[0], self.color, alpha=alpha )
         ax.set_xlabel('z (m)')
         ax.set_ylabel('x (m)')
 
@@ -508,7 +508,7 @@ class SectorBend(Element):
         self._pole_face_beg = np.concatenate( (self._pole_face_beg_a, self._pole_face_beg_b), axis=1) 
         self._pole_face_end = np.concatenate( (self._pole_face_end_a, self._pole_face_end_b), axis=1) 
 
-    def plot_floor(self, axis='equal', ax=None):
+    def plot_floor(self, axis='equal', ax=None, alpha=1):
 
         if(ax == None):
             ax = plt.gca()
@@ -522,10 +522,10 @@ class SectorBend(Element):
 
         ps = np.concatenate( (arc1_beg, arc1, arc2, arc1_beg), axis=1)
 
-        ax.plot(ps[2], ps[0], self.color)
+        ax.plot(ps[2], ps[0], self.color, alpha=alpha)
         if(self._plot_pole_faces):
-            ax.plot(self._pole_face_beg[2], self._pole_face_beg[0],'k')
-            ax.plot(self._pole_face_end[2], self._pole_face_end[0],'k')
+            ax.plot(self._pole_face_beg[2], self._pole_face_beg[0], color='k', alpha=alpha)
+            ax.plot(self._pole_face_end[2], self._pole_face_end[0], color='k', alpha=alpha)
         ax.set_xlabel('z (m)')
         ax.set_ylabel('x (m)')
 
@@ -660,7 +660,7 @@ class Lattice():
     def s_end(self):
         return self._elements[-1].s_end
 
-    def plot_floor(self, axis='equal', ax=None, box_on=True, labels_on=True):
+    def plot_floor(self, axis='equal', ax=None, box_on=True, labels_on=True, alpha=1):
 
         """
         Plots the lattice in z-x floor coordinates 
@@ -681,7 +681,7 @@ class Lattice():
         ax.set_ylabel('x (m)')
 
         for ele in self._elements:
-            ele.plot_floor(ax=ax, axis=axis)
+            ele.plot_floor(ax=ax, axis=axis, alpha=alpha)
 
         if(axis=='equal'):
             ax.set_aspect('equal')
