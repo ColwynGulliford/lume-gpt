@@ -394,17 +394,19 @@ class GPT:
             include_labels=False, 
             include_particles=True,
             include_legend=True, 
+            return_figure=False,
              **kwargs):
         """
         Convenience plotting function for making nice plots.
         
         """
-        plot_stats_with_layout(self, ykeys=y, ykeys2=y2, 
+        return plot_stats_with_layout(self, ykeys=y, ykeys2=y2, 
                            xkey=x, xlim=xlim, 
                            nice=nice, 
                            include_layout=include_layout,
                            include_labels=include_labels, 
-                           include_legend=include_legend, **kwargs)     
+                           include_legend=include_legend,
+                           return_figure=return_figure, **kwargs)     
     
     def stat(self, key, data_type='all'):
         """

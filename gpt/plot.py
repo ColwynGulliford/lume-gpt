@@ -9,20 +9,24 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
                            nice=True, 
                            include_layout=False,
                            include_labels=True, 
-                           include_legend=True, **kwargs):
+                           include_legend=True,
+                           return_figure=False,
+                           **kwargs):
     """
     Plots stat output multiple keys.
     
     If a list of ykeys2 is given, these will be put on the right hand axis. This can also be given as a single key. 
     
-    Logical switches, all default to True:
-        nice: a nice SI prefix and scaling will be used to make the numbers reasonably sized.
+    Logical switches:
+        nice: a nice SI prefix and scaling will be used to make the numbers reasonably sized. Default: True
         
-        include_legend: The plot will include the legend
+        include_legend: The plot will include the legend.  Default: True
         
-        include_layout: the layout plot will be displayed at the bottom
+        include_layout: the layout plot will be displayed at the bottom.  Default: False
         
-        include_labels: the layout will include element labels. 
+        include_labels: the layout will include element labels.  Default: True
+        
+        return_figure: return the figure object for further manipulation. Default: False
 
     """
     I = gpt_object # convenience
@@ -125,3 +129,6 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     # Layout   
     if include_layout:
         print('TODO include_layout')
+        
+    if return_figure:
+        return fig          
