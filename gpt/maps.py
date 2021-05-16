@@ -307,9 +307,9 @@ class Map1D(GDFFieldMap):
 
         self._color=color
 
-    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None):
+    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):
         """ Plots the bounding box of the field map in z-x floor coordinates """
-        plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax, xlim=xlim, ylim=ylim)
+        plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax, xlim=xlim, ylim=ylim, style=style)
 
     def plot_field_profile(self, ax=None, normalize=False):
         """ Plots the z, Fz field profile on axis """
