@@ -6,7 +6,7 @@ import numpy as np
 #from .lattice import Lattice
 
 def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['mean_kinetic_energy'], 
-                           xkey='mean_z', xlim=None, 
+                           xkey='mean_z', xlim=None, ylim=None, ylim2=None,
                            nice=True, 
                            include_layout=False,
                            include_labels=True, 
@@ -47,7 +47,10 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     if ykeys2:
         if isinstance(ykeys2, str):
             ykeys2 = [ykeys2]
-        ax_plot.append(ax_plot[0].twinx())
+        ax_twinx = ax_plot[0].twinx()
+        ax_plot.append(ax_twinx)
+
+
 
     # No need for a legend if there is only one plot
     if len(ykeys)==1 and not ykeys2:
@@ -116,6 +119,20 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
             
         ax.set_ylabel(', '.join(keys)+f' ({unit})')            
         #if len(keys) > 1:
+        
+        # Set limits, considering the scaling. 
+        if ix==0 and ylim:
+            new_ylim = np.array(ylim)/factor
+            ax.set_ylim(new_ylim)
+        # Set limits, considering the scaling. 
+        if ix==1 and ylim2:
+            pass
+        # TODO
+            if ylim2:
+                new_ylim2 = np.array(ylim2)/factor
+                ax_twinx.set_ylim(new_ylim2)            
+            else:
+                pass      
         
     # Collect legend
     if include_legend:
