@@ -388,7 +388,7 @@ class GPT:
         if self.verbose:
             print(*args, **kwargs)    
     
-    def plot(self, y=['sigma_x', 'sigma_y'], x='mean_z', xlim=None, y2=[],
+    def plot(self, y=['sigma_x', 'sigma_y'], x='mean_z', xlim=None, ylim=None, ylim2=None, y2=[],
             nice=True, 
             include_layout=False,
             include_labels=False, 
@@ -401,7 +401,7 @@ class GPT:
         
         """
         return plot_stats_with_layout(self, ykeys=y, ykeys2=y2, 
-                           xkey=x, xlim=xlim, 
+                           xkey=x, xlim=xlim, ylim=ylim, ylim2=ylim2,
                            nice=nice, 
                            include_layout=include_layout,
                            include_labels=include_labels, 
