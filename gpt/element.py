@@ -5,10 +5,14 @@ from matplotlib import pyplot as plt
 from numpy.linalg import norm 
 import copy
 
+#from gpt.maps import Map1D_E, Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
+
 from gpt.tools import rotation_matrix
 from gpt.tools import cvector
 from gpt.tools import rad, deg
 from gpt.tools import get_arc
+from gpt.tools import is_floatable
+from gpt.tools import full_path
 
 from gpt.template import BASIC_TEMPLATE
 
@@ -136,7 +140,7 @@ class Element:
         self._ds = np.linalg.norm(self._p_beg - self._ccs_beg_origin)
         self.set_ref_trajectory()
 
-    def plot_floor(self, axis=None, alpha=1.0, ax=None):
+    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):
 
         if(ax == None):
             ax = plt.gca()
@@ -291,10 +295,6 @@ class Element:
     @property
     def momentum_end(self):
         return self._momentum_end
-
-    @property
-    def t_beg(self):
-        return self._t_end
 
     @property
     def t_beg(self):
@@ -786,7 +786,7 @@ class Lattice():
 
         else:
 
-            assert os.path.exists(template_file), f'Template GPT file "template_file" does not exist.'
+            assert os.path.exists(template_file), 'Template GPT file "template_file" does not exist.'
 
             with open(template_file,'r') as fid:
                 for line in fid:
@@ -826,21 +826,87 @@ class Lattice():
         """
         Returns a list of element names
         """
-        return [ele.name for element in self._elements]
+        return [element.name for element in self._elements]
 
 
     def to_dict(self):
         return {ele._name:ele.to_dict() for ele in self._elements}
 
-    # Choose democracy
-    # Heather Cox Richardison
-    # 12/10 - Sigrid
+    def parse(self, gpt_file, style=None):
+        
+        abs_gpt_file = full_path(gpt_file)
+        
+        with open(gpt_file, 'r') as fid:
+        
+            lines = [line.strip().split('#')[0].strip() for line in fid.readlines() if(not line.strip().startswith('#') and line.strip()!='')]
+            
+            variables = { line.split("=")[0].strip():float(line.split("=")[1][:-1].strip()) for line in lines if( len(line.split("="))==2 and is_floatable(line.split("=")[1][:-1])) }
+            
+            map_lines = [line for line in lines if line.startswith('Map')]
+            
+            fmap = [self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style) for mline in map_lines]
+        
 
 
-
-
-
-
+    def parse_field_map(self, mline, variables, gpt_file_dir, style=None):
+        
+        mtype = mline.split('(')[0]
+        
+        if(mtype not in ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM']):
+            print(f'Unknown field map type: {mtype}')
+            
+        tokens = [t.strip() for t in mline.split(',')]
+        tokens[0] = tokens[0].split('(')[1]
+        tokens[-1] = tokens[-1].split(')')[0]
+        
+        fmap_token = [token for token in tokens if('.gdf' in token)][0]
+        fmap_token_index = tokens.index(fmap_token)
+        fmap_file = fmap_token[1:-1]
+        
+        fmap_name = os.path.basename(fmap_file).replace('.gdf','')
+        
+        if(not os.path.isabs(fmap_file)):
+            
+            fmap_file = os.path.abspath(os.path.join(gpt_file_dir, fmap_file))
+            
+        print(fmap_file) 
+        
+        if(fmap_token_index==10 and tokens[0]=='"wcs"'):
+            
+            zstr = tokens[3]
+            if(is_floatable(zstr)):
+                zpos=float(zstr)
+            elif(zstr in variables):
+                zpos=variables[zstr]
+                
+            else:
+                print('Could not parse z-position for mline')
+                
+            assert( int(tokens[4])==1 and #xhat = (1, 0, 0)
+               int(tokens[5])==0 and 
+               int(tokens[6])==0 and 
+               int(tokens[7])==0 and #yhat = (0, 1, 0)
+               int(tokens[8])==1 and 
+               int(tokens[9])==0) 
+            
+            if(mtype=='Map1D_B'):
+                pass
+            elif(mtype=='Map2D_B'):
+                self.add(Map2D_B(fmap_name, fmap_file, style=style), ds=zpos, ref_element='beg', element_origin='center')
+            elif(mtype=='Map2D5TM'):
+                self.add(Map2D5_TM(fmap_name, fmap_file, 0, style=style), ds=zpos, ref_element='beg', element_origin='center')
+                
+               
+        
+        
+        
+            
+            
+        
+        
+        
+        
+    
 
 
 

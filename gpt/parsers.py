@@ -5,6 +5,8 @@ import numpy as np
 import re
 import os
 
+from gpt.tools import full_path
+
 import shutil
 
 # ------ Number parsing ------
@@ -17,18 +19,25 @@ def isfloat(value):
 
 def find_path(line, pattern=r'"([^"]+\.gdf)"'):
 
-    matches=re.findall(pattern,line)
+    matches=re.findall(pattern, line)
     return matches
+ 
+  
  
 def set_support_files(lines, original_path, target_path='', copy_files=False, pattern=r'"([^"]+\.gdf)"', verbose=False):
 
     for ii, line in enumerate(lines):
 
-        support_files = find_path(line,pattern=pattern)
+        support_files = find_path(line, pattern=pattern)
 
         for support_file in support_files:
 
-            abs_original_path = os.path.join(original_path, support_file)
+            #print(full_path(support_file))
+
+            abs_original_path = full_path( os.path.join(original_path, os.path.expandvars(support_file)) )
+            
+            #print(support_file, original_path, abs_original_path)
+
 
             if(copy_files):
             
@@ -36,7 +45,7 @@ def set_support_files(lines, original_path, target_path='', copy_files=False, pa
                 shutil.copyfile(abs_original_path, abs_target_path, follow_symlinks=True)            
 
                 if(verbose):
-                    print("Copying file: ",abs_original_path,'->',abs_target_path)   
+                    print("Copying file: ", abs_original_path,'->',abs_target_path)   
 
             else:
 

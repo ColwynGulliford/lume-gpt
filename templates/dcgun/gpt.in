@@ -40,7 +40,7 @@ XSLA01=0.0;
 YSLA01=0.0;
 THXSLA01=0.0;
 BSLA01 = sol_1_current * SLAPolarity;
-Map2D_B("wcs", XSLA01,YSLA01,ZSLA01,  cos(THXSLA01),0,sin(THXSLA01), 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", BSLA01);
+Map2D_B("wcs", XSLA01,YSLA01,ZSLA01,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", BSLA01);
 IA1SDR01_z=0.922;
 screen("wcs","I",IA1SDR01_z);
 ZSTOP=1.5;

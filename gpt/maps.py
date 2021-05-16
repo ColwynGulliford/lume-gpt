@@ -4,7 +4,7 @@ import math, cmath
 from scipy.integrate import cumtrapz
 import tempfile
 
-from gpt import GPT
+#from gpt import GPT
 from gpt import tools
 from gpt.tools import cvector
 from gpt.tools import in_ecs
@@ -289,7 +289,7 @@ class Map1D(GDFFieldMap):
 
     """ Class for storing 1D GDF field maps, derives from GDFfieldMap """
 
-    def __init__(self, source_data, required_columns, gdf2a_bin='$GDF2A_BIN'):
+    def __init__(self, source_data, required_columns, gdf2a_bin='$GDF2A_BIN', color=None):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin)
 
@@ -305,9 +305,11 @@ class Map1D(GDFFieldMap):
             self.Fz_str='Bz'
             self.Fz_unit='T'
 
-    def plot_floor(self, axis=None, alpha=1.0, ax=None):
+        self._color=color
+
+    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None):
         """ Plots the bounding box of the field map in z-x floor coordinates """
-        plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax)
+        plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax, xlim=xlim, ylim=ylim)
 
     def plot_field_profile(self, ax=None, normalize=False):
         """ Plots the z, Fz field profile on axis """
@@ -339,7 +341,7 @@ class Map1D_E(Map1D):
     Defines a 1D [z, Ez] cylindrically symmetric electric field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.2, scale=1):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.3, scale=1, color='#1f77b4', style=None):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Ez'])
        
@@ -348,7 +350,12 @@ class Map1D_E(Map1D):
         self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
-        self._color = '#1f77b4'
+        self._style = style
+
+        if(style=='tao'):
+            color='#1f77b4'
+
+        self._color=color
         self._scale = scale
 
         self.place() 
@@ -413,7 +420,7 @@ class Map1D_B(Map1D):
     Defines a 1D [z, Bz] cylindrically symmetric magnetic field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.2, scale=1):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.4, scale=1, color='#2ca02c', style=None):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Bz'])
         
@@ -422,7 +429,14 @@ class Map1D_B(Map1D):
         self._length = self.z0[-1]-self.z0[0]
         self._width = width
         self._height = self._width
-        self._color = '#2ca02c'
+        self._style = style
+
+        if(style=='tao'):
+            color='blueviolet'
+
+        self._color = color
+
+
         self._scale=scale
 
         self.place()
@@ -460,8 +474,8 @@ class Map1D_TM(Map1D):
         relative_phase=0,
         oncrest_phase=0,
         gdf2a_bin='$GDF2A_BIN', 
-        color='darkorange'
-        ):
+        color='darkorange',
+        style=None):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Ez'])
 
@@ -470,6 +484,11 @@ class Map1D_TM(Map1D):
         self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
+        self._style=style
+
+        if(style=='tao'):
+            color = 'lawngreen'
+
         self._color = color
 
         self._frequency = frequency
@@ -558,7 +577,7 @@ class Map2D(GDFFieldMap):
             self.Fz_str='Bz'
             self.Fz_unit='T'
 
-    def plot_floor(self, axis=None, alpha=1.0, ax=None):
+    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):
         """ 
         Function for plotting the relevant field/object region for cylindrically symmetric map object
         Inputs: 
@@ -568,7 +587,8 @@ class Map2D(GDFFieldMap):
         Outputs:
             ax: returns current axis handle being used
         """
-        return plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax)
+        
+        return plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax, xlim=xlim, ylim=ylim, style=style)
 
     def plot_field_profile(self, ax=None, normalize=False):
         """ 
@@ -624,16 +644,21 @@ class Map2D_E(Map2D):
     Defines a 2D (r,z), (Er, Ez) cylindrically electric symmetric field map object
     """
     
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', scale=1, r=[0,0,0]):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', scale=1, r=[0,0,0], style=None, color='#1f77b4'):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez'])
 
         self._name = name
         self._type = 'Map2D_E'
         self._length = self.z0[-1]-self.z0[0]
-        self._width = 0.2
+        self._width = 0.3
         self._height = self._width
-        self._color = '#1f77b4'
+        self._style = style
+
+        if(style=='tao'):
+            color=color
+
+        self._color = color
         self._scale=scale
 
         self.place() 
@@ -659,16 +684,21 @@ class Map2D_B(Map2D):
     Defines a 2D (r,z), (Br, Bz) cylindrically magnetic symmetric field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', field_pos='center', scale=1):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', field_pos='center', scale=1, style=None, color='#2ca02c'):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Br', 'Bz'])
 
         self._type='Map2D_B'
         self._name = name
         self._length = self.z0[-1]-self.z0[0]
-        self._width = 0.2
+        self._width = 0.4
         self._height = self._width
-        self._color = '#2ca02c'
+        self._style = style
+
+        if(style=='tao'):
+            color = 'blueviolet'
+
+        self._color = color
         self._scale=scale
 
         self.place()
@@ -709,8 +739,8 @@ class Map25D_TM(Map2D):
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, 
         k=0,
-        color='darkorange'
-        ):
+        color='darkorange',
+        style=None):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
 
@@ -728,6 +758,10 @@ class Map25D_TM(Map2D):
         self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
         self._height = self._width
+        self._style=style
+        if(style=='tao'):
+            color='lawngreen'
+
         self._color = color
 
         self._k=k
@@ -913,7 +947,7 @@ def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='origin'
         p_ref = ref_element.p_beg
 
     if(element_origin=='beg'):
-
+        
         ele._s_beg = s_ref + ds
         ele._s_end = ele.s_beg + ele.length
 
@@ -945,7 +979,7 @@ def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='origin'
     ele.set_ref_trajectory()
 
 
-def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
+def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):
 
     """ 
     Function for plotting the relevant field/object region for cylindrically symmetric map object
@@ -957,6 +991,9 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
     Outputs:
         ax: returns current axis handle being used
     """
+
+    if(style is not None):
+        element._style=style
 
     f = 0.01
     zs = element.z0
@@ -1002,13 +1039,24 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None):
 
     ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
 
-    ax.plot(ps1[2], ps1[0], element.color, alpha=0.2)
-    ax.plot(ps2[2], ps2[0], element.color, alpha=alpha)
+    #print(element.name, element._color, element._style)
+
+    if(element._style=='tao'):
+        ax.plot(ps1[2], ps1[0], element.color, alpha=0.2*alpha)
+        ax.plot(ps2[2], ps2[0], element.color, alpha=alpha)
+
+        ax.plot([p1[2], p3[2]], [p1[0], p3[0]], element.color, alpha=alpha)
+        ax.plot([p2[2], p4[2]], [p2[0], p4[0]], element.color, alpha=alpha)
+    #ax.plot([ps2[]], )
+
     ax.set_xlabel('z (m)')
     ax.set_ylabel('x (m)')
 
     if(axis=='equal'):
         ax.set_aspect('equal')
+        
+    if(xlim is not None):
+        ax.set_xlim(xlim)
 
     return ax
 

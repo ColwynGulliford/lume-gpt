@@ -13,6 +13,8 @@ from pmd_beamphysics.particles import single_particle
 from pmd_beamphysics import ParticleGroup
 #from pmd_beamphysics.interfaces import write_gpt
 
+from gpt.lattice import Lattice
+
 import h5py
 import os
 import tempfile
@@ -124,6 +126,8 @@ class GPT:
             self.path = self.original_path         
 
         self.input_file = os.path.join(self.path, self.original_input_file) 
+        self.lattice = Lattice('lattice')
+        self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
         parsers.set_support_files(self.input['lines'], self.original_path)              
         

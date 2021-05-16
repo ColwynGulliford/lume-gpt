@@ -3,6 +3,7 @@ from pmd_beamphysics.units import nice_array, nice_scale_prefix
 import matplotlib.pyplot as plt
 import numpy as np 
 
+#from .lattice import Lattice
 
 def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['mean_kinetic_energy'], 
                            xkey='mean_z', xlim=None, 
@@ -128,7 +129,7 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     
     # Layout   
     if include_layout:
-        print('TODO include_layout')
-        
+        gpt_object.lattice.plot_floor(ax=ax_layout, style='tao')
+
     if return_figure:
         return fig          
