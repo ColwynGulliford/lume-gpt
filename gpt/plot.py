@@ -148,9 +148,7 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     
     # Layout   
     if include_layout:
-        print('inclucde layout!')
-        #prit(new_)
-        #ax_plot.set_xlim(xlim)
+
         gpt_object.lattice.plot_floor(axis=None, ax=ax_layout, style='tao')
         ax_layout.set_xlim(xlim)
 

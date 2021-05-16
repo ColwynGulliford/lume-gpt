@@ -318,8 +318,13 @@ class Lattice():
             
             map_lines = [line for line in lines if line.startswith('Map')]
             
-            for mline in map_lines: self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
-            
+            for mline in map_lines: 
+                
+                try:
+                    self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
+                except:
+                    print(f'Could no parse: {mline}')
+                    
             #fmap = [self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style) for mline in map_lines]
         
 
