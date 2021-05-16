@@ -8,7 +8,7 @@ import numpy as np
 def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['mean_kinetic_energy'], 
                            xkey='mean_z', xlim=None, ylim=None, ylim2=None,
                            nice=True, 
-                           include_layout=False,
+                           include_layout=True,
                            include_labels=True, 
                            include_legend=True,
                            return_figure=False,
@@ -40,6 +40,8 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
         fig, all_axis = plt.subplots( **kwargs)
         ax_plot = [all_axis]
 
+     
+ 
     # collect axes
     if isinstance(ykeys, str):
         ykeys = [ykeys]
@@ -146,7 +148,11 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     
     # Layout   
     if include_layout:
-        gpt_object.lattice.plot_floor(ax=ax_layout, style='tao')
+        print('inclucde layout!')
+        #prit(new_)
+        #ax_plot.set_xlim(xlim)
+        gpt_object.lattice.plot_floor(axis=None, ax=ax_layout, style='tao')
+        ax_layout.set_xlim(xlim)
 
     if return_figure:
         return fig          

@@ -394,7 +394,7 @@ class GPT:
     
     def plot(self, y=['sigma_x', 'sigma_y'], x='mean_z', xlim=None, ylim=None, ylim2=None, y2=[],
             nice=True, 
-            include_layout=False,
+            include_layout=True,
             include_labels=False, 
             include_particles=True,
             include_legend=True, 
