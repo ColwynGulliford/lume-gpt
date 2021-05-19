@@ -12,6 +12,7 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
                            include_labels=True, 
                            include_legend=True,
                            return_figure=False,
+                           data_type='tout',
                            **kwargs):
     """
     Plots stat output multiple keys.
@@ -60,7 +61,7 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     
     #assert xkey == 'mean_z', 'TODO: other x keys'
         
-    X = I.stat(xkey)
+    X = I.stat(xkey, data_type=data_type)
     
     # Only get the data we need
     if xlim:
@@ -104,7 +105,7 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
         unit = str(ulist[0])
         
         # Data
-        data = [I.stat(key)[good] for key in keys]        
+        data = [I.stat(key, data_type=data_type)[good] for key in keys]        
         
         if nice:
             factor, prefix = nice_scale_prefix(np.ptp(data))
