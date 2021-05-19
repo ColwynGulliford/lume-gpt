@@ -8,12 +8,12 @@
 # SETTINGS:
 #--------------------------------------------------------------------------
 Master_RF = 187e6;   # MHz
-gun_voltage = 300.0; 
 gun_peak_field = 20e6; # V/m
 voltage_scale = 1;
-gun_phase = 0;
-tmax = 5e-7;
-Ntout = 100;
+gun_oncrest_phase=0;
+gun_relative_phase=0;
+tmax = 5e-9;
+Ntout = 500;
 #--------------------------------------------------------------------------
 
 
@@ -21,9 +21,8 @@ Ntout = 100;
 # SWITCHES:
 #--------------------------------------------------------------------------
 single_particle = 0;
-space_charge=0.0;
+space_charge=1.0;
 space_charge_type = 1;
-use_gun_peak_field=1;
 #--------------------------------------------------------------------------
 
 
@@ -53,17 +52,9 @@ XGUN = 0.0;
 YGUN = 0.0;
 ZGUN = 0.0;
 
-if(use_gun_peak_field==1) {
+Map25D_TM("wcs", XGUN,YGUN,ZGUN,  1,0,0, 0,1,0, "fields/apex_gun.gdf", "R", "Z", "Er", "Ez", "Bphi", gun_peak_field, 0, (gun_oncrest_phase+gun_relative_phase)*(pi/180), 2*pi*Master_RF);
 
-    Escale   = gun_peak_field;
-
-} else {
-
-    Escale   = gun_voltage / voltage_scale;
-
-}
-
-Map25D_TM("wcs", XGUN,YGUN,ZGUN,  1,0,0, 0,1,0, "fields/apex_gun.gdf", "R", "Z", "Er", "Ez", "Bphi", Escale, 0, gun_phase*(pi/180), 2*pi*Master_RF);
+gun_gamma=1;
 #--------------------------------------------------------------------------
 
 
@@ -115,5 +106,12 @@ ZSTART = -0.000001;
 ZSTOP = 0.5;
 zminmax("wcs","I",ZSTART,ZSTOP);
 screen("wcs", "I", 0, ZSTOP, 0.005);
-tout(0,tmax,tmax/Ntout);
+tout(0, tmax, tmax/Ntout);
 #--------------------------------------------------------------------------
+
+phasing_amplitude_0 = gun_peak_field;
+phasing_on_crest_0 = gun_oncrest_phase;
+phasing_relative_0 = gun_relative_phase;
+phasing_gamma_0 = gun_gamma;
+
+auto_phase=0;
