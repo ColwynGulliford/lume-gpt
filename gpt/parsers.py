@@ -117,7 +117,7 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
         if(ccs_beg!="wcs"):
             f.write(f'settransform("{ccs_beg}", 0,0,0, 1,0,0, 0,1,0, "beam");\n')
 
-def read_particle_gdf_file(gdffile, verbose=0.0, extra_screen_keys=['q','nmacro']): #,'ID', 'm']):
+def read_particle_gdf_file(gdffile, verbose=0.0, extra_screen_keys=['q','nmacro'], load_files=False): #,'ID', 'm']):
 
     with open(gdffile, 'rb') as f:
       data = easygdf.load_initial_distribution(f, extra_screen_keys=extra_screen_keys)
@@ -149,7 +149,7 @@ def read_particle_gdf_file(gdffile, verbose=0.0, extra_screen_keys=['q','nmacro'
 
     return screen
 
-def read_gdf_file(gdffile, verbose=False):
+def read_gdf_file(gdffile, verbose=False, load_fields=False):
       
     # Read in file:
 
@@ -158,24 +158,32 @@ def read_gdf_file(gdffile, verbose=False):
     #self.vprint("Reading data...",1,False)
     t1 = time.time()
     with open(gdffile, 'rb') as f:
-        touts, screens = easygdf.load(f, extra_screen_keys=['q','nmacro',"ID","m"], extra_tout_keys=['q','nmacro',"ID","m"])
+        
+        if(load_fields):
+            extra_tout_keys   = ['q', 'nmacro', 'ID', 'm', 'fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
+        else:
+            extra_tout_keys   = ['q', 'nmacro', 'ID', 'm']
+        
+        touts, screens = easygdf.load(f, extra_screen_keys=['q','nmacro', 'ID', 'm'], extra_tout_keys=extra_tout_keys)
+        
     t2 = time.time()
     if(verbose):
         print(f'   GDF data loaded, time ellapsed: {t2-t1:G} (sec).')
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 
-    tdata = make_tout_dict(touts)
+    tdata, fields = make_tout_dict(touts, load_fields=load_fields)
     pdata = make_screen_dict(screens)
 
-    return(tdata, pdata)
+    return (tdata, pdata, fields)
 
 
 
 
-def make_tout_dict(touts):
+def make_tout_dict(touts, load_fields=False):
 
     tdata=[]
+    fields = []
     count = 0
     for data in touts:
         n=len(data[0,:])
@@ -208,11 +216,19 @@ def make_tout_dict(touts):
             tout["time"]=np.sum(tout["w"]*tout["t"])
             tout["n"]=len(tout["x"])
             tout["number"]=count
+            
+            if(load_fields):
+                field = {'Ex':data[11,:], 'Ey':data[12,:], 'Ez':data[13,:],
+                          'Bx':data[14,:], 'By':data[15,:], 'Bz':data[16,:]}
+            else:
+                field=None
+            
+            fields.append(field)
 
             count=count+1
             tdata.append(tout)
 
-    return tdata
+    return tdata, fields
 
 def make_screen_dict(screens):
 

@@ -86,7 +86,10 @@ class GDFFieldMap(Element):
     def __init__(self, source_data_file, gdf2a_bin='$GDF2A_BIN', use_temp_file=False):
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
-        self.source_data_file = os.path.abspath(source_data_file)
+
+        self.source_data_file = tools.full_path(source_data_file)
+        assert os.path.exists(self.source_data_file), f'Source GDF file {self.source_data_file} does not exist.' 
+        #self.source_data_file = os.path.abspath(source_data_file)
 
         if(use_temp_file):
             temp_ascii_file = tempfile.NamedTemporaryFile().name + '.txt'

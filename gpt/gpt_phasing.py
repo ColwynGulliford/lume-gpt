@@ -13,6 +13,8 @@ import scipy
 import scipy.optimize as sp
 from optparse import OptionParser
 
+from pathlib import Path
+
 def main():
 
     # Default setting
@@ -46,6 +48,8 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
 
     settings = {}
 
+    #print(path_to_input_file, path_to_gpt_bin, path_to_phasing_dist)
+
     if (verbose == True):
         print("\nPhasing: " + path_to_input_file )
 
@@ -53,8 +57,16 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
     split_input_file_path = path_to_input_file.split('/')
     gpt_input_filename = split_input_file_path[-1]
 
+    extension = Path(gpt_input_filename).suffix
+
+    #print(extension)
+
+    assert gpt_input_filename[-3:]=='.in', 'Phasing script requires the input file end with .in'
+
     phase_input_filename = gpt_input_filename.replace('.in', '.temp.in')
     finished_phase_input_filename = gpt_input_filename.replace('.in', '.phased.in')
+    #phase_input_filename = gpt_input_filename.replace(extension, '.temp{extension}')
+    #finished_phase_input_filename = gpt_input_filename.replace(extension, '.phased{extension}')
 
     path_to_input_file = ''
     for x in range(len(split_input_file_path)-1):

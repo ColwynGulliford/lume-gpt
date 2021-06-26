@@ -54,7 +54,8 @@ class GPT:
                  verbose=False,
                  ccs_beg='wcs',
                  ref_ccs=False,
-                 kill_msgs=DEFAULT_KILL_MSGS
+                 kill_msgs=DEFAULT_KILL_MSGS,
+                 load_fields=False
                  ):
 
         # Save init
@@ -86,6 +87,8 @@ class GPT:
         self.ccs_beg = ccs_beg
         self.ref_ccs = ref_ccs
         self.kill_msgs=kill_msgs
+        self.load_fields=load_fields
+        
 
         # Call configure
         if input_file:
@@ -179,11 +182,16 @@ class GPT:
         """ loads the GPT raw data and puts it into particle groups """
 
         self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
-        touts, screens=parsers.read_gdf_file(file, self.verbose)  # Raw GPT data
+        
+        touts, screens, fields = parsers.read_gdf_file(file, self.verbose, load_fields=self.load_fields)  # Raw GPT data
+
+        #print(self.load_fields, fields)
 
         self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose, ref_ccs=self.ref_ccs) 
         self.output['n_tout'] = len(touts)
         self.output['n_screen'] = len(screens)
+        
+        self.output['fields']=fields
 
     @property
     def n_tout(self):
@@ -293,6 +301,11 @@ class GPT:
                 trajectory[var][ii] = pg[var][pg['id']==pid]
 
         return trajectory
+    
+    @property
+    def fields(self):
+        if('fields' in self.output):
+            return self.output['fields']
    
 
     def run(self, gpt_verbose=False):
@@ -572,8 +585,10 @@ class GPT:
                 errline = self.get_syntax_error_line(self.output["why_error"])
                 if(errline):
                     outstr = outstr+f'\n   Suspected input file line: "{errline}"'
-            rtime = self.output['run_time']
-            outstr = outstr+f'\n   Run time: {rtime} (sec)'
+
+            if('run_time' in self.output):
+                rtime = self.output['run_time']
+                outstr = outstr+f'\n   Run time: {rtime} (sec)'
         
         #outstr = outstr+f"\n
         #outstr = outstr+f'\n   Log: {self.log}\n'

@@ -182,7 +182,7 @@ class Sectormagnet(SectorBend):
         self._theta_screen = thetas
         self._s_screen = self.s_beg + np.linspace(0, self._length, self._n_screen)
 
-    def plot_floor(self, axis='equal', ax=None):
+    def plot_floor(self, axis='equal', ax=None, alpha=1, xlim=None, ylim=None, style='tao'):
 
         ax = super().plot_floor(axis=axis, ax=ax)
         for ii in range(len(self.p_screen_center[1,:])):
