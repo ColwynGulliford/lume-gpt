@@ -1043,6 +1043,8 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
 
     effective_plot_length = zR-zL
 
+    #print(effective_plot_length)
+
     if(ax == None):
         ax = plt.gca()
 
