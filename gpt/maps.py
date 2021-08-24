@@ -331,7 +331,7 @@ class Map1D(GDFFieldMap):
     @property
     def Fz(self):
         """ Returns the on axis field z component """
-        return self[self.Fz_str]
+        return self[self.Fz_str]*self._scale
 
     @property
     def max_abs_Fz(self):
@@ -454,6 +454,10 @@ class Map1D_B(Map1D):
     @property
     def larmor_angle(self, p):
         return larmor_angle(self, p)
+
+    @property
+    def Bz2_integral(self):
+        return np.trapz(self.Fz**2, self.z0)
 
     def to_dict(self):
 
@@ -869,6 +873,24 @@ class Map25D_TM(Map2D):
 
     def cavity_voltage(self):
         return cavity_voltage(self)
+
+    def to_superfish_t7(self, filename, column_names={'Ez':'Ez', 'Er':'Er', 'E':'E', 'Bphi':'Bphi'}, fmt='%10.8e'):
+
+        zmin, zmax, nz = self.z0[0]*100, self.z0[-1]*100, len(self.z0)   # z [cm]
+        rmin, rmax, nr = self.r[0]*100,  self.r[-1]*100,  len(self.r)    # r [cm]
+
+        header=f'{zmin} {zmax} {nz-1}\n{self._frequency/1e6}\n{rmin} {rmax} {nr-1}'
+
+        scales = {'Ez':1e6, 'Er':1e6, 'E':1e6, 'Bphi':1}
+
+        dat=np.zeros( (nz*nr, 4) )
+        for ii, k in enumerate(column_names):
+            v = column_names[k]
+            dat[:,ii] = self[v]/scales[k]
+
+        np.savetxt(filename, dat, header=header, comments='',  fmt = fmt)
+
+
 
 
 def write_1d_map(element, filename=None, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN')):
