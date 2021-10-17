@@ -139,6 +139,8 @@ class GPT:
         self.vprint(f'   Configured to run in "{self.path}"')
 
         self.configured = True
+        
+        #print('Configured')
 
     def load_input(self, input_filePath, absolute_paths=True):
         """ Load the GPT template file """
