@@ -1,0 +1,40 @@
+# Sector magnet example
+
+setfile("beam", "distgen_gpt_particles.gdf");
+
+auto_phase=0.0;
+space_charge=0.0;
+space_charge_type=1.0;
+RadiusMax=0.04;
+GBacc=5.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=1e-16;
+dtmax=1e-10;
+
+IA1SDR01_z=0.922;
+screen("wcs","I",IA1SDR01_z);
+ZSTOP=3;
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+
+    if (space_charge_type == 1) {
+        spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+    }
+    if (space_charge_type == 2) {
+        setrmacrodist("beam","u",tree_code_R,0) ;
+        spacecharge3Dtree(tree_code_theta) ; 
+    }
+}
+Ntout=50.0;
+tmax=10e-9;
+ZSTART=-0.005;
+zminmax("wcs","I",ZSTART,ZSTOP);
+
+tout(0,tmax,tmax/Ntout);
+

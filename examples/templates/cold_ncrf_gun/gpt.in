@@ -1,0 +1,177 @@
+#################
+## SIMULATION ###
+#################
+
+# Switches:
+space_charge = 1;	# spacecharge ON/OFF
+auto_phase = 0;         # Controlling auto phasing of cavities.
+
+
+#############
+## POWER ###
+#############
+ATSXX001 = 31.2;	# S1-S2 power (in MW)
+ATSXX003 = 79.2; 	#57MV/m  	#59.4 	#45MV/m
+
+
+################
+## SOLENOIDS ###
+################
+# GUNSOL 204 	        #GUNSOL
+GUNSOLNEW = 176.9; 	#GUNSOL++
+#GUNSOLNEWCUT 176.9
+
+
+##############
+## BEAM ######
+##############
+setfile("beam", "gpt_particles.gdf");
+
+
+##############
+#SPACECHARGE##
+##############
+if(space_charge==1) Spacecharge3Dmesh("Cathode"); #,"MeshNtotal",150,33,33);
+
+
+#####################
+####Timestep#########
+#####################
+#dtmax
+
+################
+#GUN Parameters#
+################
+freqS = 2.856e9; 		#Frequency
+freqC = 2*freqS;
+ffac=1;	#Field multiplication factor
+
+gun_field = 80;
+gun_phi_oncrest = 0;
+gun_phi_relative = 0;
+gun_phi = (gun_phi_oncrest + gun_phi_relative)*pi/180;
+gun_gamma = 1;
+
+# RF GUN Map
+wC=2*pi*freqC;
+map1D_TM("wcs", "z", 0, "fields/C_GUNMAP_1.6.gdf", "z" ,"Ez", ffac, gun_phi, wC);
+
+#map25D_TM("wcs","z",0,"C_GUNMAP_1.6_CYLINDRICAL.gdf","r","z","Er","Ez","H",80,0,phi_gun,wC);
+
+######################
+## GUN_Solenoid  #####
+######################
+#SolFac=(GUNSOL)*0.0064;
+#map2D_B("wcs","z",0,"GUNSOL160_HALF.gdf","r","z","Br","Bz",SolFac);
+
+
+#######################
+#####Back Solenoid#####
+#######################
+#SolFac=(GUNSOL)*0.0064;
+#map2D_B("wcs","z",0,"GUNSOL160_HALF_BACK.gdf","r","z","Br","Bz",SolFac);
+
+######################
+## GUN_SOL_NEW++  #####
+######################
+SolFac=(GUNSOLNEW)*0.0064;
+map2D_B("wcs","z",0.10225,"fields/GUNSOL_NEW++.gdf","r","z","Br","Bz",SolFac);
+
+
+#########################
+## SolenoidBcat0++  #####
+#########################
+#SolFac=(GUNSOLNEWCUT)*0.0064;
+#map2D_B("wcs","z",0.10225,"SolenoidBcat0++.gdf","r","z","Br","Bz",SolFac);
+
+
+
+#################
+#### LINAC ######
+#################
+P1 = ATSXX001*1e6;
+P2 = P1;
+PC = ATSXX003*1e6;
+
+Rc = 82.8e6;		#Shunt Impedance C-band in [ohm/m]
+
+alphas = 0.1069;	#20MV/m @ 33MW
+alphac = 0.206;		#36MV/m @ 38MW
+
+Lc=c/(2*freqS)/3*81;  	#75 cells, phase advance (2/3*pi)  ##81 da usare come a slac
+g0 = 400;
+
+# Linac Cavity 1
+PC1 = 79.2e6;       
+PC10 = 79.2e6;  
+
+phiC1_oncrest = 0;
+phiC1_relative = 0;
+phiC1 = (phiC1_oncrest + phiC1_relative)*pi/180;
+gammaC1 = 1; 
+
+zstartc1=1.02;
+trwlinac("wcs","z",zstartc1+Lc/2,alphac,Rc,PC10,PC1,g0,pi,phiC1,wC,Lc);
+
+# Linac Cavity 2
+PC2 = 79.2e6;
+PC20 = 79.2e6;  
+
+phiC2_oncrest = 0;
+phiC2_relative = 0;
+phiC2 = (phiC2_oncrest + phiC2_relative)*pi/180;
+gammaC2 = 1;
+
+zstartc2=zstartc1+Lc+0.2;
+trwlinac("wcs","z",zstartc2+Lc/2,alphac,Rc,PC20,PC2,g0,pi,phiC2,wC,Lc);
+
+
+##############
+## OUTPUT ####
+##############
+
+#use tout to see avgEf!
+acc = 4;		# Accuracy
+zend = 10;
+nscreens = 100; # number of screens
+accuracy(acc);
+zstart=0;
+
+dz_step = (zend-zstart)/nscreens;
+tout(zstart/c, zend/c, dz_step/c); #JM: why snapshots? they are bad.
+
+
+tmax=10*zend/c;
+
+zminmax("wcs", "I", zstart, zend);
+
+
+screen("wcs","I", zstartc2+Lc+0.2);
+
+if(auto_phase==1) {
+
+	screen("wcs","I", zstartc2+Lc+0.2);
+}
+
+
+# PHASING DEFINITIONS
+
+phasing_amplitude_0 = ffac;
+phasing_on_crest_0 = gun_phi_oncrest;
+phasing_relative_0 = gun_phi_relative;
+phasing_gamma_0 = gun_gamma;
+
+phasing_amplitude_1 = PC1;
+phasing_on_crest_1 = phiC1_oncrest;
+phasing_relative_1 = phiC1_relative;
+phasing_gamma_1 = gammaC1;
+
+phasing_amplitude_2 = PC2;
+phasing_on_crest_2 = phiC2_oncrest;
+phasing_relative_2 = phiC2_relative;
+phasing_gamma_2 = gammaC2;
+
+
+
+
+

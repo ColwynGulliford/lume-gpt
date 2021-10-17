@@ -1,0 +1,18 @@
+n_particle: 10
+random_type: hammersley
+start:
+  tstart:
+    units: sec
+    value: 0
+  type: time
+  
+total_charge:
+  units: nC
+  value: 1e-12
+  
+transforms:
+  t1:
+    avg_pz:
+      units: 'MeV/c'
+      value: 1
+    type: set_avg pz

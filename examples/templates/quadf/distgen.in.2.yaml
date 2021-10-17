@@ -1,0 +1,20 @@
+n_particle: 10
+random_type: hammersley
+start:
+    tstart:
+        units: ps
+        value: 0
+    type: time
+transforms:
+    t1:
+        type: set_avg pz
+        avg_pz: 
+            value: 10
+            units: MeV/c
+total_charge:
+    units: pC
+    value: 1.0
+output: 
+    file: gpt_particles.txt
+    type: gpt
+

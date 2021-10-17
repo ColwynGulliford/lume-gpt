@@ -1,0 +1,36 @@
+GPTLICENSE=1251405651.0;
+
+
+setfile("beam","/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/cu_hcgun/gpt.particles.gdf");
+
+gun_voltage=400;
+Maxdcgun=500.0;
+Edcgun=gun_voltage/Maxdcgun;
+map1D_E("wcs","z",0,"/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/cu_hcgun/fields/dcgun_GHV_1D.gdf","Z","Ez",Edcgun*100);
+
+sol01_current=-3.81;
+ZSLA01=0.338;
+sol02_current=-4.1;
+ZSLA02=2.33;
+SLAPolarity=-1.0;
+BSLA01 = sol01_current*SLAPolarity;
+BSLA02 = sol02_current*SLAPolarity;
+map2D_B("wcs",0,0,ZSLA01,1,0,0,0,1,0,"/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/cu_hcgun/fields/solenoid_SLA_L60.gdf","R","Z","Br","Bz", BSLA01);
+map2D_B("wcs",0,0,ZSLA02,1,0,0,0,1,0,"/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/cu_hcgun/fields/solenoid_SLA_L60.gdf","R","Z","Br","Bz", BSLA02);
+
+spacecharge3Dmesh("Cathode");
+
+forwardscatter("wcs","I","remove",0);
+scatteriris("wcs","z",0.05,0.25,0.3) scatter = "remove";
+scatterpipe("wcs","I",0.05,0.95,0.3) scatter = "remove";
+scatteriris("wcs","z",0.95,0.17,0.3) scatter = "remove";
+scatterpipe("wcs","I",0.95,1.75,0.17) scatter = "remove";
+scatterpipe("wcs","I",1.75,2.4,0.3) scatter = "remove";
+
+zminmax("wcs","I",-1e-7,5);
+stdxyzmax(0,0,3.3);
+
+tend=1.6e-08;
+npts=300;
+pend=4.0;
+screen("wcs","I",1e-3,pend,pend/npts);
