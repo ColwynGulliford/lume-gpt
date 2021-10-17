@@ -6,7 +6,8 @@ from pmd_beamphysics import ParticleGroup
 import numpy as np
 
 from .tools import isotime, native_type
-from ._version import __version__
+from . import _version
+__version__ = _version.get_versions()['version']
 
 
 def fstr(s):
