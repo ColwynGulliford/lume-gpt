@@ -183,6 +183,7 @@ def evaluate_gpt_with_distgen(settings,
     Will raise an exception if there is an error. 
     
     """
+    
     G = run_gpt_with_distgen(settings=settings,
                              gpt_input_file=gpt_input_file,
                              distgen_input_file=distgen_input_file,
@@ -195,7 +196,7 @@ def evaluate_gpt_with_distgen(settings,
                              gpt_verbose=gpt_verbose,
                              asci2gdf_bin=asci2gdf_bin,
                              kill_msgs=kill_msgs)
-        
+    
     if merit_f:
         merit_f = tools.get_function(merit_f)
         output = merit_f(G)

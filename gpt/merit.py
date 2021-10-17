@@ -14,6 +14,8 @@ def get_norm_emitt(x,p):
 
 
 def default_gpt_merit(G):
+    
+    
     """
     default merit function to operate on an evaluated LUME-GPT object G.  
     
