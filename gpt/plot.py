@@ -3,11 +3,14 @@ from pmd_beamphysics.units import nice_array, nice_scale_prefix
 import matplotlib.pyplot as plt
 import numpy as np 
 
+from pmd_beamphysics.labels import mathlabel
+
 #from .lattice import Lattice
 
 def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['mean_kinetic_energy'], 
                            xkey='mean_z', xlim=None, ylim=None, ylim2=None,
                            nice=True, 
+                           tex=True,
                            include_layout=True,
                            include_labels=True, 
                            include_legend=True,
@@ -21,6 +24,8 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     
     Logical switches:
         nice: a nice SI prefix and scaling will be used to make the numbers reasonably sized. Default: True
+        
+        tex: use mathtext (TeX) for plot labels. Default: True
         
         include_legend: The plot will include the legend.  Default: True
         
@@ -81,8 +86,9 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
     
     # set all but the layout
     for ax in ax_plot:
-        ax.set_xlim(xlim[0]/factor_x, xlim[1]/factor_x)          
-        ax.set_xlabel(f'{xkey} ({units_x})')    
+        ax.set_xlim(xlim[0]/factor_x, xlim[1]/factor_x)   
+        xlabel = mathlabel(xkey, units=units_x, tex=tex)
+        ax.set_xlabel(xlabel)    
     
 
     # Draw for Y1 and Y2 
@@ -102,14 +108,14 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
             for u2 in ulist[1:]:
                 assert ulist[0] == u2, f'Incompatible units: {ulist[0]} and {u2}'
         # String representation
-        unit = str(ulist[0])
+        units = str(ulist[0])
         
         # Data
         data = [I.stat(key, data_type=data_type)[good] for key in keys]        
         
         if nice:
             factor, prefix = nice_scale_prefix(np.ptp(data))
-            unit = prefix+unit
+            units = prefix+units
         else:
             factor = 1
 
@@ -118,9 +124,11 @@ def plot_stats_with_layout(gpt_object, ykeys=['sigma_x', 'sigma_y'], ykeys2=['me
             #
             ii += 1
             color = 'C'+str(ii)
-            ax.plot(X, dat/factor, label=f'{key} ({unit})', color=color, linestyle=linestyle)
+            label=mathlabel(key, units=units, tex=tex)
+            ax.plot(X[:-1], dat[:-1]/factor, label=label, color=color, linestyle=linestyle)
             
-        ax.set_ylabel(', '.join(keys)+f' ({unit})')            
+        ylabel=mathlabel(*keys, units=units, tex=tex)    
+        ax.set_ylabel(ylabel)            
         #if len(keys) > 1:
         
         # Set limits, considering the scaling. 
