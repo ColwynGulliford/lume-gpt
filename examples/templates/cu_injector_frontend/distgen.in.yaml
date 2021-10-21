@@ -1,0 +1,34 @@
+n_particle: 20000
+random_type: hammersley
+
+total_charge:
+  units: pC
+  value: 100
+
+start:
+  MTE:
+    units: meV
+    value: 150
+  type: cathode
+
+r_dist:
+  sigma_xy:
+    units: mm
+    value: 1.0
+  alpha:
+    units: dimensionless
+    value: 0.0
+  type: rsg
+
+t_dist:
+  type: sg
+  sigma_t: 
+    units: ps
+    value: 10
+  alpha:
+    units: dimensionless
+    value: 0.0
+   
+output:
+  file: gpt.particles.gdf
+  type: gpt

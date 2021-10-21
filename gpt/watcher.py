@@ -7,7 +7,7 @@ class Watcher():
     """
     Watcher class for line by line watching of subprocess with a timeout
     """
-    def __init__(self, cmd, verbose=False, timeout=10, kill_msgs=[]):
+    def __init__(self, cmd, verbose=False, timeout=10, kill_msgs=[], workdir=''):
 
         """
         cmd: str, command to run via subprocess 
@@ -31,6 +31,7 @@ class Watcher():
         self.exception=None
         self.log = []
         self.run_time = None
+        self.workdir = workdir
 
     def runner(self):
 
@@ -47,7 +48,11 @@ class Watcher():
         """ Runs the subprocess command and starts the monitor thread Yields output lines from subprocess."""
 
         self.thread = threading.Thread(target=self.runner)
-        self.cmd_popen = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        self.cmd_popen = subprocess.Popen(self.cmd, 
+                                          stdout=subprocess.PIPE, 
+                                          stderr=subprocess.PIPE, 
+                                          universal_newlines=True,
+                                          cwd=self.workdir)
         self.thread.start()
 
         for stdout_line in iter(self.cmd_popen.stderr.readline, ""):

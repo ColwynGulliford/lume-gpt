@@ -82,8 +82,6 @@ mlc_section_on = 0;
 c1_section_on = 0;
 c2_section_on = 0;
 dump_section_on = 0;
-
-icm_1d_maps = 0;
 #--------------------------------------------------------------------------
 
 
@@ -116,7 +114,7 @@ if (single_particle == 1) {
 
 } else {
 
-    setfile("beam", "gpt.particles.gdf");
+    setfile("beam", "gpt_particles.gdf");
 
 }
 #--------------------------------------------------------------------------
@@ -426,7 +424,7 @@ if (a2_section_on==1) {
    ECTC04 = cavity_4_voltage / MaxECTC * UnitsECTC;
    ECTC05 = cavity_5_voltage / MaxECTC * UnitsECTC;
 
-   if (auto_phase == 0 && icm_1d_maps ==0) {
+   if (auto_phase == 0) {
       # SRF 1
       map3D_Ecomplex("wcs", 0, 0, ZCTC01, 0,1,0, 1,0,0, "fields/ic_cp_zc_E.gdf", "x","y","z", "ExRe","EyRe","EzRe", "ExIm","EyIm","EzIm", ECTC01, phiCTC01, 2*pi*Master_RF);
       map3D_Hcomplex("wcs", 0, 0, ZCTC01, 0,1,0, 1,0,0, "fields/ic_cp_zc_H.gdf", "x","y","z", "HxRe","HyRe","HzRe", "HxIm","HyIm","HzIm", ECTC01, phiCTC01, 2*pi*Master_RF);
@@ -508,10 +506,10 @@ if (a3_section_on==1) {
         ZMA3QUA03 = 7.776;
         ZMA3QUA04 = 8.377;
 
-        map1D_Bquad("wcs", 0, 0, ZMA3QUA01, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_1_current*QuadUnits);
-        map1D_Bquad("wcs", 0, 0, ZMA3QUA02, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_2_current*QuadUnits);
-        map1D_Bquad("wcs", 0, 0, ZMA3QUA03, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_3_current*QuadUnits);
-        map1D_Bquad("wcs", 0, 0, ZMA3QUA04, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_4_current*QuadUnits);
+        #map1D_Bquad("wcs", 0, 0, ZMA3QUA01, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_1_current*QuadUnits);
+        #map1D_Bquad("wcs", 0, 0, ZMA3QUA02, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_2_current*QuadUnits);
+        #map1D_Bquad("wcs", 0, 0, ZMA3QUA03, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_3_current*QuadUnits);
+        #map1D_Bquad("wcs", 0, 0, ZMA3QUA04, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_4_current*QuadUnits);
    }   
 
    #-----------------------------------------------------------------------
@@ -630,30 +628,30 @@ if (b1_section_on == 1) {
 
     B_dipole_1 = me * c * reference_GB / (qe * R_bend);
     B_dipole_1_scaled = dipole_1_scale * B_dipole_1 / maxBy;
-    B_dipole_1_scaled = (dipole_1_scale * B_dipole_1 / maxBy)  + 1e-3*icm_energy_override;
-    map1D_Brectmag("wcs", x_dipole_1, 0, z_dipole_1, 1,0,0, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_1_scaled);
+    #B_dipole_1_scaled = (dipole_1_scale * B_dipole_1 / maxBy)  + 1e-3*icm_energy_override;
+    #map1D_Brectmag("wcs", x_dipole_1, 0, z_dipole_1, 1,0,0, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_1_scaled);
 
     B_dipole_2 = -1.0 * me * c * reference_GB / (qe * R_bend);
     B_dipole_2_scaled = dipole_2_scale * B_dipole_2 / maxBy;
-    map1D_Brectmag("wcs", x_dipole_2, 0, z_dipole_2, cos(0.5*theta_bend),0,-sin(0.5*theta_bend), 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_2_scaled);
+    #map1D_Brectmag("wcs", x_dipole_2, 0, z_dipole_2, cos(0.5*theta_bend),0,-sin(0.5*theta_bend), 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_2_scaled);
 
     B_dipole_3 = me * c * reference_GB / (qe * R_bend);
     B_dipole_3_scaled = dipole_3_scale * B_dipole_3 / maxBy;
-    map1D_Brectmag("wcs", x_dipole_3, 0, z_dipole_3, nz_MLC,0,-nx_MLC, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_3_scaled);
+    #map1D_Brectmag("wcs", x_dipole_3, 0, z_dipole_3, nz_MLC,0,-nx_MLC, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_3_scaled);
     
     #-------------------------------------------------
     # Place quads
     #-------------------------------------------------
 
     B_quad_1 = B1Quad_1_current*BQuadUnits;
-    if (auto_phase == 0) {
-        map1D_Bquad("wcs",x_Bquad_1,0,z_Bquad_1, nz_B1_arm1,0,-nx_B1_arm1, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_1);
-    }
+    #if (auto_phase == 0) {
+    #    map1D_Bquad("wcs",x_Bquad_1,0,z_Bquad_1, nz_B1_arm1,0,-nx_B1_arm1, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_1);
+    #}
 
     B_quad_2 = B1Quad_2_current*BQuadUnits;
-    if (auto_phase == 0) {
-        map1D_Bquad("wcs",x_Bquad_2,0,z_Bquad_2, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_2);
-    }
+    #if (auto_phase == 0) {
+    #    map1D_Bquad("wcs",x_Bquad_2,0,z_Bquad_2, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_2);
+    #}
 
     #-------------------------------------------------
     # Place screens

@@ -1,5 +1,6 @@
 from .parsers import read_particle_gdf_file
 import numpy as np
+import os
           
 def get_norm_emitt(x,p):
 
@@ -32,7 +33,7 @@ def default_gpt_merit(G):
 
     elif(G.get_dist_file()):
 
-        iparticles=read_particle_gdf_file(G.get_dist_file())
+        iparticles=read_particle_gdf_file(os.path.join(G.path, G.get_dist_file()))
         start_n_particle = len(iparticles['x'])
 
     else:

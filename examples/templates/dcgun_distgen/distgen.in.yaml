@@ -15,8 +15,8 @@ r_dist:
     type: radial_uniform
 t_dist:
     sigma_t:
-        value: 0.5
-        units: ns
+        value: 10
+        units: ps
     alpha: 
         units: ''
         value: 0.0

@@ -3,6 +3,7 @@ from gpt.particles import particle_stats, raw_data_to_particle_groups
 from gpt.parsers import parse_gpt_string
 from .plot import plot_stats_with_layout
 from gpt.tools import transform_to_centroid_coordinates
+from gpt.tools import full_path
 
 from gpt.gpt_phasing import gpt_phasing
 
@@ -132,7 +133,7 @@ class GPT:
         self.lattice = Lattice('lattice')
         self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
-        parsers.set_support_files(self.input['lines'], self.original_path)              
+        parsers.set_support_files(self.input['lines'], self.original_path, target=self.path)              
         
         self.vprint('GPT.configure_gpt:')
         self.vprint(f'   Original input file "{self.original_input_file}" in "{self.original_path}"')
@@ -375,7 +376,11 @@ class GPT:
         runscript = self.get_run_script()
 
         self.vprint(f'   Running with timeout = {self.timeout} sec.')
-        run_time, exception, log = tools.execute(runscript, kill_msgs=self.kill_msgs, timeout=timeout, verbose=gpt_verbose)
+        run_time, exception, log = tools.execute(runscript, 
+                                                 kill_msgs=self.kill_msgs, 
+                                                 timeout=timeout, 
+                                                 verbose=gpt_verbose,
+                                                 workdir=full_path(self.path))
                 
         if(exception is not None):
             self.error=True

@@ -44,7 +44,13 @@ def main():
     gpt_phasing(path_to_input_file,path_to_gpt_bin="", verbose=True, debug_flag=False)
 
  
-def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=None, verbose=False, debug_flag=False):
+def gpt_phasing(path_to_input_file, 
+                path_to_gpt_bin="", 
+                path_to_phasing_dist=None, 
+                verbose=False, 
+                debug_flag=False):
+
+    workdir = os.path.dirname(path_to_input_file)
 
     settings = {}
 
@@ -77,7 +83,7 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
     # Add replace usual input distribution with single particle at centroid
     if(path_to_phasing_dist):
         dist_line_index = find_lines_containing(gpt_input_text, "setfile")[0]
-        gpt_input_text[dist_line_index]=f'setfile("beam", "{path_to_phasing_dist}");'
+        gpt_input_text[dist_line_index]=f'setfile("beam", "{os.path.basename(path_to_phasing_dist)}");'
 
     # Find all lines marked for phasing
     amplitude_flag_indices = find_lines_containing(gpt_input_text, "phasing_amplitude_")
@@ -179,7 +185,13 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
             gamma_test = []
             for phase in phase_test:
 
-                gamma = run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag)
+                gamma = run_gpt_phase(phase, 
+                                      path_to_gpt_bin, 
+                                      phase_input_text, 
+                                      path_to_input_file + phase_input_filename, 
+                                      oncrest_indices[cav_ii], 
+                                      debug_flag,
+                                      workdir)
 
                 gamma_test.append(gamma)
 
@@ -202,7 +214,7 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
                 else:
                     raise ValueError("GPT PHASING ERROR: Gamma did not depend on cavity " + str(cav_ii) + " phase, gamma = " + str(gamma_test[0]))
 
-            brent_output = sp.brent(func=neg_run_gpt_phase, args=(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag), brack=bracket, tol=1.0e-5, full_output=1, maxiter=1000)
+            brent_output = sp.brent(func=neg_run_gpt_phase, args=(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag, workdir), brack=bracket, tol=1.0e-5, full_output=1, maxiter=1000)
 
             best_phase = brent_output[0]
             best_gamma = -brent_output[1]
@@ -210,7 +222,7 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
             phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
             phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
 
-            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag)
+            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
 
             if (len(gamma_indices) > 0):
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
@@ -253,25 +265,41 @@ def gpt_phasing(path_to_input_file, path_to_gpt_bin="", path_to_phasing_dist=Non
 # ---------------------------------------------------------------------------- #
 # Run GPT with a given phase for a cavity, returns value of (NEGATIVE) gamma
 # ---------------------------------------------------------------------------- #
-def neg_run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag):
+def neg_run_gpt_phase(phase, 
+                      path_to_gpt_bin, 
+                      phase_input_text, 
+                      filename, 
+                      oncrest_index, 
+                      debug_flag,
+                      workdir):
 
-    gamma = run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag)
+    gamma = run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag, workdir)
     
     return -gamma
 
 # ---------------------------------------------------------------------------- #
 # Run GPT with a given phase for a cavity, returns value of gamma
 # ---------------------------------------------------------------------------- #
-def run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag):
+def run_gpt_phase(phase, 
+                  path_to_gpt_bin, 
+                  phase_input_text, 
+                  filename, 
+                  oncrest_index, 
+                  debug_flag,
+                  workdir):
 
     phase_input_text = set_variable_on_line(phase_input_text, oncrest_index, phase)
     
-    return run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag)
+    return run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag, workdir)
 
 # ---------------------------------------------------------------------------- #
 # Just run GPT, given an input file to write
 # ---------------------------------------------------------------------------- #
-def run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag):
+def run_gpt(path_to_gpt_bin, 
+            phase_input_text, 
+            filename, 
+            debug_flag,
+            workdir):
 
     writeinfile(phase_input_text, filename)
 
@@ -279,12 +307,12 @@ def run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag):
     output_text_filename = output_filename.replace(".gdf", ".txt")
 
     command = path_to_gpt_bin + "gpt -o " + output_filename + " " + filename
-    call_os_no_output(command.split())
+    call_os_no_output(command.split(), workdir)
     
     command = path_to_gpt_bin + "gdf2a -w16 -o " + output_text_filename + " " + output_filename
-    call_os_no_output(command.split())
+    call_os_no_output(command.split(), workdir)
 
-    gamma = get_gamma_from_file(path_to_gpt_bin, output_text_filename, debug_flag)
+    gamma = get_gamma_from_file(path_to_gpt_bin, output_text_filename, debug_flag, workdir)
 
     trashclean(output_filename, True)
     trashclean(output_text_filename, True)
@@ -294,15 +322,15 @@ def run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag):
 # ---------------------------------------------------------------------------- #
 # Run a command, suppressing all output
 # ---------------------------------------------------------------------------- #
-def call_os_no_output(command):
+def call_os_no_output(command, workdir):
 
     with open(os.devnull, "w") as fnull:
-        result = subprocess.call(command, stdout = fnull, stderr = fnull)
+        result = subprocess.call(command, stdout = fnull, stderr = fnull, cwd=workdir)
 
 # ---------------------------------------------------------------------------- #
 # Get gamma from a GPT output file. Assumes last screen is output first in text file
 # ---------------------------------------------------------------------------- #
-def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag):
+def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
 
     with open(filename, 'r') as hand:
         lines = hand.readlines()
@@ -327,7 +355,10 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag):
         output_text_filename = output_filename.replace(".gdf", ".txt")
 
         command = path_to_gpt_bin + "gpt -v -o " + output_filename + " " + filename
-        p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(command.split(), 
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.STDOUT,
+                             cwd=workdir)
         stdout, stderr = p.communicate()
   
         print(stdout.decode("utf-8") )

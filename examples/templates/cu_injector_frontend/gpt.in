@@ -1,0 +1,115 @@
+Master_RF=1300000000.0;
+gun_voltage=400;
+sol_1_current=3.75;
+buncher_voltage=50.0;
+sol_2_current=2.0;
+MTE=0.0;
+time=0;
+auto_phase=0.0;
+single_particle=0.0;
+space_charge=1.0;
+space_charge_type=1.0;
+
+if (single_particle == 1) {
+    setparticles("beam", 10, me, qe, -1.0e-12);
+    mc2 = m*c*c/abs(qe);
+    KE = MTE/2000.0;
+    G  = 1+KE/mc2 ;
+    setGdist("beam", "u", G, 0) ;
+    settdist("beam", "u", 0.0, 1.0e-16);
+    
+} else {
+    setfile("beam", "gpt_particles.gdf");
+}
+
+RadiusMax=0.04;
+GBacc=5.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=1e-16;
+dtmax=1e-10;
+
+cavity_phasing_index=0;
+phiCTB01_0=0;
+phiCTB01_off=0.0;
+global_phase=0.0;
+phiCTB01=(phiCTB01_0 + phiCTB01_off + global_phase)*pi/180;
+gammaCTB01=1.0;
+    
+ZSLA01 = 0.344;
+ZCTB01 = 0.746;
+ZSLA02 = 1.160;
+
+Zdcgun=0.15;
+Maxdcgun=500.0;
+Edcgun    = gun_voltage / Maxdcgun;
+
+if (auto_phase == 1) {
+    Map1D_E("wcs", "z", 0, "fields/dcgun_GHV_1D.gdf", "Z", "Ez", Edcgun*100);
+} else {
+    Map2D_E("wcs", "z", Zdcgun, "fields/gun_0mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+}
+
+SLAPolarity=-1.0;
+LSLA01=0.6;
+XSLA01=0.0;
+YSLA01=0.0;
+THXSLA01=0.0;
+BSLA01 = sol_1_current * SLAPolarity;
+if (auto_phase == 0) {
+    Map2D_B("wcs", XSLA01,YSLA01,ZSLA01,  cos(THXSLA01),0,sin(THXSLA01), 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", BSLA01);
+}
+
+MaxECTB=2.092;
+UnitsECTB = 1.0/62.7;
+XCTB01=0.0;
+YCTB01=0.0;
+ECTB01 = buncher_voltage / MaxECTB * UnitsECTB;
+if (auto_phase == 0) {
+    Map25D_TM("wcs", XCTB01,YCTB01,ZCTB01,  1,0,0, 0,1,0,"fields/buncher_CTB.gdf", "R", "Z", "Er", "Ez", "H", ECTB01, 0, phiCTB01, 2*pi*Master_RF);
+} else {
+    Map1D_TM("wcs", XCTB01,YCTB01,ZCTB01,  1,0,0, 0,1,0,"fields/buncher_CTB_1D.gdf", "Z", "Ez", ECTB01*1e6, phiCTB01, 2*pi*Master_RF);
+}
+
+LSLA02=0.6;
+XSLA02=0.0;
+YSLA02=0.0;
+BSLA02 = sol_2_current * SLAPolarity;
+if (auto_phase == 0) {
+Map2D_B("wcs", XSLA02,YSLA02,ZSLA02,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", BSLA02);
+}
+
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+    if (space_charge_type == 1) {
+        spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+    }
+    if (space_charge_type == 2) {
+        setrmacrodist("beam","u",tree_code_R,0) ;
+        spacecharge3Dtree(tree_code_theta) ;
+    }
+}
+
+phasing_screen_z=1.5;  
+screen("wcs","I",phasing_screen_z);
+
+ZSTOP = 2.0;
+ZSTART=-0.005;
+zminmax("wcs","I",ZSTART,ZSTOP);
+
+tmax=5e-08;
+Ntout=500;
+if (auto_phase == 0 && Ntout > 0) {
+    dtout = tmax/Ntout;
+    tout(time,tmax,dtout);
+}
+
+phasing_amplitude_0 = buncher_voltage;
+phasing_on_crest_0 = phiCTB01_0;
+phasing_relative_0 = phiCTB01_off;
+phasing_gamma_0 = gammaCTB01;

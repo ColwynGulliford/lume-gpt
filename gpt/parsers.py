@@ -24,7 +24,12 @@ def find_path(line, pattern=r'"([^"]+\.gdf)"'):
  
   
  
-def set_support_files(lines, original_path, target_path='', copy_files=False, pattern=r'"([^"]+\.gdf)"', verbose=False):
+def set_support_files_orig(lines, 
+                           original_path, 
+                           target_path='', 
+                           copy_files=False, 
+                           pattern=r'"([^"]+\.gdf)"', 
+                           verbose=False):
 
     for ii, line in enumerate(lines):
 
@@ -36,9 +41,6 @@ def set_support_files(lines, original_path, target_path='', copy_files=False, pa
 
             abs_original_path = full_path( os.path.join(original_path, os.path.expandvars(support_file)) )
             
-            #print(support_file, original_path, abs_original_path)
-
-
             if(copy_files):
             
                 abs_target_path = os.path.join(target_path, support_file) 
@@ -53,6 +55,55 @@ def set_support_files(lines, original_path, target_path='', copy_files=False, pa
                     lines[ii] = line.replace(support_file, abs_original_path)
                     if(verbose):
                         print("Set path to file: ",lines[ii])        
+                        
+def set_support_files(lines, 
+                      original_path, 
+                      target='', 
+                      copy_files=False, 
+                      pattern=r'"([^"]+\.gdf)"',
+                      verbose=False):
+    
+    for ii, line in enumerate(lines):
+
+        support_files = find_path(line, pattern=pattern)
+        
+        for support_file in support_files:
+
+            abs_original_path = full_path( os.path.join(original_path, os.path.expandvars(support_file)) )
+
+            if(copy_files):
+            
+                abs_target_path = os.path.join(target_path, support_file) 
+                shutil.copyfile(abs_original_path, abs_target_path, follow_symlinks=True)            
+
+                if(verbose):
+                    print("Copying file: ", abs_original_path,'->',abs_target_path)   
+
+            else:
+
+                if(os.path.isfile(abs_original_path)):
+                    
+                    #print(target, abs_original_path)
+                    dest = full_path( os.path.join(target, os.path.basename(abs_original_path)) )
+
+                    # Make symlink
+                    # Replace old symlinks. 
+                    if os.path.islink(dest):
+                        os.unlink(dest)
+                    elif os.path.exists(dest):
+                        
+                        if verbose:
+                            print(dest, 'exists, will not symlink')
+
+                        continue
+
+                    # Note that the following will raise an error if the dest is an actual file that exists    
+                    os.symlink(abs_original_path, dest)
+                    if verbose:
+                        print('Linked', abs_original_path, 'to', os.path.basenme(dest) )
+
+                    lines[ii] = line.replace(support_file, os.path.basename(dest))
+
 
 def parse_gpt_input_file(filePath, condense=False, verbose=False):
     """

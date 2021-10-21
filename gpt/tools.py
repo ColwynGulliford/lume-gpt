@@ -19,10 +19,10 @@ from pmd_beamphysics import ParticleGroup
 
 DEFAULT_KILL_MSGS = ["gpt: Spacecharge3Dmesh:", 'Error:', 'gpt: No valid GPT license', 'malloc', 'Segmentation fault']
 
-def execute(cmd, kill_msgs=[], verbose=False, timeout=1e6):
+def execute(cmd, kill_msgs=[], verbose=False, timeout=1e6, workdir=''):
 
     """ Function for execution of GPT """
-    w = Watcher(cmd=cmd, timeout=timeout, verbose=verbose, kill_msgs=kill_msgs)
+    w = Watcher(cmd=cmd, timeout=timeout, verbose=verbose, kill_msgs=kill_msgs, workdir=workdir)
     w.run()
 
     return w.run_time, w.exception, w.log

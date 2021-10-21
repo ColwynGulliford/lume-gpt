@@ -1,0 +1,1697 @@
+#--------------------------------------------------------------------------
+# L0E Injector - MLC Multi Pass - 2016
+# 
+#--------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------
+# MACHINE SETTINGS:
+#--------------------------------------------------------------------------
+Master_RF = 1.3e9;
+icm_energy_override = 0.0;
+gun_voltage=300;
+sol_1_current=3.75;
+buncher_voltage=50;
+sol_2_current=2.0;
+cavity_1_voltage=0;
+cavity_2_voltage=0;
+cavity_3_voltage=0;
+cavity_4_voltage=0;
+cavity_5_voltage=0;
+A3Quad_1_current = 0;
+A3Quad_2_current = 0;
+A3Quad_3_current = 0;
+A3Quad_4_current = 0;
+A4Quad_1_current = 0;
+B1Quad_1_current = 0;
+B1Quad_2_current = 0;
+B1Quad_3_current = 0; # doesn't actually exist
+B2Quad_1_current = 0;
+B2Quad_2_current = 0;
+MA1CHA01_current = 0;
+MA1CVA01_current = 0;
+MA1CHB01_current = 0;
+MA1CVB01_current = 0;
+MA1CHB02_current = 0;
+MA1CVB02_current = 0;
+MA2CHC01_current = 0;
+MA2CVC01_current = 0;
+MLC01_voltage = 0.0;
+MLC02_voltage = 0.0;
+MLC03_voltage = 0.0;
+MLC04_voltage = 0.0;
+MLC05_voltage = 0.0;
+MLC06_voltage = 0.0;
+deflector_voltage = 0;
+MTE = 0;
+
+#--------------------------------------------------------------------------
+
+gpt_pass = 1;
+breakpoint_time = 2.16e-8;
+
+if (gpt_pass == 1) {
+    time=0.0;
+} else {
+    time = breakpoint_time;
+    position = -1.0;
+}
+
+#--------------------------------------------------------------------------
+# SWITCHES:
+#--------------------------------------------------------------------------
+auto_phase = 0;
+single_particle = 1;
+space_charge = 1;
+space_charge_type = 1;
+viewscreens_on = 1;
+kill_backwards_particles = 0;
+correctors_on = 0;
+alignment_screens_on = 0;
+optimize_on = 1;
+use_old_positions = 0;
+cathode_recess = 0;
+
+a1_section_on = 1;
+a2_section_on = 1;
+a3_section_on = 1;
+b1_section_on = 0;
+b2_section_on = 0;
+mlc_section_on = 0;
+c1_section_on = 0;
+c2_section_on = 0;
+dump_section_on = 0;
+
+icm_1d_maps = 0;
+#--------------------------------------------------------------------------
+
+
+
+#--------------------------------------------------------------------------
+# Sanity checks:
+#--------------------------------------------------------------------------
+
+if (  ((b1_section_on == 1) || (mlc_section_on == 1)) && ((b2_section_on == 1) || (c1_section_on == 1) || (c2_section_on == 1)) || ((c1_section_on == 1) && (c2_section_on == 1))) {
+	
+	Pp(Conflicting_Sections_Are_Enabled);  # This is a hack way to cause GPT to exit and make an error message.
+
+}
+
+
+#--------------------------------------------------------------------------
+# INITIAL CONDITIONS
+#--------------------------------------------------------------------------
+if (single_particle == 1) {
+
+	setparticles("beam", 10, me, qe, -1.0e-12);
+
+	mc2 = m*c*c/abs(qe);
+	KE = MTE/2000.0;
+
+	G  = 1+KE/mc2 ;
+
+	setGdist("beam", "u", G, 0) ;
+        settdist("beam", "u", 0.0, 1.0e-16); # 100 attosecond bunch length, needed for GPT not to seg fault with t-outs
+
+} else {
+
+    setfile("beam", "gpt.particles.gdf");
+
+}
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# ACCURACY AND INTEGRATION PARAMETERS
+#--------------------------------------------------------------------------
+RadiusMax = 0.04;
+GBacc =  5.5;
+xacc  =  6.5;
+accuracy(GBacc, xacc);
+dtmin = 1e-16;
+dtmax = 1e-10;
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# PHASING AND CAVITY PARAMETERS
+#--------------------------------------------------------------------------
+cavity_phasing_index = 0;
+
+phiCTB01_0=0;
+phiCTC01_0=0;
+phiCTC02_0=0;
+phiCTC03_0=0;
+phiCTC04_0=0;
+phiCTC05_0=0;
+
+phiMLC01_0=0;
+phiMLC02_0=0;
+phiMLC03_0=0;
+phiMLC04_0=0;
+phiMLC05_0=0;
+phiMLC06_0=0;
+
+phi_deflector_0=0;
+
+phiCTB01_off=0;
+phiCTC01_off=0;
+phiCTC02_off=0;
+phiCTC03_off=0;
+phiCTC04_off=0;
+phiCTC05_off=0;
+
+phiMLC01_off=0;
+phiMLC02_off=0;
+phiMLC03_off=0;
+phiMLC04_off=0;
+phiMLC05_off=0;
+phiMLC06_off=0;
+
+phi_deflector_off=0;
+
+global_phase=0;
+
+phiCTB01=(phiCTB01_0 + phiCTB01_off + global_phase)*pi/180;
+phiCTC01=(phiCTC01_0 + phiCTC01_off + global_phase)*pi/180;
+phiCTC02=(phiCTC02_0 + phiCTC02_off + global_phase)*pi/180;
+phiCTC03=(phiCTC03_0 + phiCTC03_off + global_phase)*pi/180;
+phiCTC04=(phiCTC04_0 + phiCTC04_off + global_phase)*pi/180;
+phiCTC05=(phiCTC05_0 + phiCTC05_off + global_phase)*pi/180;
+
+phiMLC01=(phiMLC01_0 + phiMLC01_off + global_phase)*pi/180;
+phiMLC02=(phiMLC02_0 + phiMLC02_off + global_phase)*pi/180;
+phiMLC03=(phiMLC03_0 + phiMLC03_off + global_phase)*pi/180;
+phiMLC04=(phiMLC04_0 + phiMLC04_off + global_phase)*pi/180;
+phiMLC05=(phiMLC05_0 + phiMLC05_off + global_phase)*pi/180;
+phiMLC06=(phiMLC06_0 + phiMLC06_off + global_phase)*pi/180;
+
+phi_deflector=(phi_deflector_0 + phi_deflector_off + global_phase)*pi/180;
+
+gammaCTB01=1.0;
+gammaCTC01=1.0;
+gammaCTC02=1.0;
+gammaCTC03=1.0;
+gammaCTC04=1.0;
+gammaCTC05=1.0;
+
+gammaMLC01=1.0;
+gammaMLC02=1.0;
+gammaMLC03=1.0;
+gammaMLC04=1.0;
+gammaMLC05=1.0;
+gammaMLC06=1.0;
+
+gamma_deflector=1.0;
+
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# Other parameters:
+#--------------------------------------------------------------------------
+
+fringe_b1 = 200.0;        # suggested to use ~2/gap, units of m^-1. Note: Too large a value seems to cause particles to be clipped!
+corrector_length = 0.0;   # use 0.0 for default values
+corrector_width = 0.1;
+#--------------------------------------------------------------------------
+
+
+
+#--------------------------------------------------------------------------
+# A1 SECTION
+#--------------------------------------------------------------------------
+if (a1_section_on==1) {
+   reference_GB = sqrt(gammaCTB01^2 - 1.0);
+
+   if (use_old_positions == 1) {
+      ZSLA01 = 0.302;
+      ZCTB01 = 0.702;
+      ZSLA02 = 1.124;
+   } else {
+      ZSLA01 = 0.344;
+      ZCTB01 = 0.746;
+      ZSLA02 = 1.160;
+   }
+
+   #-----------------------------------------------------------------------
+   # ELEMENTS:
+   #-----------------------------------------------------------------------
+   # DC GUN
+   Zdcgun = 0.15;
+   Maxdcgun  = 500.0;
+   Edcgun    = gun_voltage / Maxdcgun;
+
+   if (auto_phase == 1 && cathode_recess == 0) {
+        Map1D_E("wcs", "z", 0, "fields/dcgun_GHV_1D.gdf", "Z", "Ez", Edcgun*100);
+   } else {
+       if (cathode_recess == 0) {
+         Zdcgun = 0.150;
+         Map2D_E("wcs", "z", Zdcgun, "fields/gun_0mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+       }
+       if (cathode_recess == 1) {
+         Zdcgun = 0.151;
+         Map2D_E("wcs", "z", Zdcgun, "fields/gun_1mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+       }
+       if (cathode_recess == 2) {
+         Zdcgun = 0.152;
+         Map2D_E("wcs", "z", Zdcgun, "fields/gun_2mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+       }
+       if (cathode_recess == 3) {
+         Zdcgun = 0.153;
+         Map2D_E("wcs", "z", Zdcgun, "fields/gun_3mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+       }
+       if (cathode_recess == 4) {
+         Zdcgun = 0.154;
+         Map2D_E("wcs", "z", Zdcgun, "fields/gun_4mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+       }
+       if (cathode_recess == 5) {
+         Zdcgun = 0.155;
+         Map2D_E("wcs", "z", Zdcgun, "fields/gun_5mm.gdf", "R", "Z", "Er", "Ez", Edcgun);
+       }
+   }
+
+
+   # SOL1
+   SLAPolarity = -1;
+
+   LSLA01 = 0.6;
+   XSLA01 = 0.0;
+   YSLA01 = 0.0;
+   THXSLA01 = 0.0; # Radian
+   BSLA01 = sol_1_current * SLAPolarity;
+   if (auto_phase == 0) {
+      Map2D_B("wcs", XSLA01,YSLA01,ZSLA01,  cos(THXSLA01),0,sin(THXSLA01), 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", BSLA01);
+   }
+
+   a1_quad_length = 0.0254*3; # 3 inches
+   sol_1_quad_field = 0.0; # G / cm
+   quadrupole("wcs", "z" ,ZSLA01, a1_quad_length, sol_1_quad_field*0.01); # converts to T/m
+
+   lightbox_quad_field = 0.0; # G / cm
+   lightbox_quad_z = 0.57;
+   lightbox_quad_length = 0.0254*3;
+   quadrupole("wcs", "z" ,lightbox_quad_z, lightbox_quad_length, lightbox_quad_field*0.01); # converts to T/m  
+
+   # BUNCHER
+   MaxECTB = 2.092;
+   UnitsECTB = 1.0/62.7; # convert from kV to MV/m
+   XCTB01 = 0.00;
+   YCTB01 = 0.00;
+   ECTB01 = buncher_voltage / MaxECTB * UnitsECTB;
+   if (auto_phase == 0) {
+      Map25D_TM("wcs", XCTB01,YCTB01,ZCTB01,  1,0,0, 0,1,0,"fields/buncher_CTB.gdf", "R", "Z", "Er", "Ez", "H", ECTB01, 0, phiCTB01, 2*pi*Master_RF);
+   } else {
+      Map1D_TM("wcs", XCTB01,YCTB01,ZCTB01,  1,0,0, 0,1,0,"fields/buncher_CTB_1D.gdf", "Z", "Ez", ECTB01*1e6, phiCTB01, 2*pi*Master_RF);
+   }
+
+   LA1D03 = 0.0140;
+   ZA1D03 = ZCTB01 + LA1D03 / 2;
+   drift("wcs", "z", ZA1D03, LA1D03, RadiusMax);
+   
+   # SOL2
+   LSLA02 = 0.6;
+   XSLA02 = 0.0;
+   YSLA02 = 0.0;
+   BSLA02 = sol_2_current * SLAPolarity;
+   if (auto_phase == 0) {
+      Map2D_B("wcs", XSLA02,YSLA02,ZSLA02,  1,0,0, 0,1,0, "fields/solenoid_SLA_L60.gdf", "R", "Z", "Br", "Bz", BSLA02);
+   }
+
+   sol_2_quad_field = 0.0; # G / cm
+   quadrupole("wcs", "z" ,ZSLA02, a1_quad_length, sol_2_quad_field*0.01); # converts to T/m  
+   #-----------------------------------------------------------------------
+
+   #-----------------------------------------------------------------------
+   # VIEWSCREENS:
+   #-----------------------------------------------------------------------
+   if (viewscreens_on==1 && optimize_on == 0) {
+      IA1SDR01_z = 0.922; # old position = 0.879
+      screen("wcs","I",IA1SDR01_z); # "A1 Viewscreen"
+
+      screen("wcs","I",0.339); # "A1 BPM 1"
+      screen("wcs","I",1.162); # "A1 BPM 2"
+   }
+   #-----------------------------------------------------------------------
+
+
+   ZSTOP = 1.5;
+
+   if (correctors_on == 1) {
+
+      #--------------------------------------------------------------------
+      # correctors in the gun  (L0E position unknown)
+      #--------------------------------------------------------------------
+      if (corrector_length > 0.0) {
+        MA1CHA01_L = corrector_length;
+        MA1CVA01_L = corrector_length;
+        MA1CHB01_L = corrector_length;
+        MA1CVB01_L = corrector_length;
+        MA1CHB02_L = corrector_length;
+        MA1CVB02_L = corrector_length;
+      } else {
+        MA1CHA01_L = 0.047625;
+        MA1CVA01_L = 0.047625;
+        MA1CHB01_L = 0.117475;
+        MA1CVB01_L = 0.117475;
+        MA1CHB02_L = 0.117475;
+        MA1CVB02_L = 0.117475;
+      }
+
+      stupid_factor = 0.024 / 0.05; # Needed to make the bend angle agree with the true value from the field integral. Don't know why the rectmagnet is failing here...
+      MA1CHA01_B = MA1CHA01_current * 6.8556e-05 / MA1CHA01_L * stupid_factor;
+      MA1CHA01_Z = 0.1250;
+      rectmagnet("wcs","z",MA1CHA01_Z,MA1CHA01_L,corrector_width, MA1CHA01_B,0,fringe_b1,0);
+      
+      MA1CVA01_B = MA1CVA01_current * 5.7538e-05 / MA1CVA01_L * stupid_factor;
+      MA1CVA01_Z = 0.1250;
+      rectmagnet("wcs", 0,0,MA1CVA01_Z, 0,1,0, -1,0,0, MA1CVA01_L,corrector_width, MA1CVA01_B,0,fringe_b1,0);
+      #--------------------------------------------------------------------
+
+      #--------------------------------------------------------------------
+      # correctors in 1st solenoid
+      #--------------------------------------------------------------------
+      MA1CHB01_B = MA1CHB01_current * 1.7192e-04 / MA1CHB01_L;
+      MA1CHB01_Z = 0.3632;
+      rectmagnet("wcs","z",MA1CHB01_Z,1,MA1CHB01_L,MA1CHB01_B,0,fringe_b1,0);
+     
+      MA1CVB01_B = MA1CVB01_current * 1.8735e-04 / MA1CVB01_L; 
+      MA1CVB01_Z = 0.3632;
+      rectmagnet("wcs", 0,0,MA1CVB01_Z, 0,1,0, -1,0,0, MA1CVB01_L,corrector_width, MA1CVB01_B,0,fringe_b1,0);
+      #--------------------------------------------------------------------
+
+      #--------------------------------------------------------------------
+      # correctors in the 2nd solenoid
+      #--------------------------------------------------------------------
+      MA1CHB02_B = MA1CHB02_current * 1.7192e-04 / MA1CHB02_L;
+      MA1CHB02_Z = 1.209;
+      rectmagnet("wcs","z",MA1CHB02_Z,1,MA1CHB02_L,MA1CHB02_B,0,fringe_b1,0);
+
+      MA1CVB02_B = MA1CVB02_current * 1.8735e-04 / MA1CVB02_L;
+      MA1CVB02_Z = 1.209;
+      rectmagnet("wcs", 0,0,MA1CVB02_Z, 0,1,0, -1,0,0, MA1CVB02_L,corrector_width,MA1CVB02_B,0,fringe_b1,0);
+      #--------------------------------------------------------------------
+   }
+}
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# A2 SECTION
+#--------------------------------------------------------------------------
+if (a2_section_on==1) {
+   reference_GB = sqrt(gammaCTC05^2 - 1.0);
+   #-----------------------------------------------------------------------
+   # ELEMENTS:
+   #-----------------------------------------------------------------------
+   
+   # CAVITY POSITIONS:
+   if (use_old_positions == 1) {
+      ZCTC01 = 2.047;        #  value in L0;
+   } else {
+      ZCTC01 = 2.086;        #  measured on 7/20/17
+   }
+   ZCTC02 = ZCTC01 + 0.786; 
+   ZCTC03 = ZCTC02 + 0.863; 
+   ZCTC04 = ZCTC03 + 0.786;  
+   ZCTC05 = ZCTC04 + 0.863; 
+
+   UnitsECTC = 1.0/116.5; # conversion from kV to MV/m
+
+   MaxECTC = 8.5593;
+   ECTC01 = cavity_1_voltage / MaxECTC * UnitsECTC;
+   ECTC02 = cavity_2_voltage / MaxECTC * UnitsECTC;
+   ECTC03 = cavity_3_voltage / MaxECTC * UnitsECTC;
+   ECTC04 = cavity_4_voltage / MaxECTC * UnitsECTC;
+   ECTC05 = cavity_5_voltage / MaxECTC * UnitsECTC;
+
+   if (auto_phase == 0 && icm_1d_maps ==0) {
+      # SRF 1
+      map3D_Ecomplex("wcs", 0, 0, ZCTC01, 0,1,0, 1,0,0, "fields/ic_cp_zc_E.gdf", "x","y","z", "ExRe","EyRe","EzRe", "ExIm","EyIm","EzIm", ECTC01, phiCTC01, 2*pi*Master_RF);
+      map3D_Hcomplex("wcs", 0, 0, ZCTC01, 0,1,0, 1,0,0, "fields/ic_cp_zc_H.gdf", "x","y","z", "HxRe","HyRe","HzRe", "HxIm","HyIm","HzIm", ECTC01, phiCTC01, 2*pi*Master_RF);
+
+      # SRF 2
+      map3D_Ecomplex("wcs", 0, 0, ZCTC02,  0,1,0, -1,0,0, "fields/ic_cp_zc_E.gdf", "x","y","z", "ExRe","EyRe","EzRe", "ExIm","EyIm","EzIm", -ECTC02, phiCTC02, 2*pi*Master_RF);
+      map3D_Hcomplex("wcs", 0, 0, ZCTC02,  0,1,0, -1,0,0, "fields/ic_cp_zc_H.gdf", "x","y","z", "HxRe","HyRe","HzRe", "HxIm","HyIm","HzIm", -ECTC02, phiCTC02, 2*pi*Master_RF);
+
+      # SRF 3
+      map3D_Ecomplex("wcs", 0, 0, ZCTC03, 0,1,0, 1,0,0, "fields/ic_cp_zc_E.gdf", "x","y","z", "ExRe","EyRe","EzRe", "ExIm","EyIm","EzIm", ECTC03, phiCTC03, 2*pi*Master_RF);
+      map3D_Hcomplex("wcs", 0, 0, ZCTC03, 0,1,0, 1,0,0, "fields/ic_cp_zc_H.gdf", "x","y","z", "HxRe","HyRe","HzRe", "HxIm","HyIm","HzIm", ECTC03, phiCTC03, 2*pi*Master_RF);
+
+      # SRF 4
+      map3D_Ecomplex("wcs", 0, 0, ZCTC04,  0,1,0, -1,0,0, "fields/ic_cp_zc_E.gdf", "x","y","z", "ExRe","EyRe","EzRe", "ExIm","EyIm","EzIm", -ECTC04, phiCTC04, 2*pi*Master_RF);
+      map3D_Hcomplex("wcs", 0, 0, ZCTC04,  0,1,0, -1,0,0, "fields/ic_cp_zc_H.gdf", "x","y","z", "HxRe","HyRe","HzRe", "HxIm","HyIm","HzIm", -ECTC04, phiCTC04, 2*pi*Master_RF);
+
+       # SRF 5
+      map3D_Ecomplex("wcs", 0, 0, ZCTC05, 0,1,0, 1,0,0, "fields/ic_cp_zc_E.gdf", "x","y","z", "ExRe","EyRe","EzRe", "ExIm","EyIm","EzIm", ECTC05, phiCTC05, 2*pi*Master_RF);
+      map3D_Hcomplex("wcs", 0, 0, ZCTC05, 0,1,0, 1,0,0, "fields/ic_cp_zc_H.gdf", "x","y","z", "HxRe","HyRe","HzRe", "HxIm","HyIm","HzIm", ECTC05, phiCTC05, 2*pi*Master_RF);
+   } else {
+      # 1D Field Maps for phasing
+
+      # SRF 1
+      Map1D_TM("wcs", 0, 0, ZCTC01, 1,0,0, 0,1,0, "fields/icm_1d.gdf", "z", "Ez", ECTC01, phiCTC01, 2*pi*Master_RF);
+
+      # SRF 2
+      Map1D_TM("wcs", 0, 0, ZCTC02, 1,0,0, 0,-1,0, "fields/icm_1d.gdf", "z", "Ez", -ECTC02, phiCTC02, 2*pi*Master_RF);
+
+      # SRF 3
+      Map1D_TM("wcs", 0, 0, ZCTC03, 1,0,0, 0,1,0, "fields/icm_1d.gdf", "z", "Ez", ECTC03, phiCTC03, 2*pi*Master_RF);
+
+      # SRF 4
+      Map1D_TM("wcs", 0, 0, ZCTC04, 1,0,0, 0,-1,0, "fields/icm_1d.gdf", "z", "Ez", -ECTC04, phiCTC04, 2*pi*Master_RF);
+
+      # SRF 5
+      Map1D_TM("wcs", 0, 0, ZCTC05, 1,0,0, 0,1,0, "fields/icm_1d.gdf", "z", "Ez", ECTC05, phiCTC05, 2*pi*Master_RF);
+   }
+   #-----------------------------------------------------------------------
+
+   ZSTOP = 6;
+
+
+   if (correctors_on == 1) {
+      if (corrector_length > 0.0) {
+        MA2CHC01_L = corrector_length;
+        MA2CVC01_L = corrector_length;
+      } else {
+        MA2CHC01_L = 0.1;
+        MA2CVC01_L = 0.1;
+      }
+
+      MA2CHC01_B = MA2CHC01_current * 8.3270e-05 / corrector_length;
+      MA2CVC01_B = MA2CVC01_current * 9.3352e-05 / corrector_length;
+
+      MA2CHC01_Z = 1.550;   # Updated for L0E
+      rectmagnet("wcs","z",MA2CHC01_Z,corrector_length,corrector_width,MA2CHC01_B,0,fringe_b1,0);
+      
+      MA2CVC01_Z = 1.550;
+      rectmagnet("wcs", 0,0,MA2CVC01_Z, 0,1,0, -1,0,0, corrector_length,corrector_width,MA2CVC01_B,0,fringe_b1,0);
+   }
+}
+#--------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------
+# A3 SECTION
+#--------------------------------------------------------------------------
+if (a3_section_on==1) {
+   
+   QuadUnits = 1/1.2504;
+
+   #-----------------------------------------------------------------------
+   # ELEMENTS:
+   #-----------------------------------------------------------------------
+   
+   if (auto_phase == 0) 
+   {
+        ZMA3QUA01 = 6.577;
+        ZMA3QUA02 = 7.176;
+        ZMA3QUA03 = 7.776;
+        ZMA3QUA04 = 8.377;
+
+        map1D_Bquad("wcs", 0, 0, ZMA3QUA01, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_1_current*QuadUnits);
+        map1D_Bquad("wcs", 0, 0, ZMA3QUA02, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_2_current*QuadUnits);
+        map1D_Bquad("wcs", 0, 0, ZMA3QUA03, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_3_current*QuadUnits);
+        map1D_Bquad("wcs", 0, 0, ZMA3QUA04, 1,0,0, 0,1,0, "fields/A3quad1D.gdf", "z", "G", A3Quad_4_current*QuadUnits);
+   }   
+
+   #-----------------------------------------------------------------------
+   # VIEWSCREENS:
+   #-----------------------------------------------------------------------
+   if (viewscreens_on==1) 
+   {
+      
+      IA3BPC01_z = 6.489;
+      screen("wcs","I",IA3BPC01_z); # "A3 BPM 1"      
+
+      IA3SDR01_z = 7.536;
+      screen("wcs","I",IA3SDR01_z); # "A3 Viewscreen"
+
+      IA3BPC02_z = 7.653;
+      screen("wcs","I",IA3BPC02_z); # "A3 BPM 2"
+
+      IA3BPC03_z = 8.228;
+      screen("wcs","I",IA3BPC03_z); # "A3 BPM 3"
+
+   }
+   #-----------------------------------------------------------------------
+
+   ZSTOP = 9.5;
+
+}
+#--------------------------------------------------------------------------
+
+
+#-------------------------------------------------
+# Geometry common to B1 and B2 lines
+#-------------------------------------------------
+
+BQuadUnits = 1/1.1906;
+maxBy = 0.024303062319700;
+
+# Bend parameters
+theta_bend = 15.0*(pi/180); # Keep this positive
+R_bend = 1.25;  
+
+L_inj = 8.534;                  # From cathode to beginning of first bend.
+L_merg = 0.9;                   # Length of pure straight in merger arms
+MLC_start_L = 0.302 + 1.32107;  # From end of last bend to center of 1st MLC cavity
+MLC_end_L = 2.242564;           # From center of last MLC cavity to final matching screen
+
+B1_quad1_L = 0.106897;       # Distance from end of 1st straight to middle of quad
+B1_quad2_L = 0.106897;       # Distance from beginning of 2nd straight to middle of quad
+B1_quad3_L = 0.106897;       # Distance from beginning of 3rd straight to middle of quad
+
+delta_dipole_1 = -2.50e-3;    # Fudge factor for 1st dipole position
+delta_dipole_3 = -2.86e-3;    # Fudge factor for 3rd dipole position
+delta_dipole_4 = -1.9e-2;    # Fudge factor for 4th dipole position
+
+dipole_1_scale = 1.0553; #   Fudge factor for 1st dipole field
+dipole_2_scale = 1.0649; #  Fudge factor for 2nd dipole field
+dipole_3_scale = 1.0561; #   Fudge factor for 3rd dipole field
+dipole_4_scale = -1.045*20/15; #   Fudge factor for 3rd dipole field
+
+#-------------------------------------------------
+# B1 Section
+#-------------------------------------------------
+if (b1_section_on == 1) {
+
+    # Allows fine tuning the dipole setting, somewhat indirectly
+    if (icm_energy_override > 0.0) {
+        gamma = icm_energy_override / 0.510998946;
+        reference_GB = sqrt(gamma^2 - 1);
+    }
+
+    #-------------------------------------------------
+    # Geometry calculation
+    #-------------------------------------------------
+    dz_merg = R_bend * sin(theta_bend);             # change in z during a bend
+    dx_merg = R_bend * (1.0 - cos(theta_bend));   # change in x during a bend
+    
+    z_B1_arm1_start = L_inj + dz_merg;
+    x_B1_arm1_start = dx_merg;
+    nz_B1_arm1 = cos(theta_bend);
+    nx_B1_arm1 = sin(theta_bend);
+    z_B1_arm1_end = z_B1_arm1_start + L_merg*nz_B1_arm1;
+    x_B1_arm1_end = x_B1_arm1_start + L_merg*nx_B1_arm1;
+
+    z_B1_arm2_start = z_B1_arm1_end + dz_merg;
+    x_B1_arm2_start = x_B1_arm1_end + dx_merg;
+    nz_B1_arm2 = 1.0;
+    nx_B1_arm2 = 0.0;
+    z_B1_arm2_end = z_B1_arm2_start + L_merg*nz_B1_arm2;
+    x_B1_arm2_end = x_B1_arm2_start + L_merg*nx_B1_arm2;
+
+    z_MLC_start = z_B1_arm2_end + dz_merg;
+    x_MLC_start = x_B1_arm2_end + dx_merg;
+    nz_MLC = nz_B1_arm1;
+    nx_MLC = nx_B1_arm1;
+
+    z_dipole_1 = L_inj + R_bend * tan(theta_bend * 0.5) + delta_dipole_1;
+    x_dipole_1 = 0.0;
+    
+    z_dipole_2 = 0.5 * (z_B1_arm1_end + z_B1_arm2_start);
+    x_dipole_2 = 0.5 * (x_B1_arm1_end + x_B1_arm2_start);
+
+    z_dipole_3 = z_MLC_start - (R_bend * tan(theta_bend * 0.5) + delta_dipole_3) * nz_MLC;
+    x_dipole_3 = x_MLC_start - (R_bend * tan(theta_bend * 0.5) + delta_dipole_3) * nx_MLC;
+
+    z_Bquad_1 = z_B1_arm1_end - B1_quad1_L*nz_B1_arm1;
+    x_Bquad_1 = x_B1_arm1_end - B1_quad1_L*nx_B1_arm1;
+
+    z_Bquad_2 = z_B1_arm2_start + B1_quad2_L*nz_B1_arm2;
+    x_Bquad_2 = x_B1_arm2_start + B1_quad2_L*nx_B1_arm2;
+
+    z_Bquad_3 = z_MLC_start + B1_quad3_L*nz_MLC;
+    x_Bquad_3 = x_MLC_start + B1_quad3_L*nx_MLC;
+
+    #-------------------------------------------------
+    # Place dipoles
+    #-------------------------------------------------
+
+    B_dipole_1 = me * c * reference_GB / (qe * R_bend);
+    B_dipole_1_scaled = dipole_1_scale * B_dipole_1 / maxBy;
+    B_dipole_1_scaled = (dipole_1_scale * B_dipole_1 / maxBy)  + 1e-3*icm_energy_override;
+    map1D_Brectmag("wcs", x_dipole_1, 0, z_dipole_1, 1,0,0, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_1_scaled);
+
+    B_dipole_2 = -1.0 * me * c * reference_GB / (qe * R_bend);
+    B_dipole_2_scaled = dipole_2_scale * B_dipole_2 / maxBy;
+    map1D_Brectmag("wcs", x_dipole_2, 0, z_dipole_2, cos(0.5*theta_bend),0,-sin(0.5*theta_bend), 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_2_scaled);
+
+    B_dipole_3 = me * c * reference_GB / (qe * R_bend);
+    B_dipole_3_scaled = dipole_3_scale * B_dipole_3 / maxBy;
+    map1D_Brectmag("wcs", x_dipole_3, 0, z_dipole_3, nz_MLC,0,-nx_MLC, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_3_scaled);
+    
+    #-------------------------------------------------
+    # Place quads
+    #-------------------------------------------------
+
+    B_quad_1 = B1Quad_1_current*BQuadUnits;
+    if (auto_phase == 0) {
+        map1D_Bquad("wcs",x_Bquad_1,0,z_Bquad_1, nz_B1_arm1,0,-nx_B1_arm1, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_1);
+    }
+
+    B_quad_2 = B1Quad_2_current*BQuadUnits;
+    if (auto_phase == 0) {
+        map1D_Bquad("wcs",x_Bquad_2,0,z_Bquad_2, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_2);
+    }
+
+    #-------------------------------------------------
+    # Place screens
+    #-------------------------------------------------
+
+    if (viewscreens_on==1) {
+        screen_z0 = z_B1_arm1_end - (B1_quad1_L + 0.0576 + 0.122)*nz_B1_arm1;
+        screen_x0 = x_B1_arm1_end - (B1_quad1_L + 0.0576 + 0.122)*nx_B1_arm1;
+        screen_z0_fake = screen_z0 - nz_B1_arm1*screen_z0;
+        screen_x0_fake = screen_x0 - nx_B1_arm1*screen_z0;
+        
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        screen_z0_manual = 9.450122198583975;
+        #screen_z0_manual = screen_z0;
+
+        if (abs(screen_z0_manual - screen_z0) > 1.0e-6) {
+            pp(screen_z0);
+            pp(manual_viewscreen_not_in_right_location);  # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, "screen_hack_0");
+        screen("wcs", screen_x0,0,screen_z0_manual, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, 0, "screen_hack_0"); # "B1 Viewscreen"
+
+        bpm_z1 = z_B1_arm1_end - (B1_quad1_L + 0.0576)*nz_B1_arm1;
+        bpm_x1 = x_B1_arm1_end - (B1_quad1_L + 0.0576)*nx_B1_arm1;
+        bpm_z1_fake = bpm_z1 - nz_B1_arm1*bpm_z1;
+        bpm_x1_fake = bpm_x1 - nx_B1_arm1*bpm_z1;
+        
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        bpm_z1_manual = 9.567965149391242;
+        #bpm_z1_manual = bpm_z1;
+
+        if (abs(bpm_z1_manual - bpm_z1) > 1.0e-6) {
+            pp(bpm_z1);
+            pp(manual_viewscreen_not_in_right_location);  # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", bpm_x1_fake,0,bpm_z1_fake, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, "screen_hack_BPM1");
+        screen("wcs", bpm_x1,0,bpm_z1_manual, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, 0, "screen_hack_BPM1"); # "B1 BPM 1"
+
+        bpm_z2 = z_B1_arm2_start + (B1_quad1_L + 0.0576);
+        
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        bpm_z2_manual = 10.21487785641647;
+        #bpm_z2_manual = bpm_z2;
+
+        if (abs(bpm_z2_manual - bpm_z2) > 1.0e-6) {
+            pp(bpm_z2);
+            pp(manual_viewscreen_not_in_right_location);  # Will cause error if viewscreen is moved, but manual location is not
+        }
+        CCS("wcs", x_B1_arm2_end,0,0, 1, 0, 0, 0,1,0, "screen_hack_BPM2");
+        screen("wcs", x_B1_arm2_end,0,bpm_z2_manual, 1, 0, 0, 0,1,0, 0, "screen_hack_BPM2"); # "B1 BPM 2"
+    }
+
+    if (viewscreens_on==1 && alignment_screens_on==1) {
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        screen_z1 = z_B1_arm1_start + nz_B1_arm1*0.05;
+        screen_x1 = x_B1_arm1_start + nx_B1_arm1*0.05;
+        screen_z1_fake = screen_z1 - nz_B1_arm1*screen_z1;
+        screen_x1_fake = screen_x1 - nx_B1_arm1*screen_z1;
+        
+        CCS("wcs", screen_x1_fake,0,screen_z1_fake, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, "screen_hack_1");
+        screen("wcs", screen_x1,0,screen_z1, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, 0, "screen_hack_1"); # "B1 Leg 1 Start"
+
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        screen_z2 = z_B1_arm1_end - nz_B1_arm1*0.05;
+        screen_x2 = x_B1_arm1_end - nx_B1_arm1*0.05;
+        screen_z2_fake = screen_z2 - nz_B1_arm1*screen_z2;
+        screen_x2_fake = screen_x2 - nx_B1_arm1*screen_z2;
+        
+        CCS("wcs", screen_x2_fake,0,screen_z2_fake, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, "screen_hack_2");
+        screen("wcs", screen_x2,0,screen_z2, nz_B1_arm1, 0, -nx_B1_arm1, 0,1,0, 0, "screen_hack_2"); # "B1 Leg 1 End"
+
+        screen_z3 = z_B1_arm2_start + 0.05;
+        CCS("wcs", x_B1_arm2_start,0,0, 1,0,0, 0,1,0, "screen_hack_3");
+        screen("wcs", x_B1_arm2_start,0,screen_z3, 1, 0, 0, 0,1,0, 0, "screen_hack_3"); # "B2 Leg 1 Start"
+
+        screen_z4 = z_B1_arm2_end - 0.05;
+        CCS("wcs", x_B1_arm2_end,0,0, 1,0,0, 0,1,0, "screen_hack_4");
+        screen("wcs", x_B1_arm2_end,0,screen_z4, 1, 0, 0, 0,1,0, 0, "screen_hack_4"); # "B2 Leg 1 End"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        screen_z5 = z_MLC_start + nz_MLC*0.05;
+        screen_x5 = x_MLC_start + nx_MLC*0.05;
+        screen_z5_fake = screen_z5 - nz_MLC*screen_z5;
+        screen_x5_fake = screen_x5 - nx_MLC*screen_z5;
+        
+        CCS("wcs", screen_x5_fake,0,screen_z5_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_5");
+        screen("wcs", screen_x5,0,screen_z5, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_5"); # "MLC Line Start"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        screen_z6 = z_MLC_start + nz_MLC*0.30;
+        screen_x6 = x_MLC_start + nx_MLC*0.30;
+        screen_z6_fake = screen_z6 - nz_MLC*screen_z6;
+        screen_x6_fake = screen_x6 - nx_MLC*screen_z6;
+        
+        CCS("wcs", screen_x6_fake,0,screen_z6_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_6");
+        screen("wcs", screen_x6,0,screen_z6, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_6"); # "MLC Entrance"
+    }
+
+    ZSTOP  = 13.5;
+}
+#--------------------------------------------------------------------------
+
+#-------------------------------------------------
+# MLC Section
+#-------------------------------------------------
+if (mlc_section_on == 1) {
+
+    MLC_cavity_L = 1.4105; # 1.391300; # center to center cavity separation
+    MLC_cav6_to_flange = 1.9425639;    # center of last cavity to beam pipe flange
+    MLC_flange_to_VS = 0.2921;          # beam pipe flange to viewscreen
+
+    ZMLC01 = z_MLC_start + nz_MLC*MLC_start_L;
+    XMLC01 = x_MLC_start + nx_MLC*MLC_start_L;
+
+    ZMLC02 = ZMLC01 + nz_MLC*MLC_cavity_L;
+    XMLC02 = XMLC01 + nx_MLC*MLC_cavity_L;
+
+    ZMLC03 = ZMLC02 + nz_MLC*MLC_cavity_L;
+    XMLC03 = XMLC02 + nx_MLC*MLC_cavity_L;
+
+    ZMLC04 = ZMLC03 + nz_MLC*MLC_cavity_L;
+    XMLC04 = XMLC03 + nx_MLC*MLC_cavity_L;
+
+    ZMLC05 = ZMLC04 + nz_MLC*MLC_cavity_L;
+    XMLC05 = XMLC04 + nx_MLC*MLC_cavity_L;
+
+    ZMLC06 = ZMLC05 + nz_MLC*MLC_cavity_L;
+    XMLC06 = XMLC05 + nx_MLC*MLC_cavity_L;
+
+    ZVS = ZMLC06 + nz_MLC*(MLC_cav6_to_flange + MLC_flange_to_VS);
+    XVS = XMLC06 + nx_MLC*(MLC_cav6_to_flange + MLC_flange_to_VS);
+
+    OpticsMatchL = 1.5;
+
+    ZInitialOptics = ZMLC01 - nz_MLC*OpticsMatchL;
+    XInitialOptics = XMLC01 - nx_MLC*OpticsMatchL;
+
+    ZFinalScreen = ZMLC06 + nz_MLC*MLC_end_L;
+    XFinalScreen = XMLC06 + nx_MLC*MLC_end_L;
+
+    ZFinalOptics = ZMLC06 + nz_MLC*OpticsMatchL;
+    XFinalOptics = XMLC06 + nx_MLC*OpticsMatchL;
+
+    ZBmadScreen = ZMLC06 + nz_MLC*1.948;
+    XBmadScreen = XMLC06 + nx_MLC*1.948;
+
+    ZBPC = ZBmadScreen + nz_MLC*0.0330;
+    XBPC = XBmadScreen + nx_MLC*0.0330;
+
+    Z_beg_ves = ZBmadScreen + nz_MLC*(11.640 - 21.938);
+    X_beg_ves = XBmadScreen + nx_MLC*(11.640 - 21.938);
+
+    Z_end_ves = ZBmadScreen + nz_MLC*(21.915 - 21.938);
+    X_end_ves = XBmadScreen + nx_MLC*(21.915 - 21.938);
+
+    MLC_field_scale = 1e6;
+
+    if (auto_phase == 0) {
+       Map25D_TM("wcs",   XMLC01, 0,  ZMLC01,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_2D.gdf",  "r", "z", "Er", "Ez", "Bphi", MLC_field_scale * MLC01_voltage, 0, phiMLC01, Master_RF*2*pi);
+       Map25D_TM("wcs",   XMLC02, 0,  ZMLC02,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_2D.gdf",  "r", "z", "Er", "Ez", "Bphi", MLC_field_scale * MLC02_voltage, 0, phiMLC02, Master_RF*2*pi);
+       Map25D_TM("wcs",   XMLC03, 0,  ZMLC03,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_2D.gdf",  "r", "z", "Er", "Ez", "Bphi", MLC_field_scale * MLC03_voltage, 0, phiMLC03, Master_RF*2*pi);
+       Map25D_TM("wcs",   XMLC04, 0,  ZMLC04,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_2D.gdf",  "r", "z", "Er", "Ez", "Bphi", MLC_field_scale * MLC04_voltage, 0, phiMLC04, Master_RF*2*pi);
+       Map25D_TM("wcs",   XMLC05, 0,  ZMLC05,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_2D.gdf",  "r", "z", "Er", "Ez", "Bphi", MLC_field_scale * MLC05_voltage, 0, phiMLC05, Master_RF*2*pi);
+       Map25D_TM("wcs",   XMLC06, 0,  ZMLC06,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_2D.gdf",  "r", "z", "Er", "Ez", "Bphi", MLC_field_scale * MLC06_voltage, 0, phiMLC06, Master_RF*2*pi);
+    } else {
+       Map1D_TM("wcs",   XMLC01, 0,  ZMLC01,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_1D.gdf",  "z", "Ez", MLC_field_scale * MLC01_voltage, phiMLC01, Master_RF*2*pi);
+       Map1D_TM("wcs",   XMLC02, 0,  ZMLC02,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_1D.gdf",  "z", "Ez", MLC_field_scale * MLC02_voltage, phiMLC02, Master_RF*2*pi);
+       Map1D_TM("wcs",   XMLC03, 0,  ZMLC03,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_1D.gdf",  "z", "Ez", MLC_field_scale * MLC03_voltage, phiMLC03, Master_RF*2*pi);
+       Map1D_TM("wcs",   XMLC04, 0,  ZMLC04,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_1D.gdf",  "z", "Ez", MLC_field_scale * MLC04_voltage, phiMLC04, Master_RF*2*pi);
+       Map1D_TM("wcs",   XMLC05, 0,  ZMLC05,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_1D.gdf",  "z", "Ez", MLC_field_scale * MLC05_voltage, phiMLC05, Master_RF*2*pi);
+       Map1D_TM("wcs",   XMLC06, 0,  ZMLC06,   nz_MLC, 0, -nx_MLC, 0, 1, 0, "fields/mlc_scott_1D.gdf",  "z", "Ez", MLC_field_scale * MLC06_voltage, phiMLC06, Master_RF*2*pi);
+    }
+
+    iris_z = ZMLC01 - nz_MLC*0.1;
+    iris_x = XMLC01 - nx_MLC*0.1;
+    CCS("wcs", iris_x,0,iris_z, nz_MLC, 0, -nx_MLC,0,1,0, "iris_ccs");
+
+    forwardscatter("iris_ccs","I","mlc_remove",0);
+    MLC_entrance_radius = 2.000e-02;
+    iris_outer_radius = 1.0;   
+    scatteriris("wcs", iris_x,0,iris_z, nz_MLC, 0, -nx_MLC,0,1,0, MLC_entrance_radius, iris_outer_radius) scatter="mlc_remove";    
+
+    ZSTOP  = ZFinalScreen + 0.3;
+
+      if (viewscreens_on==1) {
+        
+        ds_start_to_flangemid = 0.105;
+        ds_flangemid_to_bpm = 0.034;
+        ds_bpm_to_slit_H1 = 0.977;
+        ds_slit_H1_to_slit_V1 = 0.070;
+
+        ds_screen_fs1 = ds_start_to_flangemid + ds_flangemid_to_bpm + ds_bpm_to_slit_H1;
+        screen_z_fs1 = z_MLC_start + nz_MLC*ds_screen_fs1;
+        screen_x_fs1 = x_MLC_start + nx_MLC*ds_screen_fs1;
+        screen_z_fs1_fake = screen_z_fs1 - nz_MLC*screen_z_fs1;
+        screen_x_fs1_fake = screen_x_fs1 - nx_MLC*screen_z_fs1;
+
+        screen_z_fs1_Manual = 12.35187788493322;
+
+        if (abs(screen_z_fs1 - screen_z_fs1_Manual) > 1.0e-6) {
+            pp(screen_z_fs1);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x_fs1_fake,0,screen_z_fs1_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_fs1");
+        screen("wcs", screen_x_fs1,0,screen_z_fs1_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_fs1"); # "Horz. Slit"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        
+        ds_screen_fs2 = ds_screen_fs1 + ds_slit_H1_to_slit_V1;
+        screen_z_fs2 = z_MLC_start + nz_MLC*ds_screen_fs2;
+        screen_x_fs2 = x_MLC_start + nx_MLC*ds_screen_fs2;
+        screen_z_fs2_fake = screen_z_fs2 - nz_MLC*screen_z_fs2;
+        screen_x_fs2_fake = screen_x_fs2 - nx_MLC*screen_z_fs2;
+        
+        screen_z_fs2_Manual = 12.41949269277345;
+
+        if (abs(screen_z_fs2 - screen_z_fs2_Manual) > 1.0e-6) {
+            pp(screen_z_fs2);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x_fs2_fake,0,screen_z_fs2_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_fs2");
+        screen("wcs", screen_x_fs2,0,screen_z_fs2_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_fs2"); # "Vert. Slit"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        FinalOptics_Manual = 21.10275052300687;
+
+        if (abs(ZFinalOptics - FinalOptics_Manual) > 1.0e-6) {
+            pp(ZFinalOptics);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        MLCVS01a_z = ZFinalOptics;
+        MLCVS01a_x = XFinalOptics; 
+        MLCVS01a_z_fake = MLCVS01a_z - nz_MLC*MLCVS01a_z;
+        MLCVS01a_x_fake = MLCVS01a_x - nx_MLC*MLCVS01a_z;
+        CCS("wcs", MLCVS01a_x_fake,0,MLCVS01a_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "MLC-Hack1a");
+        screen("wcs", MLCVS01a_x,0,FinalOptics_Manual,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "MLC-Hack1a"); # "MLC Exit Optics"
+
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        ZBmad_Manual = 21.53548529318438;
+        #ZBmad_Manual  = ZFinalScreen;
+
+        if (abs(ZBmadScreen - ZBmad_Manual) > 1.0e-6) {
+            pp(ZBmadScreen);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        MLCVS01b_z = ZBmadScreen;
+        MLCVS01b_x = XBmadScreen; 
+        MLCVS01b_z_fake = MLCVS01b_z - nz_MLC*MLCVS01b_z;
+        MLCVS01b_x_fake = MLCVS01b_x - nx_MLC*MLCVS01b_z;
+        CCS("wcs", MLCVS01b_x_fake,0,MLCVS01b_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "MLC-Hack1b");
+        screen("wcs", MLCVS01b_x,0,ZBmad_Manual,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "MLC-Hack1b"); # "LA.CRMOD.MAR.END1"
+
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        ZFinal_Manual = 21.82001226827939;
+        #ZFinal_Manual  = ZFinalScreen;
+
+        if (abs(ZFinalScreen - ZFinal_Manual) > 1.0e-6) {
+            pp(ZFinalScreen);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        MLCVS02_z = ZFinalScreen;
+        MLCVS02_x = XFinalScreen; 
+        MLCVS02_z_fake = MLCVS02_z - nz_MLC*MLCVS02_z;
+        MLCVS02_x_fake = MLCVS02_x - nx_MLC*MLCVS02_z;
+        CCS("wcs", MLCVS02_x_fake,0,MLCVS02_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "MLC-Hack2");
+        screen("wcs", MLCVS02_x,0,ZFinal_Manual,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "MLC-Hack2"); # "Original Optics Match"
+
+        
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        ZInitial_Manual = 11.39278115423601;
+
+        if (abs(ZInitialOptics - ZInitial_Manual) > 1.0e-6) {
+            pp(ZInitialOptics);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        MLCVS03_z = ZInitialOptics;
+        MLCVS03_x = XInitialOptics; 
+        MLCVS03_z_fake = MLCVS03_z - nz_MLC*MLCVS03_z;
+        MLCVS03_x_fake = MLCVS03_x - nx_MLC*MLCVS03_z;
+        CCS("wcs", MLCVS03_x_fake,0,MLCVS03_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "MLC-Hack3");
+        screen("wcs", MLCVS03_x,0,ZInitial_Manual,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "MLC-Hack3"); # "MLC Entrance Optics"
+
+        
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        ZBPC_Manual = 21.56736084545192;
+
+        if (abs(ZBPC - ZBPC_Manual) > 1.0e-6) {
+            pp(ZBPC);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        MLCVS04_z = ZBPC;
+        MLCVS04_x = XBPC; 
+        MLCVS04_z_fake = MLCVS04_z - nz_MLC*MLCVS04_z;
+        MLCVS04_x_fake = MLCVS04_x - nx_MLC*MLCVS04_z;
+        CCS("wcs", MLCVS04_x_fake,0,MLCVS04_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "MLC-Hack4");
+        screen("wcs", MLCVS04_x,0, ZBPC_Manual,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "MLC-Hack4"); # "D1 BPM 1"
+
+        
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        Z_beg_ves_manual = 11.58838113405955;
+
+        if (abs(Z_beg_ves - Z_beg_ves_manual) > 1.0e-6) {
+            pp(Z_beg_ves);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        MLCVS05_z = Z_beg_ves;
+        MLCVS05_x = X_beg_ves; 
+        MLCVS05_z_fake = MLCVS05_z - nz_MLC*MLCVS05_z;
+        MLCVS05_x_fake = MLCVS05_x - nx_MLC*MLCVS05_z;
+        CCS("wcs", MLCVS05_x_fake,0,MLCVS05_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "MLC-Hack5");
+        screen("wcs", MLCVS05_x,0, Z_beg_ves_manual,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "MLC-Hack5"); # "LA.MAR.BEG_VESSEL"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        Z_end_ves_manual = 21.51326899917973;
+
+        if (abs(Z_end_ves - Z_end_ves_manual) > 1.0e-6) {
+            pp(Z_end_ves);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        MLCVS06_z = Z_end_ves;
+        MLCVS06_x = X_end_ves; 
+        MLCVS06_z_fake = MLCVS06_z - nz_MLC*MLCVS06_z;
+        MLCVS06_x_fake = MLCVS06_x - nx_MLC*MLCVS06_z;
+        CCS("wcs", MLCVS06_x_fake,0,MLCVS06_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "MLC-Hack6");
+        screen("wcs", MLCVS06_x,0, Z_end_ves_manual,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "MLC-Hack6"); # "LA.MAR.END_VESSEL"
+    }
+}
+#--------------------------------------------------------------------------
+
+
+
+
+#-------------------------------------------------
+# Dump Section
+#-------------------------------------------------
+if (dump_section_on == 1) {
+
+    #--------------------------------------
+    # DUMP BEAMLINE DEFINITION
+    #--------------------------------------
+
+    gamma = gammaMLC06;
+    reference_GB = sqrt((gamma-1)*(gamma+1)); 
+    GB_6 = 11.6990464;
+
+    LACRMODMAREND_s = 101.115;
+
+    ID1BPC01_s = 101.148;
+
+    MD1DIP01_s = 101.650; ###
+    MD1DIP01_L = 0.07;
+    MD1DIP01_W = 0.1;
+    MD1DIP01_D2 = 40;  # (roughly) m^-1, Enge function fringe term
+    MD1DIP01_B = 7.4453192E-02 * reference_GB / GB_6; # T
+
+    BNL_quad_L = 0.16276438;
+    MD2QUA02_s = 102.574; ###
+    MD2QUA02_G = -1.4447E-01;  # T/m
+
+    MD2QUA03_s = 102.892; ###
+    MD2QUA03_G = -4.4673E-01;  # T/m
+
+    MD2QUA04_s = 103.164; ###
+    MD2QUA04_G = 7.1401E-01;  # T/m
+
+    MD2QUA05_s = 103.436; ###
+    MD2QUA05_G = -9.3328E-01;  # T/m
+
+    ID2SCR01_s = 103.609; ###
+
+    ID2BPM01_s = 102.349; ###
+    ID2BPM02_s = 103.487; ###
+
+    MD2DIP01_s = 104.045; ###
+
+    ID2BPM03_s = 104.530; ###
+
+    MD2QUA06_s = 104.447; ###
+    MD2QUA06_G = -3.9316E-01;  # T/m
+
+    MD2QUA07_s = 104.777; ###
+    MD2QUA07_G = 3.3082E-01;  # T/m
+
+    MD2QUA08_s = 105.107; ###
+    MD2QUA08_G = -5.2419E-02;  # T/m
+
+    ID2SCR02_s = 105.336; ###
+    ID2SCR03_s = 105.936; ###
+    ID2SCR04_s = 106.536; ###
+
+    ID2BPM04_s = 106.772; ###
+    ID2BPM05_s = 107.154; ###
+    ID2BPM06_s = 107.705; ###
+
+    #--------------------------------------
+    # GEOMETRY CALCULATION OF DUMP
+    #--------------------------------------
+
+    z_D2_arm1_start = ZBmadScreen + (MD1DIP01_s - LACRMODMAREND_s)*nz_MLC;
+    x_D2_arm1_start = XBmadScreen + (MD1DIP01_s - LACRMODMAREND_s)*nx_MLC;
+    nz_D2_arm1 = cos(2*theta_bend);
+    nx_D2_arm1 = sin(2*theta_bend);
+    
+    arm1_length_fudge = -0.0005;
+    arm1_length = MD2DIP01_s - MD1DIP01_s + arm1_length_fudge;
+    z_D2_arm2_start = z_D2_arm1_start + nz_D2_arm1*arm1_length;
+    x_D2_arm2_start = x_D2_arm1_start + nx_D2_arm1*arm1_length;
+
+    nz_D2_arm2 = nz_MLC;
+    nx_D2_arm2 = nx_MLC;
+
+    bpm_1_L = ID2BPM01_s - MD1DIP01_s;
+    x_bpm_1 = x_D2_arm1_start + nx_D2_arm1*bpm_1_L;
+    z_bpm_1 = z_D2_arm1_start + nz_D2_arm1*bpm_1_L;
+
+    bpm_2_L = ID2BPM02_s - MD1DIP01_s;
+    x_bpm_2 = x_D2_arm1_start + nx_D2_arm1*bpm_2_L;
+    z_bpm_2 = z_D2_arm1_start + nz_D2_arm1*bpm_2_L;
+
+    bpm_3_L = ID2BPM03_s - MD2DIP01_s;
+    x_bpm_3 = x_D2_arm2_start + nx_D2_arm2*bpm_3_L;
+    z_bpm_3 = z_D2_arm2_start + nz_D2_arm2*bpm_3_L;
+
+    bpm_4_L = ID2BPM04_s - MD2DIP01_s;
+    x_bpm_4 = x_D2_arm2_start + nx_D2_arm2*bpm_4_L;
+    z_bpm_4 = z_D2_arm2_start + nz_D2_arm2*bpm_4_L;
+
+    vs_2_L = ID2SCR02_s - MD2DIP01_s;
+    x_vs_2 = x_D2_arm2_start + nx_D2_arm2*vs_2_L;
+    z_vs_2 = z_D2_arm2_start + nz_D2_arm2*vs_2_L;
+
+    vs_3_L = ID2SCR03_s - MD2DIP01_s;
+    x_vs_3 = x_D2_arm2_start + nx_D2_arm2*vs_3_L;
+    z_vs_3 = z_D2_arm2_start + nz_D2_arm2*vs_3_L;
+
+    vs_4_L = ID2SCR04_s - MD2DIP01_s;
+    x_vs_4 = x_D2_arm2_start + nx_D2_arm2*vs_4_L;
+    z_vs_4 = z_D2_arm2_start + nz_D2_arm2*vs_4_L;
+
+    quad_2_L = MD2QUA02_s - MD1DIP01_s;
+    x_quad_2 = x_D2_arm1_start + nx_D2_arm1*quad_2_L;
+    z_quad_2 = z_D2_arm1_start + nz_D2_arm1*quad_2_L;
+
+    quad_3_L = MD2QUA03_s - MD1DIP01_s;
+    x_quad_3 = x_D2_arm1_start + nx_D2_arm1*quad_3_L;
+    z_quad_3 = z_D2_arm1_start + nz_D2_arm1*quad_3_L;
+
+    quad_4_L = MD2QUA04_s - MD1DIP01_s;
+    x_quad_4 = x_D2_arm1_start + nx_D2_arm1*quad_4_L;
+    z_quad_4 = z_D2_arm1_start + nz_D2_arm1*quad_4_L;
+
+    quad_5_L = MD2QUA05_s - MD1DIP01_s;
+    x_quad_5 = x_D2_arm1_start + nx_D2_arm1*quad_5_L;
+    z_quad_5 = z_D2_arm1_start + nz_D2_arm1*quad_5_L;
+
+    quad_6_L = MD2QUA06_s - MD2DIP01_s;
+    x_quad_6 = x_D2_arm2_start + nx_D2_arm2*quad_6_L;
+    z_quad_6 = z_D2_arm2_start + nz_D2_arm2*quad_6_L;
+
+    quad_7_L = MD2QUA07_s - MD2DIP01_s;
+    x_quad_7 = x_D2_arm2_start + nx_D2_arm2*quad_7_L;
+    z_quad_7 = z_D2_arm2_start + nz_D2_arm2*quad_7_L;
+
+    quad_8_L = MD2QUA08_s - MD2DIP01_s;
+    x_quad_8 = x_D2_arm2_start + nx_D2_arm2*quad_8_L;
+    z_quad_8 = z_D2_arm2_start + nz_D2_arm2*quad_8_L;
+
+    #-------------------------------------------------
+    # PLACE MAGNETS IN DUMP
+    #-------------------------------------------------
+
+    dipole_1_scale = 0.8562; # 0.8551
+    dipole_1_z_fudge = -1.24e-3;
+    rectmagnet("wcs", x_D2_arm1_start + dipole_1_z_fudge*nx_MLC, 0,  z_D2_arm1_start + dipole_1_z_fudge*nz_MLC,   nz_MLC, 0, -nx_MLC, 0, 1, 0, MD1DIP01_W, MD1DIP01_L, dipole_1_scale*MD1DIP01_B, 0, MD1DIP01_D2, 0);
+
+
+    dipole_2_z_fudge = -0.0021;
+    x_dipole_2 = x_D2_arm2_start + nx_D2_arm1*dipole_2_z_fudge;
+    z_dipole_2 = z_D2_arm2_start + nz_D2_arm1*dipole_2_z_fudge;
+
+    BQuadUnits = 1/1.1906;
+    maxBy = 0.024303062319700;
+    dipole_2_scale = 1.05494; #   Fudge factor for dipole field
+    B_dipole_2 = 1.0 * me * c * reference_GB / (qe * R_bend);
+    B_dipole_2_scaled = dipole_2_scale * B_dipole_2 / maxBy;
+    #map1D_Brectmag("wcs", x_dipole_2, 0, z_dipole_2, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_2_scaled*-1.0);
+
+
+    quadrupole("wcs", x_quad_2, 0, z_quad_2, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, BNL_quad_L, MD2QUA02_G);
+    quadrupole("wcs", x_quad_3, 0, z_quad_3, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, BNL_quad_L, MD2QUA03_G);
+    quadrupole("wcs", x_quad_4, 0, z_quad_4, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, BNL_quad_L, MD2QUA04_G);
+    quadrupole("wcs", x_quad_5, 0, z_quad_5, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, BNL_quad_L, MD2QUA05_G);
+    quadrupole("wcs", x_quad_6, 0, z_quad_6, nz_MLC, 0, -nx_MLC, 0, 1, 0, BNL_quad_L, MD2QUA06_G);
+    quadrupole("wcs", x_quad_7, 0, z_quad_7, nz_MLC, 0, -nx_MLC, 0, 1, 0, BNL_quad_L, MD2QUA07_G);
+    quadrupole("wcs", x_quad_8, 0, z_quad_8, nz_MLC, 0, -nx_MLC, 0, 1, 0, BNL_quad_L, MD2QUA08_G);
+
+    ZSTOP = ZFinalScreen + 6;
+
+    if (viewscreens_on==1) {
+        correct_z = z_bpm_1;
+        screen_x = x_bpm_1;
+        screen_z1_dump = 22.65760736749436;
+        if (abs(correct_z - screen_z1_dump) > 1e-6) {
+         pp(correct_z);
+         pp(SCREEN_IN_WRONG_PLACE);
+        }
+        screen_z0_fake = correct_z - nz_D2_arm1*correct_z;
+        screen_x0_fake = screen_x - nx_D2_arm1*correct_z;
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, "screen_hack_0b");
+        screen("wcs",screen_x, 0, screen_z1_dump, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, 0, "screen_hack_0b"); # "ID2BPM01" 
+        
+        correct_z = z_bpm_2;
+        screen_x = x_bpm_2;
+        screen_z2_dump = 23.64314427700104;
+        if (abs(correct_z - screen_z2_dump) > 1e-6) {
+         pp(correct_z);
+         pp(SCREEN_IN_WRONG_PLACE);
+        }
+        screen_z0_fake = correct_z - nz_D2_arm1*correct_z;
+        screen_x0_fake = screen_x - nx_D2_arm1*correct_z;
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, "screen_hack_1");
+        screen("wcs",screen_x, 0, screen_z2_dump, nz_D2_arm1, 0, -nx_D2_arm1, 0,1,0, 0, "screen_hack_1"); # "ID2BPM02" 
+
+        correct_z = z_bpm_3;
+        screen_x = x_bpm_3;
+        screen_z3_dump = 24.59442746536107;
+        if (abs(correct_z - screen_z3_dump) > 1e-6) {
+         pp(correct_z);
+         pp(SCREEN_IN_WRONG_PLACE);
+        }
+        screen_z0_fake = correct_z - nz_MLC*correct_z;
+        screen_x0_fake = screen_x - nx_MLC*correct_z;
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_2");
+        screen("wcs",screen_x, 0, screen_z3_dump, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_2"); # "ID2BPM03" 
+
+        correct_z = z_bpm_4;
+        screen_x = x_bpm_4;
+        screen_z4_dump = 26.76003316790116;
+        if (abs(correct_z - screen_z4_dump) > 1e-6) {
+         pp(correct_z);
+         pp(SCREEN_IN_WRONG_PLACE);
+        }
+        screen_z0_fake = correct_z - nz_MLC*correct_z;
+        screen_x0_fake = screen_x - nx_MLC*correct_z;
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_3");
+        screen("wcs",screen_x, 0, screen_z4_dump, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_3"); # "ID2BPM04" 
+
+        correct_z = z_vs_2;
+        screen_x = x_vs_2;
+        screen_z5_dump = 25.37296368135005;
+        if (abs(correct_z - screen_z5_dump) > 1e-6) {
+         pp(correct_z);
+         pp(SCREEN_IN_WRONG_PLACE);
+        }
+        screen_z0_fake = correct_z - nz_MLC*correct_z;
+        screen_x0_fake = screen_x - nx_MLC*correct_z;
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_4");
+        screen("wcs",screen_x, 0, screen_z5_dump, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_4"); # "ID2SCR02" 
+
+        correct_z = z_vs_3;
+        screen_x = x_vs_3;
+        screen_z6_dump = 25.95251917712351;
+        if (abs(correct_z - screen_z6_dump) > 1e-6) {
+         pp(correct_z);
+         pp(SCREEN_IN_WRONG_PLACE);
+        }
+        screen_z0_fake = correct_z - nz_MLC*correct_z;
+        screen_x0_fake = screen_x - nx_MLC*correct_z;
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_5");
+        screen("wcs",screen_x, 0, screen_z6_dump, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_5"); # "ID2SCR03" 
+
+        correct_z = z_vs_4;
+        screen_x = x_vs_4;
+        screen_z7_dump = 26.53207467289694;
+        if (abs(correct_z - screen_z7_dump) > 1e-6) {
+         pp(correct_z);
+         pp(SCREEN_IN_WRONG_PLACE);
+        }
+        screen_z0_fake = correct_z - nz_MLC*correct_z;
+        screen_x0_fake = screen_x - nx_MLC*correct_z;
+        CCS("wcs", screen_x0_fake,0,screen_z0_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_6");
+        screen("wcs",screen_x, 0, screen_z7_dump, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_6"); # "ID2SCR04" 
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+#-------------------------------------------------
+# B2 Section
+#-------------------------------------------------
+if (b2_section_on == 1) {
+
+    # Allows fine tuning the dipole setting, somewhat indirectly
+    if (icm_energy_override > 0.0) {
+        gamma = icm_energy_override / 0.510998946;
+        reference_GB = sqrt(gamma^2 - 1);
+    }
+
+    #-------------------------------------------------
+    # Geometry calculation
+    #-------------------------------------------------
+    dz_merg = R_bend * sin(theta_bend);             # change in z during a bend
+    dx_merg = - R_bend * (1.0 - cos(theta_bend));   # change in x during a bend
+    
+    z_B1_arm1_start = L_inj + dz_merg;
+    x_B1_arm1_start = dx_merg;
+    nz_B1_arm1 = cos(theta_bend);
+    nx_B1_arm1 = -sin(theta_bend);
+    z_B1_arm1_end = z_B1_arm1_start + L_merg*nz_B1_arm1;
+    x_B1_arm1_end = x_B1_arm1_start + L_merg*nx_B1_arm1;
+
+    z_B1_arm2_start = z_B1_arm1_end + dz_merg;
+    x_B1_arm2_start = x_B1_arm1_end + dx_merg;
+    nz_B1_arm2 = 1.0;
+    nx_B1_arm2 = 0.0;
+    z_B1_arm2_end = z_B1_arm2_start + L_merg*nz_B1_arm2;
+    x_B1_arm2_end = x_B1_arm2_start + L_merg*nx_B1_arm2;
+
+    z_MLC_start = z_B1_arm2_end + dz_merg;
+    x_MLC_start = x_B1_arm2_end + dx_merg;
+    nz_MLC = nz_B1_arm1;
+    nx_MLC = nx_B1_arm1;
+
+    z_dipole_1 = L_inj + R_bend * tan(theta_bend * 0.5) + delta_dipole_1;
+    x_dipole_1 = 0.0;
+
+    z_dipole_2 = 0.5 * (z_B1_arm1_end + z_B1_arm2_start);
+    x_dipole_2 = 0.5 * (x_B1_arm1_end + x_B1_arm2_start);
+
+    z_dipole_3 = z_MLC_start - (R_bend * tan(theta_bend * 0.5) + delta_dipole_3) * nz_MLC;
+    x_dipole_3 = x_MLC_start - (R_bend * tan(theta_bend * 0.5) + delta_dipole_3) * nx_MLC;
+
+    z_Bquad_1 = z_B1_arm1_end - B1_quad1_L*nz_B1_arm1;
+    x_Bquad_1 = x_B1_arm1_end - B1_quad1_L*nx_B1_arm1;
+
+    z_Bquad_2 = z_B1_arm2_start + B1_quad2_L*nz_B1_arm2;
+    x_Bquad_2 = x_B1_arm2_start + B1_quad2_L*nx_B1_arm2;
+
+    z_Bquad_3 = z_MLC_start + B1_quad3_L*nz_MLC;
+    x_Bquad_3 = x_MLC_start + B1_quad3_L*nx_MLC;
+
+    #-------------------------------------------------
+    # Distances in straight section
+    #-------------------------------------------------
+
+    ds_start_to_flangemid = 0.105;
+    ds_flangemid_to_bpm = 0.034;
+    ds_bpm_to_slit_H1 = 0.977;
+    ds_slit_H1_to_slit_V1 = 0.070;
+    ds_slit_V1_to_slit_H2 = 1.199;
+    ds_slit_H2_to_slit_V2 = 0.070;
+    ds_slit_V2_to_deflector = 0.191;
+    ds_deflector_to_dipole = 0.458;
+    ds_defl_to_c1 = 1.580;
+
+    ds_start_to_deflector = ds_start_to_flangemid + ds_flangemid_to_bpm + ds_bpm_to_slit_H1 + ds_slit_H1_to_slit_V1 + ds_slit_V1_to_slit_H2 + ds_slit_H2_to_slit_V2 + ds_slit_V2_to_deflector;
+    z_deflector = z_MLC_start + ds_start_to_deflector*nz_MLC;
+    x_deflector = x_MLC_start + ds_start_to_deflector*nx_MLC;
+
+    z_C2_start = z_MLC_start + (ds_start_to_deflector + ds_deflector_to_dipole)*nz_MLC; # in middle of dipole, not at beginning flange
+    x_C2_start = x_MLC_start + (ds_start_to_deflector + ds_deflector_to_dipole)*nx_MLC;
+
+    z_dipole_4 = z_C2_start + (delta_dipole_4)*nz_MLC; # slightly further down diagnostic line, towards C1
+    x_dipole_4 = x_C2_start + (delta_dipole_4)*nx_MLC;
+
+    #-------------------------------------------------
+    # Place dipoles
+    #-------------------------------------------------
+
+    B_dipole_1 = -1.0 * me * c * reference_GB / (qe * R_bend);
+    B_dipole_1_scaled = dipole_1_scale * B_dipole_1 / maxBy;
+    #map1D_Brectmag("wcs", x_dipole_1, 0, z_dipole_1, 1,0,0, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_1_scaled);
+
+    B_dipole_2 = me * c * reference_GB / (qe * R_bend);
+    B_dipole_2_scaled = dipole_2_scale * B_dipole_2 / maxBy;
+    #map1D_Brectmag("wcs", x_dipole_2, 0, z_dipole_2, cos(0.5*theta_bend),0,sin(0.5*theta_bend), 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_2_scaled);
+
+    B_dipole_3 = -1.0 * me * c * reference_GB / (qe * R_bend);
+    B_dipole_3_scaled = dipole_3_scale * B_dipole_3 / maxBy;
+    #map1D_Brectmag("wcs", x_dipole_3, 0, z_dipole_3, nz_MLC,0,-nx_MLC, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_3_scaled);
+    
+    
+
+    #-------------------------------------------------
+    # Place quads
+    #-------------------------------------------------
+
+    B_quad_1 = B2Quad_1_current*BQuadUnits;
+    #if (auto_phase == 0) {
+    #    map1D_Bquad("wcs",x_Bquad_1,0,z_Bquad_1, nz_B1_arm1,0,-nx_B1_arm1, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_1);
+    #}
+
+    B_quad_2 = B2Quad_2_current*BQuadUnits;
+    #if (auto_phase == 0) {
+    #    map1D_Bquad("wcs",x_Bquad_2,0,z_Bquad_2, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/B1quad1D.gdf", "z", "G", B_quad_2);
+    #}
+
+    #-------------------------------------------------
+    # Place deflector
+    #-------------------------------------------------
+
+    horz_deflector = 0;
+
+    deflector_field_scale = deflector_voltage / 1.4345e3; # voltage is in kV
+
+    if (auto_phase == 1) {
+        map3D_Ecomplex("wcs",x_deflector,0,z_deflector, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/defcav_E.gdf","x","y","z","EzRe","EyRe","EzRe","ExIm","EyIm","ExIm",deflector_field_scale,phi_deflector,Master_RF*2*pi);
+        map3D_Hcomplex("wcs",x_deflector,0,z_deflector, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/defcav_H.gdf","x","y","z","HzRe","HyRe","HzRe","HxIm","HyIm","HxIm",deflector_field_scale,phi_deflector,Master_RF*2*pi);
+    } else {
+        if(horz_deflector==1) {
+          map3D_Ecomplex("wcs",x_deflector,0,z_deflector, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/defcav_E.gdf","x","y","z","ExRe","EyRe","EzRe","ExIm","EyIm","EzIm",deflector_field_scale,phi_deflector,Master_RF*2*pi);
+          map3D_Hcomplex("wcs",x_deflector,0,z_deflector, nz_B1_arm2,0,-nx_B1_arm2, 0,1,0, "fields/defcav_H.gdf","x","y","z","HxRe","HyRe","HzRe","HxIm","HyIm","HzIm",deflector_field_scale,phi_deflector,Master_RF*2*pi);
+        } else {
+          map3D_Ecomplex("wcs",x_deflector,0,z_deflector, 0,1,0, -nz_B1_arm2,0,nx_B1_arm2, "fields/defcav_E.gdf","x","y","z","ExRe","EyRe","EzRe","ExIm","EyIm","EzIm",deflector_field_scale,phi_deflector,Master_RF*2*pi);
+          map3D_Hcomplex("wcs",x_deflector,0,z_deflector, 0,1,0, -nz_B1_arm2,0,nx_B1_arm2, "fields/defcav_H.gdf","x","y","z","HxRe","HyRe","HzRe","HxIm","HyIm","HzIm",deflector_field_scale,phi_deflector,Master_RF*2*pi);
+        }
+    }
+
+    #-------------------------------------------------
+    # Place screens
+    #-------------------------------------------------
+
+    if (viewscreens_on==1) {
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+
+        ds_screen_5b = ds_start_to_flangemid + ds_flangemid_to_bpm + ds_bpm_to_slit_H1;
+        screen_z5b = z_MLC_start + nz_MLC*ds_screen_5b;
+        screen_x5b = x_MLC_start + nx_MLC*ds_screen_5b;
+        screen_z5b_fake = screen_z5b - nz_MLC*screen_z5b;
+        screen_x5b_fake = screen_x5b - nx_MLC*screen_z5b;
+            
+        screen_z5b_Manual = 12.35187788493322;
+        #screen_z5b_Manual  = screen_z5b; 
+
+        if (abs(screen_z5b - screen_z5b_Manual) > 1.0e-6) {
+            pp(screen_z5b);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x5b_fake,0,screen_z5b_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_5");
+        screen("wcs", screen_x5b,0,screen_z5b_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_5"); # "Horz. Slit 1"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        
+        ds_screen_6b = ds_screen_5b + ds_slit_H1_to_slit_V1;
+        screen_z6b = z_MLC_start + nz_MLC*ds_screen_6b;
+        screen_x6b = x_MLC_start + nx_MLC*ds_screen_6b;
+        screen_z6b_fake = screen_z6b - nz_MLC*screen_z6b;
+        screen_x6b_fake = screen_x6b - nx_MLC*screen_z6b;
+        
+        screen_z6b_Manual = 12.41949269277345;
+        #screen_z6b_Manual  = screen_z6b;
+
+        if (abs(screen_z6b - screen_z6b_Manual) > 1.0e-6) {
+            pp(screen_z6b);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x6b_fake,0,screen_z6b_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_6");
+        screen("wcs", screen_x6b,0,screen_z6b_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_6"); # "Vert. Slit 1"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        
+        ds_screen_7b = ds_screen_6b + ds_slit_V1_to_slit_H2;
+        screen_z7b = z_MLC_start + nz_MLC*ds_screen_7b;
+        screen_x7b = x_MLC_start + nx_MLC*ds_screen_7b;
+        screen_z7b_fake = screen_z7b - nz_MLC*screen_z7b;
+        screen_x7b_fake = screen_x7b - nx_MLC*screen_z7b;
+        
+        screen_z7b_Manual = 13.57763775849405;
+        #screen_z7b_Manual  = screen_z7b;
+
+        if (abs(screen_z7b - screen_z7b_Manual) > 1.0e-6) {
+            pp(screen_z7b);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x7b_fake,0,screen_z7b_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_7");
+        screen("wcs", screen_x7b,0,screen_z7b_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_7"); # "Horz. Slit 2"
+
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        
+        ds_screen_8b = ds_screen_7b + ds_slit_H2_to_slit_V2;
+        screen_z8b = z_MLC_start + nz_MLC*ds_screen_8b;
+        screen_x8b = x_MLC_start + nx_MLC*ds_screen_8b;
+        screen_z8b_fake = screen_z8b - nz_MLC*screen_z8b;
+        screen_x8b_fake = screen_x8b - nx_MLC*screen_z8b;
+        
+        screen_z8b_Manual = 13.64525256633428;
+        #screen_z8b_Manual  = screen_z8b;
+
+        if (abs(screen_z8b - screen_z8b_Manual) > 1.0e-6) {
+            pp(screen_z8b);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x8b_fake,0,screen_z8b_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_8");
+        screen("wcs", screen_x8b,0,screen_z8b_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_8"); # "Vert. Slit 2"
+        
+        # This hack makes GPT output the 'position' of the screen at its real z.
+        
+        ds_screen_9b = ds_screen_8b + ds_slit_V2_to_deflector;
+        screen_z9b = z_MLC_start + nz_MLC*ds_screen_9b;
+        screen_x9b = x_MLC_start + nx_MLC*ds_screen_9b;
+        screen_z9b_fake = screen_z9b - nz_MLC*screen_z9b;
+        screen_x9b_fake = screen_x9b - nx_MLC*screen_z9b;
+        
+        screen_z9b_Manual = 13.82974439915549;
+        #screen_z9b_Manual  = screen_z9b;
+
+        if (abs(screen_z9b - screen_z9b_Manual) > 1.0e-6) {
+            pp(screen_z9b);
+            pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+        }
+
+        CCS("wcs", screen_x9b_fake,0,screen_z9b_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_9");
+        screen("wcs", screen_x9b,0,screen_z9b_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_9"); # "Deflector"
+
+
+        
+        if (c2_section_on == 0) {
+            # This hack makes GPT output the 'position' of the screen at its real z.
+            
+            ds_screen_10b = ds_screen_9b + ds_defl_to_c1;
+            screen_z10b = z_MLC_start + nz_MLC*ds_screen_10b;
+            screen_x10b = x_MLC_start + nx_MLC*ds_screen_10b;
+            screen_z10b_fake = screen_z10b - nz_MLC*screen_z10b;
+            screen_x10b_fake = screen_x10b - nx_MLC*screen_z10b;
+            
+            screen_z10b_Manual = 15.35590720469222;
+            #screen_z10b_Manual  = screen_z10b;
+
+            if (abs(screen_z10b - screen_z10b_Manual) > 1.0e-6) {
+                pp(screen_z10b);
+                pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+            }
+
+            CCS("wcs", screen_x10b_fake,0,screen_z10b_fake, nz_MLC, 0, -nx_MLC, 0,1,0, "screen_hack_10");
+            screen("wcs", screen_x10b,0,screen_z10b_Manual, nz_MLC, 0, -nx_MLC, 0,1,0, 0, "screen_hack_10"); # "C1 Viewscreen"
+
+
+        } else {
+            #-------------------------------------------------
+            # Place dipole
+            #-------------------------------------------------
+
+            B_dipole_4 = -1.0 * me * c * reference_GB / (qe * R_bend);
+            B_dipole_4_scaled = dipole_4_scale * B_dipole_4 / maxBy;
+            #map1D_Brectmag("wcs", x_dipole_4, 0, z_dipole_4, nz_MLC, 0, -nx_MLC, 0,1,0, "fields/L0_LD_1D.gdf", "z", "By", B_dipole_4_scaled);
+
+            theta_c2 = 20*pi/180;
+
+            nz_C2 = cos(theta_c2) * nz_MLC - sin(theta_c2) * nx_MLC;
+            nx_C2 = sin(theta_c2) * nz_MLC + cos(theta_c2) * nx_MLC;
+
+            ds_C2_test = 0.4;
+            ds_C2_screen = 1.430;
+
+            if (alignment_screens_on == 1) {
+                ds_screen_12b = ds_C2_test;
+                screen_z12b = z_C2_start + nz_C2*ds_screen_12b;
+                screen_x12b = x_C2_start + nx_C2*ds_screen_12b;
+                screen_z12b_fake = screen_z12b - nz_C2*screen_z12b;
+                screen_x12b_fake = screen_x12b - nx_C2*screen_z12b;
+                
+                screen_z12b_Manual = 14.67061630683258;
+
+                if (abs(screen_z12b - screen_z12b_Manual) > 1.0e-6) {
+                    pp(screen_z12b);
+                    pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+                }
+
+                CCS("wcs", screen_x12b_fake,0,screen_z12b_fake, nz_C2, 0, -nx_C2, 0,1,0, "screen_hack_10");
+                screen("wcs", screen_x12b,0,screen_z12b_Manual, nz_C2, 0, -nx_C2, 0,1,0, 0, "screen_hack_10"); # "C2 Test"
+            }
+            
+            ds_screen_11b = ds_C2_screen;
+            screen_z11b = z_C2_start + nz_C2*ds_screen_11b;
+            screen_x11b = x_C2_start + nx_C2*ds_screen_11b;
+            screen_z11b_fake = screen_z11b - nz_C2*screen_z11b;
+            screen_x11b_fake = screen_x11b - nx_C2*screen_z11b;
+            
+            screen_z11b_Manual = 15.69669684586708;
+
+            if (abs(screen_z11b - screen_z11b_Manual) > 1.0e-6) {
+                pp(screen_z11b);
+                pp(manual_viewscreen_not_in_right_location); # Will cause error if viewscreen is moved, but manual location is not
+            }
+
+            CCS("wcs", screen_x11b_fake,0,screen_z11b_fake, nz_C2, 0, -nx_C2, 0,1,0, "screen_hack_11");
+            screen("wcs", screen_x11b,0,screen_z11b_Manual, nz_C2, 0, -nx_C2, 0,1,0, 0, "screen_hack_11"); # "C2 Viewscreen"
+         }
+    }
+
+   ZFinalScreen = z_C2_start;
+   XFinalScreen = x_C2_start;
+
+   ZSTOP  = 15.5;
+}
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# Spacecharge Parameters
+#--------------------------------------------------------------------------
+Alpha  = 1.0;   # 1.0    (manual default is 1.0), (bigger is better)
+Fn     = 0.5;    # 0.5   (manual default is 0.5), (smaller is better)
+verror = 0.005; # 0.005  (manual default is 0.01), (smaller is better)
+Nstd   = 5;    # 5     (manual default is 5), (bigger is better)
+
+tree_code_theta = 1.0;
+tree_code_R = 1.0e-6;
+
+if (space_charge == 1) {
+    if (space_charge_type == 1) {
+        spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+    }
+    if (space_charge_type == 2) {
+	    setrmacrodist("beam","u",tree_code_R,0) ;
+        spacecharge3Dtree(tree_code_theta) ;
+    }
+}
+
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# OUTPUT PARAMETERS
+#--------------------------------------------------------------------------
+
+if (viewscreens_on == 1) {
+    z_cathode_screen = 1e-6;
+    screen("wcs","I", z_cathode_screen); # "After Cathode"
+}
+
+tmax_gui = 1.1e-7;
+
+if (gpt_pass == 1) {
+    final_time = breakpoint_time;
+} else {
+    final_time = tmax_gui;
+}
+
+if (auto_phase == 1 || optimize_on == 1 || single_particle == 1) {
+    final_time = tmax_gui;
+}
+
+#tmax = 1.05*final_time; 
+
+if (auto_phase == 1) {
+
+    if (cavity_phasing_index < 6) {
+        phasing_screen_z = 6.0;
+        ZSTOP = 6.1;
+        screen("wcs","I",phasing_screen_z); 
+    } else {
+        ZSTOP = ZFinalScreen + 0.3;
+        phasing_screen_z = ZFinalScreen;
+        phasing_screen_x = XFinalScreen; 
+        phasing_screen_z_fake = phasing_screen_z - nz_MLC*phasing_screen_z;
+        phasing_screen_x_fake = phasing_screen_x - nx_MLC*phasing_screen_z;
+        CCS("wcs", phasing_screen_x_fake,0,phasing_screen_z_fake, nz_MLC, 0, -nx_MLC,0,1,0, "Phase-Hack");
+        screen("wcs", phasing_screen_x,0,phasing_screen_z,        nz_MLC, 0, -nx_MLC,0,1,0, 0, "Phase-Hack");
+    }
+}
+
+ZSTART = -0.005;
+zminmax("wcs","I",ZSTART,ZSTOP);
+
+tmax = 50e-9;
+Ntout = 10;
+
+if (auto_phase == 0 && single_particle == 0 && Ntout > 0) {
+    dtout = tmax/Ntout;
+    tout(time,tmax,dtout);
+}
+
+#if (kill_backwards_particles == 1) {
+#  GBzmin("wcs", "I", 5.0e-10, 0.0); # kill particles going backwards (gamma*beta < 0.0) after t=5e-10 s
+#}
+
+#--------------------------------------------------------------------------
+
+
+
+#--------------------------------------------------------------------------
+# Definition of variables to be phased
+#--------------------------------------------------------------------------
+
+phasing_amplitude_0 = buncher_voltage;
+phasing_on_crest_0 = phiCTB01_0;
+phasing_relative_0 = phiCTB01_off;
+phasing_gamma_0 = gammaCTB01;
+
+phasing_amplitude_1 = cavity_1_voltage;
+phasing_on_crest_1 = phiCTC01_0;
+phasing_relative_1 = phiCTC01_off;
+phasing_gamma_1 = gammaCTC01;
+
+phasing_amplitude_2 = cavity_2_voltage;
+phasing_on_crest_2 = phiCTC02_0;
+phasing_relative_2 = phiCTC02_off;
+phasing_gamma_2 = gammaCTC02;
+
+phasing_amplitude_3 = cavity_3_voltage;
+phasing_on_crest_3 = phiCTC03_0;
+phasing_relative_3 = phiCTC03_off;
+phasing_gamma_3 = gammaCTC03;
+
+phasing_amplitude_4 = cavity_4_voltage;
+phasing_on_crest_4 = phiCTC04_0;
+phasing_relative_4 = phiCTC04_off;
+phasing_gamma_4 = gammaCTC04;
+
+phasing_amplitude_5 = cavity_5_voltage;
+phasing_on_crest_5 = phiCTC05_0;
+phasing_relative_5 = phiCTC05_off;
+phasing_gamma_5 = gammaCTC05;
+
+
