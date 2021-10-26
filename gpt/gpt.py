@@ -57,7 +57,7 @@ class GPT:
                  ref_ccs=False,
                  kill_msgs=DEFAULT_KILL_MSGS,
                  load_fields=False
-                 ):
+                 parse_layout=False):
 
         # Save init
         self.original_input_file = input_file
@@ -130,8 +130,10 @@ class GPT:
             self.path = self.original_path         
 
         self.input_file = os.path.join(self.path, self.original_input_file) 
-        self.lattice = Lattice('lattice')
-        self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
+        
+        if(parse_layout):
+            self.lattice = Lattice('lattice')
+            self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
         parsers.set_support_files(self.input['lines'], self.original_path, target=self.path)              
         
