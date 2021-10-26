@@ -56,7 +56,7 @@ class GPT:
                  ccs_beg='wcs',
                  ref_ccs=False,
                  kill_msgs=DEFAULT_KILL_MSGS,
-                 load_fields=False
+                 load_fields=False,
                  parse_layout=False):
 
         # Save init
