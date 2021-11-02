@@ -89,6 +89,7 @@ class GPT:
         self.ref_ccs = ref_ccs
         self.kill_msgs=kill_msgs
         self.load_fields=load_fields
+        self.parse_layout=parse_layout
         
 
         # Call configure
@@ -131,7 +132,7 @@ class GPT:
 
         self.input_file = os.path.join(self.path, self.original_input_file) 
         
-        if(parse_layout):
+        if(self.parse_layout):
             self.lattice = Lattice('lattice')
             self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
@@ -144,6 +145,10 @@ class GPT:
         self.configured = True
         
         #print('Configured')
+        
+    def parse_lattice_file(self):
+        self.lattice = Lattice('lattice')
+        self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
     def load_input(self, input_filePath, absolute_paths=True):
         """ Load the GPT template file """
