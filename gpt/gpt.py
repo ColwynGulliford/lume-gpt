@@ -89,6 +89,7 @@ class GPT:
         self.ref_ccs = ref_ccs
         self.kill_msgs=kill_msgs
         self.load_fields=load_fields
+        
         self.parse_layout=parse_layout
         
 
@@ -145,10 +146,6 @@ class GPT:
         self.configured = True
         
         #print('Configured')
-        
-    def parse_lattice_file(self):
-        self.lattice = Lattice('lattice')
-        self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
     def load_input(self, input_filePath, absolute_paths=True):
         """ Load the GPT template file """
@@ -183,6 +180,20 @@ class GPT:
             return True
         else:
             return False
+        
+    def set_support_file(self, original_file, new_file):
+        
+        results = {}
+        
+        for ii, sfile in self.input['support_files'].items():
+            
+            if(original_file in self.input['lines'][ii]):
+                
+                new_file = sfile.replace(original_file, new_file)
+                self.input['lines'][ii]=self.input['lines'][ii].replace(original_file, new_file)
+                
+                
+        parsers.set_support_files(self.input['lines'], self.original_path, target=self.path)        
 
     def set_variables(self, variables):
         """ Set a list of variables (variable.keys) to new values (variables.values()) in the GPT Input file """
@@ -360,6 +371,7 @@ class GPT:
         return os.path.join(path, outfile)
 
     def run_gpt(self, verbose=False, parse_output=True, timeout=None, gpt_verbose=False):
+        
         """ RUN GPT and read in results """
         self.vprint('GPT.run_gpt:')
 

@@ -11,11 +11,11 @@ import shutil
 
 # ------ Number parsing ------
 def isfloat(value):
-      try:
-            float(value)
-            return True
-      except ValueError:
-            return False
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
 
 def find_path(line, pattern=r'"([^"]+\.gdf)"'):
 
@@ -66,6 +66,7 @@ def set_support_files(lines,
     for ii, line in enumerate(lines):
 
         support_files = find_path(line, pattern=pattern)
+        
         
         for support_file in support_files:
 
@@ -139,11 +140,16 @@ def parse_gpt_input_file(filePath, condense=False, verbose=False):
             elif(verbose):
                 print(f'Warning: multiple definitions of variable {name} on line {ii}.')
 
-    for line in clean_lines:
-        find_path(line)
-
+    support_files={}
+    for ii, line in enumerate(clean_lines):
+        for sfile in find_path(line):
+            if(sfile not in support_files):
+                support_files[ii]=sfile
+                
+        
     finput['lines']=clean_lines
     finput['variables']=variables
+    finput['support_files'] = support_files
 
     return finput
 
@@ -154,12 +160,12 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
     for var in finput['variables'].keys():
 
         value=finput['variables'][var]
-        for index,line in enumerate(finput['lines']):
+        for index, line in enumerate(finput['lines']):
             tokens = line.split('=')
             if(len(tokens)==2 and tokens[0].strip()==var):
                 finput["lines"][index]=f'{var}={value};'
                 break
-
+            
     with open(inputFile,'w') as f:
 
         for line in finput["lines"]:
@@ -171,7 +177,7 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
 def read_particle_gdf_file(gdffile, verbose=0.0, extra_screen_keys=['q','nmacro'], load_files=False): #,'ID', 'm']):
 
     with open(gdffile, 'rb') as f:
-      data = easygdf.load_initial_distribution(f, extra_screen_keys=extra_screen_keys)
+        data = easygdf.load_initial_distribution(f, extra_screen_keys=extra_screen_keys)
 
     screen = {}
     n = len(data[0,:])
