@@ -57,7 +57,7 @@ class GPT:
                  ref_ccs=False,
                  kill_msgs=DEFAULT_KILL_MSGS,
                  load_fields=False,
-                 parse_layout=False):
+                 parse_layout=True):
 
         # Save init
         self.original_input_file = input_file

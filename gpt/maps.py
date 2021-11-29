@@ -83,7 +83,7 @@ class GDFFieldMap(Element):
 
     """ General class for holding GDF field map data """
 
-    def __init__(self, source_data_file, gdf2a_bin='$GDF2A_BIN', use_temp_file=False):
+    def __init__(self, source_data_file, gdf2a_bin='$GDF2A_BIN', use_temp_file=True):
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
 
@@ -310,7 +310,7 @@ class Map1D(GDFFieldMap):
 
         self._color=color
 
-    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):
+    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style='tao'):
         """ Plots the bounding box of the field map in z-x floor coordinates """
         plot_clyindrical_map_floor(self, axis=axis, alpha=alpha, ax=ax, xlim=xlim, ylim=ylim, style=style)
 
@@ -423,7 +423,7 @@ class Map1D_B(Map1D):
     Defines a 1D [z, Bz] cylindrically symmetric magnetic field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.4, scale=1, color='#2ca02c', style=None):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.4, scale=1, color='#2ca02c', style='tao'):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Bz'])
         
@@ -451,8 +451,7 @@ class Map1D_B(Map1D):
     def Bz0(self):
         return self.Fz
 
-    @property
-    def larmor_angle(self, p):
+    def larmor_angle(self, p=1e6):
         return larmor_angle(self, p)
 
     @property
@@ -584,7 +583,7 @@ class Map2D(GDFFieldMap):
             self.Fz_str='Bz'
             self.Fz_unit='T'
 
-    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):
+    def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style='tao'):
         """ 
         Function for plotting the relevant field/object region for cylindrically symmetric map object
         Inputs: 
@@ -691,7 +690,7 @@ class Map2D_B(Map2D):
     Defines a 2D (r,z), (Br, Bz) cylindrically magnetic symmetric field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', field_pos='center', scale=1, style=None, color='#2ca02c'):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', field_pos='center', scale=1, style='tao', color='#2ca02c'):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Br', 'Bz'])
 
@@ -1048,7 +1047,7 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
     if(ax == None):
         ax = plt.gca()
 
-    pc = 0.5*(element.p_beg + element.p_end)
+    #pc = 0.5*(element.p_beg + element.p_end)
 
     p1 = element.p_beg + (element._width/2)*element.e1_beg
     p2 = element.p_beg - (element._width/2)*element.e1_beg
@@ -1066,7 +1065,7 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
 
     ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
 
-    #print(element.name, element._color, element._style)
+    #print(element.color)
 
     if(element._style=='tao'):
         ax.plot(ps1[2], ps1[0], element.color, alpha=0.2*alpha)
