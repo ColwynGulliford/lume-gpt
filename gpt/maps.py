@@ -559,6 +559,7 @@ class Map1D_TM(Map1D):
 
         return desc
 
+    @property
     def cavity_voltage(self):
         return cavity_voltage(self)
 
@@ -870,6 +871,7 @@ class Map25D_TM(Map2D):
     def autophase(self, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, workdir=None, n_screen=100, verbose=False):
         return autophase(self, t, p, xacc=xacc, GBacc=GBacc, dtmin=dtmin, dtmax=dtmax, workdir=workdir, n_screen=n_screen, verbose=verbose)
 
+    @property
     def cavity_voltage(self):
         return cavity_voltage(self)
 

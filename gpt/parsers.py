@@ -18,7 +18,6 @@ def isfloat(value):
         return False
 
 def find_path(line, pattern=r'"([^"]+\.gdf)"'):
-
     matches=re.findall(pattern, line)
     return matches
  
@@ -31,10 +30,12 @@ def set_support_files_orig(lines,
                            pattern=r'"([^"]+\.gdf)"', 
                            verbose=False):
 
+    print('set SUPPORT ORIG')
+    
     for ii, line in enumerate(lines):
 
         support_files = find_path(line, pattern=pattern)
-
+        
         for support_file in support_files:
 
             #print(full_path(support_file))
@@ -67,11 +68,12 @@ def set_support_files(lines,
 
         support_files = find_path(line, pattern=pattern)
         
-        
         for support_file in support_files:
 
             abs_original_path = full_path( os.path.join(original_path, os.path.expandvars(support_file)) )
 
+            #print(support_file, os.path.join(original_path, os.path.expandvars(support_file)), line)
+            
             if(copy_files):
             
                 abs_target_path = os.path.join(target_path, support_file) 
@@ -101,7 +103,7 @@ def set_support_files(lines,
                     # Note that the following will raise an error if the dest is an actual file that exists    
                     os.symlink(abs_original_path, dest)
                     if verbose:
-                        print('Linked', abs_original_path, 'to', os.path.basenme(dest) )
+                        print('Linked', abs_original_path, 'to', os.path.basename(dest) )
 
                     lines[ii] = line.replace(support_file, os.path.basename(dest))
 
