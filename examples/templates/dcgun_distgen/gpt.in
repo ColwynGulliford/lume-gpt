@@ -6,7 +6,7 @@
 # MACHINE SETTINGS:
 #--------------------------------------------------------------------------
 Master_RF = 1.3e9;
-icm_energy_override = 0.0;
+cathode=1.0;
 gun_voltage=300;
 sol_1_current=3.75;
 time=0.0;
@@ -115,7 +115,13 @@ tree_code_R = 1.0e-6;
 
 if (space_charge == 1) {
     if (space_charge_type == 1) {
-        spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+    
+        if(cathode==1) {
+            spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+            
+        } else {
+            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        }
     }
     if (space_charge_type == 2) {
 	    setrmacrodist("beam","u",tree_code_R,0) ;
