@@ -134,7 +134,11 @@ def parse_gpt_input_file(filePath, condense=False, verbose=False):
 
         if(len(tokens)==2 and isfloat(tokens[1][:-1].strip())):
  
-            name = tokens[0].strip()
+            if(len(tokens[0].split(")"))>1):
+                name = tokens[0].split(")")[-1].strip()
+            else:
+                name = tokens[0].strip()
+
             value = float(tokens[1][:-1].strip())
             
             if(name not in variables.keys()):
@@ -164,8 +168,10 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
         value=finput['variables'][var]
         for index, line in enumerate(finput['lines']):
             tokens = line.split('=')
-            if(len(tokens)==2 and tokens[0].strip()==var):
-                finput["lines"][index]=f'{var}={value};'
+            #if(len(tokens)==2 and tokens[0].strip()==var):
+            if(len(tokens)==2 and tokens[0].strip().endswith(var)):
+                finput["lines"][index]=f'{tokens[0].strip().replace(var,"")}{var}={value};'
+                #print(finput["lines"][index])
                 break
             
     with open(inputFile,'w') as f:
