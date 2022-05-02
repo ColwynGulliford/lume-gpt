@@ -170,7 +170,7 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
             tokens = line.split('=')
             #if(len(tokens)==2 and tokens[0].strip()==var):
             if(len(tokens)==2 and tokens[0].strip().endswith(var)):
-                finput["lines"][index]=f'{tokens[0].strip().replace(var,"")}{var}={value};'
+                finput["lines"][index]=f'{tokens[0].strip()[:-len(var)]}{var}={value};'
                 #print(finput["lines"][index])
                 break
             
