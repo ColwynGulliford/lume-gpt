@@ -1,6 +1,3 @@
-GPTLICENSE=1251405651.0;
-
-
 setfile("beam","/Users/colwyngulliford/Documents/GitHub/lume-gpt/templates/cu_hcgun/gpt.particles.gdf");
 
 gun_voltage=400;
