@@ -3,6 +3,7 @@ import os
 import math, cmath
 from scipy.integrate import cumtrapz
 import tempfile
+import subprocess
 
 #from gpt import GPT
 from gpt import tools
@@ -72,11 +73,14 @@ def get_gdf_header(gdf_file, gdf2a_bin=os.path.expandvars('$GDF2A_BIN')):
     assert os.path.exists(gdf_file), f'The gdf file "{gdf_file}" does not exist'
 
     temp_ascii_file = f'{gdf_file}.temp.txt'
-    rc = os.system(f'{gdf2a_bin} -o {temp_ascii_file} {gdf_file}')
+    cmd = f'{gdf2a_bin} -o {temp_ascii_file} {gdf_file}'
+    subprocess.run(cmd, shell=True)
 
     with open(temp_ascii_file, 'r') as fp:
         columns = fp.readline().split()
-    os.system(f'rm {temp_ascii_file}')
+
+    # cleanup    
+    os.remove(temp_ascii_file)
     return columns
 
 class GDFFieldMap(Element):
@@ -96,13 +100,20 @@ class GDFFieldMap(Element):
         else:
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
 
-        os.system(f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}')
+        cmd = f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}'  
+        subprocess.run(cmd, shell=True)
+
 
         with open(temp_ascii_file, 'r') as fp:
-            column_names = fp.readline().split()
-
+            for i, line in enumerate(fp):
+                if 'warning' in line.lower():
+                    print(f'warning found in {temp_ascii_file}', line )
+                else:
+                    column_names = line.split()
+                    break
+        n_header = i+1
         self.column_names = column_names
-        ndata = np.loadtxt(temp_ascii_file, skiprows=1)
+        ndata = np.loadtxt(temp_ascii_file, skiprows=n_header)
 
         os.remove(temp_ascii_file)
 
@@ -204,8 +215,8 @@ class GDFFieldMap(Element):
         headers = '     '.join(headers)
         np.savetxt(temp_ascii_file, data, header=headers, comments=' ')
 
-        os.system(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}')
-        os.system(f'rm {temp_ascii_file}')
+        subprocess.run(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}', shell=True)
+        os.remove(temp_ascii_file)
 
     def gpt_label_to_fieldmap_label(self, name):
 
@@ -929,8 +940,8 @@ def write_1d_map(element, filename=None, asci2gdf_bin=os.path.expandvars('$ASCI2
             fout.seek(fout.tell() - NEWLINE_SIZE_IN_BYTES, os.SEEK_SET)
             fout.truncate() # Truncate the file to this point.
 
-        os.system(f'{asci2gdf_bin} -o {filename} {tempfile}')
-        os.system(f'rm {tempfile}')
+        subprocess.run(f'{asci2gdf_bin} -o {filename} {tempfile}', shell=True)
+        os.remove(tempfile)
 
 
 
