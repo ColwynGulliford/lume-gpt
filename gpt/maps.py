@@ -100,7 +100,7 @@ class GDFFieldMap(Element):
         else:
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
 
-        cmd = f'{gdf2a_bin} -o {temp_ascii_file} {self.source_data_file}'  
+        cmd = f'{gdf2a_bin} -o {temp_ascii_file} "{self.source_data_file}"' 
         subprocess.run(cmd, shell=True)
 
 
@@ -224,6 +224,8 @@ class GDFFieldMap(Element):
             for cn in self.column_names:
                 if(name.lower()==cn.lower()):
                     return cn
+        else:
+            return name
 
     def gpt_lines(self, ccs=None, gdf_file=None, e1=[1, 0, 0], e2=[0, 1, 0], scale =None, user_vars=[]):
 
@@ -275,7 +277,7 @@ class GDFFieldMap(Element):
 
         for ii, rc in enumerate(self.required_columns):
 
-            name = self.gpt_label_to_fieldmap_label (rc)
+            name = self.gpt_label_to_fieldmap_label(rc)
             map_line = map_line + f'"{name}", '
         
         if(scale is None):
@@ -754,13 +756,17 @@ class Map25D_TM(Map2D):
         frequency, 
         scale=1,
         relative_phase=0,
+        oncrest_phase=0,
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, 
+        required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'],
+        e1=[1, 0, 0], 
+        e2=[0, 1, 0],
         k=0,
         color='darkorange',
         style=None):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=required_columns)
 
         self._name=name
         self._type='Map25D_TM'
@@ -771,7 +777,7 @@ class Map25D_TM(Map2D):
         self._frequency = frequency
         self._w = 2*math.pi*frequency
 
-        self._oncrest_phase=0
+        self._oncrest_phase=oncrest_phase
 
         self._length = self.z0[-1]-self.z0[0]
         self._width = 0.2
@@ -786,6 +792,9 @@ class Map25D_TM(Map2D):
 
         self.Fz_str='Ez'
         self.Fz_unit='V/m'
+
+        self._e1=e1
+        self._e2=e2
 
         self.place()
 
@@ -840,7 +849,7 @@ class Map25D_TM(Map2D):
 
         name = self.name
 
-        base_lines = super().gpt_lines()
+        base_lines = super().gpt_lines(e1=self._e1, e2=self._e2)
         extra_lines = base_lines[:-1]
         map_line = base_lines[-1].replace(');','')
 
@@ -1033,7 +1042,17 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
         element._style=style
 
     f = 0.01
+
+
     zs = element.z0
+    p00 = np.array([[0],[0],[0]])
+    if(hasattr(element, '_e1') and hasattr(element, '_e2')):
+        e3 = np.cross(element._e1, element._e2)
+        if(e3[2]==-1):
+            zs = np.flip(element.z0) 
+            p00 = np.array([[0],[0],[-element.z0[-1]]])
+
+
     Fz = element.Fz
 
     maxF = max(np.abs(Fz))
@@ -1062,14 +1081,14 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
 
     #pc = 0.5*(element.p_beg + element.p_end)
 
-    p1 = element.p_beg + (element._width/2)*element.e1_beg
-    p2 = element.p_beg - (element._width/2)*element.e1_beg
-    p3 = element.p_end + (element._width/2)*element.e1_beg
-    p4 = element.p_end - (element._width/2)*element.e1_beg
+    p1 = element.p_beg + (element._width/2)*element.e1_beg + p00
+    p2 = element.p_beg - (element._width/2)*element.e1_beg + p00
+    p3 = element.p_end + (element._width/2)*element.e1_beg + p00
+    p4 = element.p_end - (element._width/2)*element.e1_beg + p00
 
     ps1 = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
 
-    p0 = (zL-element.z0[0])*element.e3_beg + element.p_beg
+    p0 = (zL-element.z0[0])*element.e3_beg + element.p_beg + p00
 
     p1 = p0 + (element._width/2)*element.e1_beg 
     p2 = p1 + effective_plot_length*element.e3_beg
@@ -1117,7 +1136,16 @@ def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
 
     Fz = element.Fz
 
-    zs = element.s_beg + element.z0 - element.z0[0]
+    if(hasattr(element, '_e1') and hasattr(element, '_e2')):
+
+        e3 = np.cross(element._e1, element._e2)
+        if(e3[2]==-1):
+            zs = element.s_beg + np.flip(element.z0) - element.z0[-1]
+        else:
+            zs = element.s_beg + element.z0 - element.z0[0]
+
+    else:
+        zs = element.s_beg + element.z0 - element.z0[0]
 
     if(normalize):
 
