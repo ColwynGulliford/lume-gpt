@@ -269,13 +269,13 @@ def run_gpt_with_distgen(settings=None,
 
     write_gpt(beam, particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
 
-    print(beam['x'].mean())
-    print(beam['y'].mean())
-    print(beam['z'].mean())
-    print(beam['px'].mean())
-    print(beam['py'].mean())
-    print(beam['pz'].mean())
-    print(beam['t'].mean())
+    #print(beam['x'].mean())
+    #print(beam['y'].mean())
+    #print(beam['z'].mean())
+    #print(beam['px'].mean())
+    #print(beam['py'].mean())
+    #print(beam['pz'].mean())
+    #print(beam['t'].mean())
 
     if(auto_phase): 
 
