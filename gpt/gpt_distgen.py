@@ -45,6 +45,126 @@ def centroid(particle_group):
     data['weight'] = pg.charge
     data['status'] = 1
     return ParticleGroup(data=data)
+
+
+def phase_gpt_with_distgen(settings=None,
+                         gpt_input_file=None,
+                         distgen_input_file=None,
+                         workdir=None, 
+                         use_tempdir=True,
+                         gpt_bin='$GPT_BIN',
+                         timeout=2500,
+                         #auto_phase=False,
+                         verbose=False,
+                         gpt_verbose=False,
+                         asci2gdf_bin='$ASCI2GDF_BIN',
+                         kill_msgs=DEFAULT_KILL_MSGS,
+                         load_fields=False,
+                         parse_layout=False):
+
+    # Call simpler evaluation if there is no generator:
+    if not distgen_input_file:
+        return run_gpt(settings=settings, 
+                       gpt_input_file=gpt_input_file, 
+                       workdir=workdir,
+                       use_tempdir=use_tempdir,
+                       gpt_bin=gpt_bin, 
+                       timeout=timeout, 
+                       verbose=verbose,
+                       kill_msgs=kill_msgs,
+                       load_fields=load_fields)
+    
+    if(verbose):
+        print('Run GPT with Distgen:') 
+
+    # Make gpt and generator objects
+    G = GPT(gpt_bin=gpt_bin, 
+        input_file=gpt_input_file,
+        workdir=workdir, 
+        use_tempdir=use_tempdir,
+        kill_msgs=kill_msgs,
+        load_fields=load_fields,
+        parse_layout=parse_layout)
+
+    
+    G.timeout=timeout
+    G.verbose = verbose
+
+    # Distgen generator
+    gen = Generator(verbose=verbose)
+    f = tools.full_path(distgen_input_file)
+    distgen_params = yaml.safe_load(open(f))
+
+    # Set inputs
+    if settings:
+        G, distgen_params = set_gpt_and_distgen(G, distgen_params, settings, verbose=verbose)
+    
+    # Link particle files
+    particle_file = tools.full_path(os.path.join(G.path, os.path.basename(G.get_dist_file())))
+    phasing_particle_file = particle_file.replace('.gdf', '.phasing.gdf')
+
+    if(verbose):
+        print('Linking particle files, distgen output will point to -> "'+os.path.basename(particle_file)+'" in working directory.')
+
+    G.set_dist_file(os.path.basename(particle_file))
+
+    if('output' in distgen_params and verbose):
+        print('Replacing Distgen output params')
+
+    distgen_params['output'] = {'type':'gpt','file':particle_file}
+
+    if(verbose):
+        print('\nDistgen >------\n')
+    # Configure distgen
+    gen.parse_input(distgen_params)   
+     
+    # Attach distgen input. This is non-standard. Used for archiving
+    G.distgen_input = gen.input        
+
+    beam = gen.beam()
+
+    if(verbose):
+        print('------< Distgen\n')
+
+    if(os.path.exists(particle_file)):
+        
+        if(os.path.islink(particle_file)):
+            os.unlink(particle_file)
+        else:
+            os.remove(particle_file)
+
+    write_gpt(beam, particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
+
+    if(verbose):
+        print('\nAuto Phasing >------\n')
+    t1 = time.time()
+
+    # Create the distribution used for phasing
+    if(verbose):
+        print('****> Creating intiial distribution for phasing...')
+
+    phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+    write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
+    
+    if(verbose):
+        print('<**** Created intiial distribution for phasing.\n')    
+
+    G.write_input_file()   # Write the unphased input file
+       
+    phased_file_name, phased_settings = gpt_phasing(G.input_file, 
+                                                        path_to_gpt_bin=G.gpt_bin[:-3], 
+                                                        path_to_phasing_dist=phasing_particle_file, 
+                                                        verbose=verbose)
+
+    G.set_variables(phased_settings)
+    t2 = time.time()
+
+    if(verbose):
+        print(f'Time Ellapsed: {t2-t1} sec.')
+        print('------< Auto Phasing\n')
+
+    return G, phased_settings
+
     
 def run_gpt_with_distgen(settings=None,
                          gpt_input_file=None,
