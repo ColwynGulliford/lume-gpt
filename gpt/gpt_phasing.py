@@ -15,6 +15,8 @@ from optparse import OptionParser
 
 from pathlib import Path
 
+from time import time
+
 def main():
 
     # Default setting
@@ -172,6 +174,8 @@ def gpt_phasing(path_to_input_file,
         print(" ")
 
     for cav_ii in range(len(amplitude_indices)):
+
+        #print(cav_ii)
 
         if desired_amplitude[cav_ii] > 0:
 
@@ -547,6 +551,15 @@ def readinfile(filename):
 # ---------------------------------------------------------------------------- #
 # This allows the main function to be at the beginning of the file
 # ---------------------------------------------------------------------------- #
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     main()

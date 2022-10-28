@@ -492,7 +492,7 @@ class GPT:
         if not fname:
             fname = os.path.join(self.path, 'gpt.particles.gdf')
         self.initial_particles.write_gpt(fname, asci2gdf_bin='$ASCI2GDF_BIN', verbose=False)
-        self.vprint(f'   Initial particles written to "{fname}"')
+        self.vprint(f'   Initial {len(self.initial_particles["x"])} particles written to "{fname}"')
         return fname 
 
     def load_initial_particles(self, h5):
@@ -697,6 +697,56 @@ class GPT:
         
         return G2
 
+    def auto_phase(self):
+        phase_gpt(self)
+
+def phase_gpt(G):
+
+    if(G.verbose):
+        print('\nAuto Phasing >------\n')
+    t1 = time()
+
+    
+        
+    if(G.initial_particles):
+
+        # Create the distribution used for phasing
+        if(G.verbose):
+            print('****> Creating intiial distribution for phasing...')
+
+
+        phasing_beam = single_particle(x=G.initial_particles['mean_x'], 
+            y=G.initial_particles['mean_y'], 
+            z=G.initial_particles['mean_z'],
+            px=G.initial_particles['mean_px'], 
+            py=G.initial_particles['mean_py'], 
+            pz=G.initial_particles['mean_pz'],
+            t=G.initial_particles['mean_t'])
+
+        #phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+
+    phasing_particle_file = os.path.join(G.path, 'gpt_particles.phasing.gdf')
+
+    phasing_beam.write_gpt(phasing_particle_file, asci2gdf_bin='$ASCI2GDF_BIN', verbose=G.verbose)
+
+    #write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
+    
+    if(G.verbose):
+        print('<**** Created intiial distribution for phasing.\n')    
+
+    G.write_input_file()   # Write the unphased input file
+
+    phased_file_name, phased_settings = gpt_phasing(G.input_file, 
+                                                    path_to_gpt_bin=G.gpt_bin[:-3], 
+                                                    path_to_phasing_dist=phasing_particle_file, 
+                                                    verbose=G.verbose)
+    G.set_variables(phased_settings)
+    t2 = time()
+
+    if(G.verbose):
+        print(f'Time Ellapsed: {t2-t1} sec.')
+        print('------< Auto Phasing\n')
+
 def run_gpt(settings=None, 
             initial_particles=None,
             gpt_input_file=None,
@@ -735,6 +785,8 @@ def run_gpt(settings=None,
     
     G.timeout=timeout
     G.verbose = verbose
+
+    print(G.input)
       
     # Set inputs
     if settings:
