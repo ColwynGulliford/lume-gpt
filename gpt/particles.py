@@ -121,7 +121,7 @@ def gdf_to_particle_groups(gdffile, verbose=False):
     touts = all_pgs[:len(tdata)]
     screens = all_pgs[len(tdata):]
 
-    return (touts, screens)
+    return (touts, screens, fields)
 
 def initial_beam_to_particle_group(gdffile, verbose=0, extra_screen_keys=['q','nmacro','ID', 'm'], missing_data=None):
 

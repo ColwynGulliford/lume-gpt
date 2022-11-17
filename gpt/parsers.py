@@ -284,7 +284,7 @@ def make_tout_dict(touts, load_fields=False):
             
             if(load_fields):
                 field = {'Ex':data[11,:], 'Ey':data[12,:], 'Ez':data[13,:],
-                          'Bx':data[14,:], 'By':data[15,:], 'Bz':data[16,:]}
+                         'Bx':data[14,:], 'By':data[15,:], 'Bz':data[16,:]}
             else:
                 field=None
             
