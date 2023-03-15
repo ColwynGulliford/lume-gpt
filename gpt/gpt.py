@@ -785,8 +785,6 @@ def run_gpt(settings=None,
     
     G.timeout=timeout
     G.verbose = verbose
-
-    print(G.input)
       
     # Set inputs
     if settings:

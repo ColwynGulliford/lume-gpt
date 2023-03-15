@@ -361,8 +361,9 @@ def evaluate_gpt_with_distgen(settings,
         
     #Recreate Generator object for fingerprint, proper archiving
     # TODO: make this cleaner
-    gen = Generator()
-    gen.input = G.distgen_input    
+    gen = Generator(G.distgen_input)
+    #gen = Generator()
+    #gen.input = G.distgen_input    
     
     fingerprint = fingerprint_gpt_with_distgen(G, gen)
     output['fingerprint'] = fingerprint    
