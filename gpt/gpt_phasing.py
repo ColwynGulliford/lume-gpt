@@ -189,6 +189,7 @@ def gpt_phasing(path_to_input_file,
             gamma_test = []
             for phase in phase_test:
 
+
                 gamma = run_gpt_phase(phase, 
                                       path_to_gpt_bin, 
                                       phase_input_text, 
@@ -196,6 +197,8 @@ def gpt_phasing(path_to_input_file,
                                       oncrest_indices[cav_ii], 
                                       debug_flag,
                                       workdir)
+
+                #print(gamma)
 
                 gamma_test.append(gamma)
 
@@ -241,7 +244,7 @@ def gpt_phasing(path_to_input_file,
             phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
             phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
 
-            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag)
+            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
             if (len(gamma_indices) > 0):
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
 
@@ -304,6 +307,8 @@ def run_gpt(path_to_gpt_bin,
             filename, 
             debug_flag,
             workdir):
+
+    #print(path_to_gpt_bin, filename, debug_flag, workdir)
 
     writeinfile(phase_input_text, filename)
 

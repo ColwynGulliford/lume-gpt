@@ -13,6 +13,12 @@ from distgen.physical_constants import qe, c, MC2
 MC2=MC2.magnitude
 c = c.magnitude
 
+from pmd_beamphysics import single_particle
+
+from gpt.tools import DEFAULT_KILL_MSGS 
+from . import tools
+from gpt.gpt_phasing import gpt_phasing
+
 def p2e(p):
     return np.sqrt(p**2 + MC2**2)
 
@@ -455,7 +461,74 @@ def autoscale1_element(t, p, auto_element, verbose=True, workdir=None):
 
 
 
+def phase_gpt(settings,
+              gpt_input_file=None,
+              initial_particles=None,
+              workdir=None, 
+              use_tempdir=True,
+              gpt_bin='$GPT_BIN',
+              timeout=2500,
+              verbose=False,
+              gpt_verbose=False,
+              asci2gdf_bin='$ASCI2GDF_BIN',
+              kill_msgs=DEFAULT_KILL_MSGS,
+              load_fields=False,
+              parse_layout=False):
 
+
+    # Make gpt and generator objects
+    G = GPT(gpt_bin=gpt_bin, 
+            #initial_particles = initial_particles,
+            input_file=gpt_input_file,
+            workdir=workdir, 
+            use_tempdir=use_tempdir,
+            kill_msgs=kill_msgs,
+            load_fields=load_fields,
+            parse_layout=parse_layout)
+
+    G.set_variables(settings)
+
+    G.timeout=timeout
+    G.verbose = verbose
+
+    # Create a new particle group that is the centroid of the initial particles
+    particle_file = tools.full_path(os.path.join(G.path, os.path.basename(G.get_dist_file())))
+    phasing_particle_file = particle_file.replace('.gdf', '.phasing.gdf')
+
+    if(verbose):
+        print('\nAuto Phasing >------\n')
+    t1 = time.time()
+
+    # Create the distribution used for phasing
+    if(verbose):
+        print('****> Creating intiial distribution for phasing...')
+
+    P1 = single_particle(t=initial_particles['t'].mean(),
+                         x=initial_particles['x'].mean(),
+                         y=initial_particles['y'].mean(),
+                         z=initial_particles['z'].mean(),
+                         px=initial_particles['px'].mean(),
+                         py=initial_particles['py'].mean(),
+                         pz=initial_particles['pz'].mean())
+
+    G.initial_particles = P1
+    G.write_initial_particles(fname=phasing_particle_file)
+    G.write_input_file()   # Write the unphased input file
+       
+    phased_file_name, phased_settings = gpt_phasing(G.input_file, 
+                                                    path_to_gpt_bin=G.gpt_bin[:-3], 
+                                                    path_to_phasing_dist=phasing_particle_file, 
+                                                    verbose=verbose)
+
+    G.set_variables(phased_settings)
+    G.initial_particles = initial_particles
+    t2 = time.time()
+
+    if(verbose):
+        print(f'Time Ellapsed: {t2-t1} sec.')
+        print('------< Auto Phasing\n')
+
+    return G, phased_settings
 
 
 
