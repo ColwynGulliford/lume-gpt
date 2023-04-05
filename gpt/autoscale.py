@@ -475,6 +475,8 @@ def phase_gpt(settings,
               load_fields=False,
               parse_layout=False):
 
+    """ FUNCTION FOR PHASING A GPT CLASS OBJECT """
+
 
     # Make gpt and generator objects
     G = GPT(gpt_bin=gpt_bin, 
