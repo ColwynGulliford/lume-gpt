@@ -1,5 +1,5 @@
 # lume-gpt
-Python wrapper for GPT (General Particle Tracer) for use in LUME
+Python wrapper for GPT (General Particle Tracer) for use in LUME.  Using this package requires the user to properly obtain their own copy of GPT with a valid GPT license.  Please see:
 
 [GPT website](http://www.pulsar.nl/gpt/)
 
