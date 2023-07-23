@@ -320,10 +320,10 @@ class Lattice():
             
             for mline in map_lines: 
                 
-                try:
-                    self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
-                except:
-                    print(f'Could no parse: {mline}')
+                #try:
+                self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
+                #except:
+                #    print(f'Could not parse: {mline}')
                     
             #fmap = [self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style) for mline in map_lines]
         
@@ -332,6 +332,8 @@ class Lattice():
     def parse_field_map(self, mline, variables, gpt_file_dir, style=None):
         
         mtype = mline.split('(')[0]
+
+        #print(mtype, gpt_file_dir)
         
         if(mtype not in ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM']):
             print(f'Unknown field map type: {mtype}')
@@ -339,19 +341,22 @@ class Lattice():
         tokens = [t.strip() for t in mline.split(',')]
         tokens[0] = tokens[0].split('(')[1]
         tokens[-1] = tokens[-1].split(')')[0]
+
+        #print(tokens)
         
         fmap_token = [token for token in tokens if('.gdf' in token)][0]
         fmap_token_index = tokens.index(fmap_token)
-        fmap_file = fmap_token[1:-1]
+        fmap_file = os.path.expandvars(fmap_token[1:-1])
         
         fmap_name = os.path.basename(fmap_file).replace('.gdf','')
+
         
         if(not os.path.isabs(fmap_file)):
             
             fmap_file = os.path.abspath(os.path.join(gpt_file_dir, fmap_file))
             
-        #print(fmap_file, mtype) 
-        
+        #print(fmap_file, mtype, fmap_token_index) 
+
         if(fmap_token_index==10 and tokens[0]=='"wcs"'):    
         
             zstr = tokens[3]
@@ -362,7 +367,9 @@ class Lattice():
                 
             else:
                 print('Could not parse z-position for mline')
-                
+
+            #print(zpos)
+
             assert( int(tokens[4])==1 and #xhat = (1, 0, 0)
                int(tokens[5])==0 and 
                int(tokens[6])==0 and 
@@ -371,6 +378,8 @@ class Lattice():
                int(tokens[9])==0) 
             
             ele_name = f'ele_{len(self._elements) + 1}'
+
+            #print(ele_name)
             
             if(mtype=='Map1D_B'):
                 ele = Map1D_B(ele_name, fmap_file, style=style)

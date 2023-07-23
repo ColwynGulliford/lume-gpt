@@ -849,6 +849,8 @@ class Lattice():
 
 
     def parse_field_map(self, mline, variables, gpt_file_dir, style=None):
+
+        print("WORKING")
         
         mtype = mline.split('(')[0]
         
