@@ -1,66 +1,68 @@
-BASIC_TEMPLATE=[
-'setfile("beam", "gpt_particles.gdf");\n', 
-'time=0.0;'
-'\n', 
-'auto_phase=0.0;\n', 
-'space_charge=0.0;\n', 
-'cathode=0.0;\n',
-'space_charge_type=1.0;\n', 
-'RadiusMax=0.04;\n', 
-'GBacc=5.5;\n', 
-'xacc=6.5;\n', 
-'accuracy(GBacc, xacc);\n', 
-'dtmin=1e-16;\n', 
-'dtmax=1e-10;\n', 
-'\n',  
-'Alpha=1.0;\n', 
-'Fn=0.5;\n', 
-'verror=0.005;\n', 
-'Nstd=5.0;\n', 
-'tree_code_theta=1.0;\n', 
-'tree_code_R=1e-06;\n', 
-'if (space_charge == 1) {\n', 
-'\n', 
-'    if (space_charge_type == 1) {\n', 
-'        if(cathode == 1) {\n'
-'            spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n',
-'        } else {\n'
-'            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);\n', 
-'        }' 
-'    }\n', 
-'    if (space_charge_type == 2) {\n', 
-'        setrmacrodist("beam","u",tree_code_R,0) ;\n', 
-'        spacecharge3Dtree(tree_code_theta) ; \n', '    }\n', 
-'}\n', 
-'Ntout=50.0;\n', 
-'tmax=10e-9;\n', 
-'ZSTART=-0.005;\n', 
-'ZSTOP=3;\n',
-'zminmax("wcs", "I", ZSTART, ZSTOP);\n', 
-'\n', 
-'if(Ntout>0) {\n',
-'    tout(time, tmax, tmax/Ntout);\n',
-'}\n' 
-'\n'
-]
+BASIC_TEMPLATE="""
+setfile("beam", "gpt_particles.gdf");
+time=0.0;
 
-ZTRACK1_TEMPLATE=[
-'setfile("beam", "gpt_particles.gdf");\n', 
-'time=0.0;'
-'\n', 
-'RadiusMax=0.04;\n', 
-'GBacc=5.5;\n', 
-'xacc=6.5;\n', 
-'accuracy(GBacc, xacc);\n', 
-'dtmin=1e-16;\n', 
-'dtmax=1e-10;\n', 
-'\n',  
-'tmax=1;\n', 
-'ZSTART=-0.005;\n', 
-'ZSTOP=3;\n',
-'zminmax("wcs", "I", ZSTART, ZSTOP);\n', 
-'\n'
-]
+auto_phase=0.0;
+space_charge=0.0;
+cathode=0.0;
+space_charge_type=1.0;
+RadiusMax=0.04;
+GBacc=5.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=1e-16;
+dtmax=1e-10;
+ 
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+
+    if (space_charge_type == 1) {
+        if(cathode == 1) {
+            spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        } else {
+            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        }
+    }
+    if (space_charge_type == 2) {
+        setrmacrodist("beam","u",tree_code_R,0) ;
+        spacecharge3Dtree(tree_code_theta) ;   }
+        
+    if (space_charge_type == 3) {
+        spacechargeP2Pgpu("3D", "SinglePrecision");
+        }
+}
+Ntout=50.0;
+tmax=10e-9;
+ZSTART=-0.005;
+ZSTOP=3;
+zminmax("wcs", "I", ZSTART, ZSTOP);
+
+if(Ntout>0) {
+    tout(time, tmax, tmax/Ntout);
+}
+""".split('\n')
+
+ZTRACK1_TEMPLATE="""
+setfile("beam", "gpt_particles.gdf");
+time=0.0;
+
+RadiusMax=0.04;
+GBacc=5.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=1e-16;
+dtmax=1e-10;
+ 
+tmax=1;
+ZSTART=-0.005;
+ZSTOP=3;
+zminmax("wcs", "I", ZSTART, ZSTOP);
+""".split('\n')
 
 
 def template(template_type='basic', filename='gpt.temp.in'):
