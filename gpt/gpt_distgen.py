@@ -7,15 +7,20 @@ from .tools import full_path
 from .merit import default_gpt_merit
 
 from distgen import Generator   
-from distgen.writers import write_gpt
+#from distgen.writers import write_gpt
 from distgen.tools import update_nested_dict
 
 from gpt.gpt_phasing import gpt_phasing
+
+from pmd_beamphysics.interfaces.gpt import write_gpt
+from pmd_beamphysics.particles import centroid, join_particle_groups
 
 from h5py import File
 import yaml
 import os
 import time
+
+import numpy as np
 
 
 
@@ -37,19 +42,20 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
     
     return gpt, distgen_input
 
-def centroid(particle_group):
-    good = particle_group.status == 1
-    pg = particle_group[good]
-    data = {key:pg.avg(key) for key in ['x', 'px', 'y', 'py', 'z', 'pz', 't']}
-    data['species'] = pg.species
-    data['weight'] = pg.charge
-    data['status'] = 1
-    return ParticleGroup(data=data)
+#def centroid(particle_group):
+#    good = particle_group.status == 1
+#    pg = particle_group[good]
+#    data = {key:pg.avg(key) for key in ['x', 'px', 'y', 'py', 'z', 'pz', 't']}
+#    data['species'] = pg.species
+#    data['weight'] = pg.charge
+#    data['status'] = 1
+#    return ParticleGroup(data=data)
 
 
 def phase_gpt_with_distgen(settings=None,
                          gpt_input_file=None,
                          distgen_input_file=None,
+                         n_cpu_distgen = 1,
                          workdir=None, 
                          use_tempdir=True,
                          gpt_bin='$GPT_BIN',
@@ -121,7 +127,8 @@ def phase_gpt_with_distgen(settings=None,
     # Attach distgen input. This is non-standard. Used for archiving
     G.distgen_input = gen.input        
 
-    beam = gen.beam()
+    #beam = gen.beam()
+    beam = gen.run(max_workers=n_cpu_distgen)
 
     if(verbose):
         print('------< Distgen\n')
@@ -141,13 +148,16 @@ def phase_gpt_with_distgen(settings=None,
 
     # Create the distribution used for phasing
     if(verbose):
-        print('****> Creating intiial distribution for phasing...')
+        print('****> Creating initial distribution for phasing...')
+        
+    centroid_particle = centroid_wrapper(beam)
+    phasing_beam = join_particle_groups(*[centroid_particle for ii in range(10)])
 
-    phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+    #phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
     write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
     if(verbose):
-        print('<**** Created intiial distribution for phasing.\n')    
+        print('<**** Created initial distribution for phasing.\n')    
 
     G.write_input_file()   # Write the unphased input file
        
@@ -169,6 +179,7 @@ def phase_gpt_with_distgen(settings=None,
 def run_gpt_with_distgen(settings=None,
                          gpt_input_file=None,
                          distgen_input_file=None,
+                         n_cpu_distgen = 1,
                          workdir=None, 
                          use_tempdir=True,
                          gpt_bin='$GPT_BIN',
@@ -255,8 +266,9 @@ def run_gpt_with_distgen(settings=None,
     # Attach distgen input. This is non-standard. Used for archiving
     G.distgen_input = gen.input        
 
-    beam = gen.beam()
-
+    #beam = gen.beam()
+    beam = gen.run()
+    
     if(verbose):
         print('------< Distgen\n')
 
@@ -285,13 +297,16 @@ def run_gpt_with_distgen(settings=None,
 
         # Create the distribution used for phasing
         if(verbose):
-            print('****> Creating intiial distribution for phasing...')
+            print('****> Creating initial distribution for phasing...')
+                   
+        centroid_particle = centroid_wrapper(beam)
+        phasing_beam = join_particle_groups(*[centroid_particle for ii in range(10)])
 
-        phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
+        #phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
         write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
         if(verbose):
-            print('<**** Created intiial distribution for phasing.\n')    
+            print('<**** Created initial distribution for phasing.\n')    
 
         G.write_input_file()   # Write the unphased input file
        
@@ -379,11 +394,14 @@ def evaluate_gpt_with_distgen(settings,
         
     return output
 
+"""
 def get_distgen_beam_for_phasing(beam, n_particle=10, verbose=False):
 
     variables = ['x', 'y', 'z','px', 'py', 'pz', 't']
+    #units = 
 
-    transforms = { f'avg_{var}':{'type': f'set_avg {var}', f'avg_{var}': { 'value': beam.avg(var).magnitude, 'units':  str(beam.avg(var).units)  } } for var in variables }
+    transforms = { f'avg_{var}':{'type': f'set_avg {var}', 
+                   f'avg_{var}': { 'value': beam.avg(var).magnitude, 'units':  str(beam.avg(var).units)  } } for var in variables }
     #for var in variables:
     #  
     #    avg_var = beam.avg(var)
@@ -395,10 +413,11 @@ def get_distgen_beam_for_phasing(beam, n_particle=10, verbose=False):
                              'start': {'type':'time', 'tstart':{'value': 0.0, 'units': 's'}},}
     
     gen = Generator(phasing_distgen_input, verbose=verbose) 
-    pbeam = gen.beam()
+    #pbeam = gen.beam()
+    pbeam = gen.run()
 
     return pbeam
-
+"""
 
 def fingerprint_gpt_with_distgen(gpt_object, distgen_object):
     """
@@ -434,3 +453,18 @@ def archive_gpt_with_distgen(gpt_object,
     gpt_object.archive(g)
     
     h5.close()
+    
+    
+def centroid_wrapper(particle_group):
+    """
+    Convenience function to return a single particle representing
+    the average of all coordinates. Only considers live particles.
+    
+    """
+    #print(particle_group)
+    particle_group.status = np.full(len(particle_group), 1)
+    
+    centroid_particle = centroid(particle_group)
+    centroid_particle.status = [0]
+    
+    return centroid_particle

@@ -16,12 +16,12 @@ from pmd_beamphysics import ParticleGroup
 
 from gpt.lattice import Lattice
 
+from copy import deepcopy
 import h5py
+import numpy as np
 import os
 import tempfile
 from time import time
-import numpy as np
-from copy import deepcopy
 
 c = 299792458
 
@@ -57,7 +57,8 @@ class GPT:
                  ref_ccs=False,
                  kill_msgs=DEFAULT_KILL_MSGS,
                  load_fields=False,
-                 parse_layout=True):
+                 parse_layout=True,
+                 n_cpu=1):
 
         # Save init
         self.original_input_file = input_file
@@ -91,6 +92,8 @@ class GPT:
         self.load_fields=load_fields
         
         self.parse_layout=parse_layout
+        
+        self.n_cpu = n_cpu
         
 
         # Call configure
@@ -352,7 +355,7 @@ class GPT:
         else:
             outfile = tokens[0]+'.out.gdf'
         
-        runscript = [self.gpt_bin, '-j1', '-v', '-o', self.get_gpt_output_file(), self.input_file]
+        runscript = [self.gpt_bin, f'-j{self.n_cpu}', '-v', '-o', self.get_gpt_output_file(), self.input_file]
             
         if write_to_path:
             with open(os.path.join(self.path, 'run'), 'w') as f:
