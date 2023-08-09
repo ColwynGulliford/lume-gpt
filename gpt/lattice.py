@@ -19,6 +19,8 @@ from matplotlib import pyplot as plt
 import os
 import copy
 
+import tempfile
+
 class Lattice():
 
     def __init__(self, name, s=0, origin=[0,0,0], angles=[0,0,0]):
@@ -31,6 +33,8 @@ class Lattice():
 
         self._elements.append(Beg(s, origin, angles))
         self._bends.append(Beg(s, origin, angles))
+        
+        self.template_dir = None
 
     #def get_element_ds(self, ds, ref_origin, p_beg_ref, p_end_ref, element_origin, element_length):
 
@@ -232,7 +236,13 @@ class Lattice():
     def __add__(self, lattice):
         return self.combine(lattice)
 
-    def write_gpt_lines(self, template_file=None, output_file=None, slices=None, legacy_phasing=False):
+    def write_gpt_lines(self, 
+                        template_file=None, 
+                        output_file=None, 
+                        slices=None, 
+                        legacy_phasing=False,
+                        use_element_name_for_gdf_files=False
+                       ):
 
         file_lines = []
         element_lines = []
@@ -252,11 +262,18 @@ class Lattice():
         for element in elements:
             if(not is_bend(element)):
                 element_lines.append(f'\n# {element.name}\n')
-                for line in element.gpt_lines():
+                
+                if(hasattr(element, 'source_data_file') and use_element_name_for_gdf_files):
+                    new_ele_lines = element.gpt_lines(gdf_file=f'{element.name}.gdf')
+                else:
+                    new_ele_lines = element.gpt_lines()
+                
+                for line in new_ele_lines:
                     element_lines.append(line+'\n')
 
         if(template_file is None):
-            file_lines = BASIC_TEMPLATE
+            #print('load basic template')
+            file_lines = [line+'\n' for line in BASIC_TEMPLATE]
 
         else:
 
@@ -400,7 +417,42 @@ class Lattice():
                 ele_origin = 'center'
                 
             self.add(ele, ds=zpos, ref_element='beg', element_origin=ele_origin)
+            
+            
+    def create_template_dir(self, 
+                            template_dir=None, 
+                            template_file=None, 
+                            output_file=None, 
+                            slices=None, 
+                            legacy_phasing=False):
+        
+        if(template_dir==None):
+            self.template_dir = tempfile.TemporaryDirectory()
+            template_dir_str = str(self.template_dir.name)          
+        else:
+            self.template_dir = template_dir
+            template_dir_str = template_dir
                 
+        if(output_file is None):
+            output_file = f'{template_dir_str}/gpt.in'
+        
+        lines = self.write_gpt_lines(template_file=template_file, 
+                                     output_file=output_file,
+                                     slices=slices,
+                                     legacy_phasing=legacy_phasing,
+                                     use_element_name_for_gdf_files=True
+                                    )
+        
+        for ele in self._elements:
+            
+            if(hasattr(ele, 'source_data_file')):
+                
+                gdf_file = os.path.join(template_dir_str, ele.name+'.gdf')
+                ele.write_gdf(gdf_file)
+
+        return template_dir, output_file
+            
+
                
         
         

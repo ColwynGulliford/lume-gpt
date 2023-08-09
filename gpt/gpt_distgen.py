@@ -341,8 +341,8 @@ def evaluate_gpt_with_distgen(settings,
              verbose=False,
              gpt_verbose=False,
              asci2gdf_bin='$ASCI2GDF_BIN',
-             kill_msgs=DEFAULT_KILL_MSGS
-             ):    
+             kill_msgs=DEFAULT_KILL_MSGS,
+             parse_layout=False):    
     """
     Simple evaluate GPT.
     
@@ -363,7 +363,9 @@ def evaluate_gpt_with_distgen(settings,
                              verbose=verbose,
                              gpt_verbose=gpt_verbose,
                              asci2gdf_bin=asci2gdf_bin,
-                             kill_msgs=kill_msgs)
+                             kill_msgs=kill_msgs,
+                             parse_layout=parse_layout
+                            )
     
     if merit_f:
         merit_f = tools.get_function(merit_f)

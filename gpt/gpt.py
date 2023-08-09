@@ -14,6 +14,8 @@ from pmd_beamphysics.particles import single_particle
 from pmd_beamphysics import ParticleGroup
 #from pmd_beamphysics.interfaces import write_gpt
 
+from gpt.gpt_tao import gpt_from_tao
+
 from gpt.lattice import Lattice
 
 from copy import deepcopy
@@ -702,6 +704,9 @@ class GPT:
 
     def auto_phase(self):
         phase_gpt(self)
+        
+    def gpt_from_tao(self, tao, cls=None, workdir=None, use_tempdir=False):
+        gpt_from_tao(tao, gpt_object=self, cls=cls, workdir=workdir, use_tempdir=use_tempdir)
 
 def phase_gpt(G):
 
@@ -839,6 +844,8 @@ def run_gpt(settings=None,
     G.run(gpt_verbose=gpt_verbose)
     
     return G
+
+    
 
 
 def track1_to_z(gpt_object, 

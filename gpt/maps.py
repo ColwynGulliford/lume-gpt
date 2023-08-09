@@ -16,7 +16,7 @@ from gpt.template import ztrack1_template
 
 from matplotlib import pyplot as plt
 
-from pmd_beamphysics import single_particle
+from pmd_beamphysics import single_particle, FieldMesh
 
 from scipy.optimize import brent
 import scipy.constants
@@ -93,16 +93,28 @@ class GDFFieldMap(Element):
 
         self.source_data_file = tools.full_path(source_data_file)
         assert os.path.exists(self.source_data_file), f'Source GDF file {self.source_data_file} does not exist.' 
-        #self.source_data_file = os.path.abspath(source_data_file)
-
+        
+        remove_temp_gdf = False
+        
+        # If *.h5 file, load via FieldMesh, write a temporary GDF file and then load that
+        if(source_data_file.endswith('.h5')):
+            
+            remove_temp_gdf = True
+            
+            FM = FieldMesh(source_data_file)
+            temp_gdf_file = tempfile.NamedTemporaryFile().name + '.gdf'
+            FM.write_gpt(temp_gdf_file, asci2gdf_bin='$ASCI2GDF_BIN', verbose=False)
+            
+            self.source_data_file = temp_gdf_file            
+          
         if(use_temp_file):
             temp_ascii_file = tempfile.NamedTemporaryFile().name + '.txt'
         else:
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
 
         cmd = f'{gdf2a_bin} -o {temp_ascii_file} "{self.source_data_file}"' 
+        
         subprocess.run(cmd, shell=True)
-
 
         with open(temp_ascii_file, 'r') as fp:
             for i, line in enumerate(fp):
@@ -116,6 +128,10 @@ class GDFFieldMap(Element):
         ndata = np.loadtxt(temp_ascii_file, skiprows=n_header)
 
         os.remove(temp_ascii_file)
+        
+        if(remove_temp_gdf):
+            os.remove(temp_gdf_file)
+            
 
         self.coordinates = [name for name in column_names if(name.lower() in ['r', 'x', 'y', 'z'])]
         self.field_components = [name for name in column_names if(name.lower() not in ['r', 'x', 'y', 'z'])]
@@ -845,11 +861,11 @@ class Map25D_TM(Map2D):
     def scale(self):
         return self._scale
 
-    def gpt_lines(self, oncrest_phase=None, relative_phase=None):
+    def gpt_lines(self, oncrest_phase=None, relative_phase=None, gdf_file=None):
 
         name = self.name
 
-        base_lines = super().gpt_lines(e1=self._e1, e2=self._e2)
+        base_lines = super().gpt_lines(e1=self._e1, e2=self._e2, gdf_file=gdf_file)
         extra_lines = base_lines[:-1]
         map_line = base_lines[-1].replace(');','')
 
