@@ -22,14 +22,20 @@ from gpt.element import Element
 from gpt.element import Quad
 from gpt.element import Beg
 
-from gpt import GPT
+#from . import GPT
 
 import tempfile
 
 from pmd_beamphysics import single_particle
 
+from scipy.constants import physical_constants
+mu0 = physical_constants['mag. constant'][0]
+#c = physical_constants['c'][0]
 
-c = 299792458  # Speed of light 
+from scipy.constants import c
+
+from scipy import integrate 
+from scipy import optimize
 
 class Sectormagnet(SectorBend):
 
@@ -350,7 +356,7 @@ class Sectormagnet(SectorBend):
 
         else:
             print('No fringe specified, skipping plot.')
-
+    """
     def track_ref(self, t0=0, p0=1e-15, xacc=6.5, GBacc=5.5, dtmin=1e-14, dtmax=1e-8, Ntout=100, workdir=None):
 
         dz_ccs_beg = np.linalg.norm( self.p_beg - self._ccs_beg_origin )
@@ -441,7 +447,7 @@ class Sectormagnet(SectorBend):
                 print(f'   angle error = {angle_err*1e6} urad.')
 
             return G
-
+    """
 
     def plot_field_profile(self, ax=None, normalize=False):
 
@@ -741,6 +747,304 @@ class QuadF(Quad):
     @property
     def d2Gdz2(self):
         return self.d2grad_dz2()
+    
+    
+    
+class Bzsolenoid(Element):
+    
+    def __init__(self, name, L, R, nI, Lbound=None):
+        
+        if(Lbound is None):
+            Lbound = L
+        
+        super().__init__(name, length=Lbound, width=4*R, height=0, angles=[0,0,0], color='k')
+        
+        self._L = L
+        self._R = R
+        self._nI = nI
+    
+    @property
+    def L(self):
+        return self._L
+    
+    @L.setter
+    def L(self, L):
+        self._L = L
+    
+    @property
+    def R(self):
+        return self._R
+    
+    @R.setter
+    def R(self, R):
+        self._R = R
+    
+    @property
+    def nI(self):
+        return self._nI
+    
+    def plot_Bz(self, ax=None):
+        
+        zpts = np.linspace(-3*self.L, 3*self.L, 1000)
+        
+        if(ax is None):
+            ax = plt.gca()
+            
+        ax.plot(zpts, self.Bz(zpts)) 
+        ax.set_xlabel('z (m)')
+        ax.set_ylabel('$B_z(r=0)$ (T)')
+            
+    def Bz(self, z, r=0):
+        
+        if(isinstance(z, np.ndarray)):
+        
+            Bz = np.zeros(z.shape)
+
+            is_inf = np.isinf(z)
+            not_inf = ~is_inf
+
+            zp = z[not_inf] + self.L/2
+            zm = z[not_inf] - self.L/2
+
+            Tzp = zp / np.sqrt(zp**2 + self.R**2)
+            Tzm = zm / np.sqrt(zm**2 + self.R**2)
+
+            Bz[not_inf] = 0.5*mu0*self.nI*(Tzp - Tzm)
+            
+        else:
+            
+            if(np.isinf(z)): return 0.0
+            
+            zp = z + self.L/2
+            zm = z - self.L/2
+            
+            Tzp = zp / np.sqrt(zp**2 + self.R**2)
+            Tzm = zm / np.sqrt(zm**2 + self.R**2)
+
+            Bz = 0.5*mu0*self.nI*(Tzp - Tzm)
+        
+        return Bz
+    
+    def Bz2(self, z, r=0):
+        return self.Bz(z, r=r)**2
+        
+        
+    def Br(self, z, r):
+        
+        zp = z + self.L/2
+        zm = z - self.L/2
+        
+        Trp = 1 / np.power(zp**2 + self.R**2, 3/2)
+        Trm = 1 / np.power(zm**2 + self.R**2, 3/2)
+        
+        Br = -(r/4)*mu0*self.nI*self.R**2*(Trp-Trm)
+        
+        return Br
+        
+    
+    def int_Bzdz(self, zmin=None, zmax=None):
+        
+        if(zmin is None):
+            zmin = -np.inf
+        
+        if(zmax is None):
+            zmax = +np.inf
+        
+        return integrate.quad(self.Bz, zmin, zmax)[0] 
+    
+    @property
+    def intBzdz(self):
+        return self.int_Bzdz()
+    
+    def int_Bz2dz(self, zmin=None, zmax=None):
+        
+        if(zmin is None):
+            zmin = -np.inf
+        
+        if(zmax is None):
+            zmax = +np.inf
+            
+        return integrate.quad(self.Bz2, zmin, zmax)[0] 
+    
+    @property
+    def intBz2dz(self):
+        return self.int_Bz2dz()
+    
+    @property
+    def L_hard_edge(self):
+        return self.intBzdz**2 / self.intBz2dz
+        
+    @property
+    def Bzmax(self):
+        return np.abs(self.Bz(0))
+    
+    @property
+    def B0(self):
+        return self.Bz(0)
+    
+    
+    @Bzmax.setter
+    def Bzmax(self, B):
+        self._nI = (B/self.Bzmax)*self.nI
+        
+    @B0.setter
+    def B0(self, B):
+        self._nI = (B/self.B0)*self.nI
+        
+        
+    def fit_hard_edge_model(self, BHE, LHE, R=None):
+        
+        s = np.sign(BHE)
+        BHE = np.abs(BHE)
+        
+        BLHE, B2LHE = BHE*LHE, BHE**2 * LHE
+        
+        def chi2(alpha):
+            
+            B, L = alpha[0], np.abs(alpha[1])
+            
+            self.L = L
+            self.Bzmax = B
+            
+            if(R is not None):
+                self.R = R
+            
+            res = np.array([(self.intBzdz - BLHE)/BLHE, (self.intBz2dz-B2LHE)/B2LHE])
+            
+            return np.sum(res**2)
+        
+        
+        res = optimize.minimize(chi2, [BHE, LHE])
+        
+        self.Bzmax = res['x'][0]
+        self.L = res['x'][1]
+        
+        return res
+    
+    
+    def gpt_lines(self, ccs=None):
+
+        lines = []
+
+        name = self.name
+  
+        lines.append(f'\n#***********************************************')
+        lines.append(f'#               Bzsolenoid: {self.name}         ')
+        lines.append(f'#***********************************************')
+        
+        lines.append(f'{name}_R = {self._R};')
+        lines.append(f'{name}_L = {self.L};')
+        lines.append(f'{name}_bs_field = {self.B0};')
+        lines.append(f'{name}_mu0 = {mu0};')
+        lines.append(f'{name}_nI = {name}_bs_field/{name}_mu0;')      
+        lines.append(f'{name}_x = 0;') 
+        lines.append(f'{name}_y = 0;')
+        
+        ds = np.linalg.norm( 0.5*(self.p_end + self.p_beg) - self._ccs_beg_origin) 
+        
+        lines.append(f'{name}_z = {ds};') 
+
+        lines.append(f'\nbzsolenoid("{self.ccs_beg}", {name}_x, {name}_y, {name}_z, 1, 0, 0, 0, 1, 0, {name}_R, {name}_L, {name}_nI);')
+        
+        return lines
+                         
+                         
+    def fit_to_1d_map(self, z, Bz, set_results=True):
+        
+        intBzdz = np.trapz(Bz, z)
+        intBz2dz = np.trapz(Bz**2, z)
+        
+        Leff = intBz2dz/intBzdz
+        B = Bz[np.argmax(np.abs(Bz))]
+        guess = [Leff,  0.1]
+        
+        def chi2(z, *alpha):
+            
+            L, R = np.abs(alpha)
+            
+            fsol = Bzsolenoid('fitsol', L, R, 1)
+            fsol.Bzmax = B
+            
+            return fsol.Bz(z)
+            
+            
+        
+        popt, pcov = optimize.curve_fit(chi2, z, Bz, guess)
+        
+        if(set_results):
+            self.L = popt[0]
+            self.R = popt[1]
+            self.Bzmax = B
+            
+            
+    def z_cutoff(self, f):
+        
+        Bf = f*self.Bzmax
+        
+        res = optimize.brentq(lambda z: self.Bz(z) - Bf, 0, 100*self.L, maxiter=1000)
+        
+        return res
+    
+    def plot_floor(self, ax = None, axis=None, alpha=1, xlim=None, ylim=None, style=None):
+        
+        if(ax is None):
+            ax = plt.gca()
+        
+        p1 = self.p_beg + (self._width/2)*cvector(self._M_beg[:,0])
+        p2 = self.p_beg - (self._width/2)*cvector(self._M_beg[:,0])
+        p3 = self.p_end + (self._width/2)*cvector(self._M_end[:,0])
+        p4 = self.p_end - (self._width/2)*cvector(self._M_end[:,0])
+
+        ps = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
+        
+        ax.plot(ps[2], ps[0], self.color, alpha=0.1)
+        ax.plot(ps[2], ps[0], self.color, alpha=0.1)
+        
+        dp = self.L*self.e3_beg
+        
+        pc = 0.5*(self.p_end + self.p_beg)
+        
+        p1 = pc + (self.R)*cvector(self._M_beg[:,0]) - 0.5*dp
+        p2 = pc - (self.R)*cvector(self._M_beg[:,0]) - 0.5*dp
+        p3 = pc + (self.R)*cvector(self._M_end[:,0]) + 0.5*dp
+        p4 = pc - (self.R)*cvector(self._M_end[:,0]) + 0.5*dp
+        
+        ps = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
+        
+        ax.plot(ps[2], ps[0], self.color, alpha=0.5)
+        ax.plot(ps[2], ps[0], self.color, alpha=0.5)
+
+        
+        #ax.plot([p1o[2], p3o[2]], [p1o[0], p3o[0]], self.color, alpha=alpha)
+        #ax.plot([p2o[2], p4o[2]], [p2o[0], p4o[0]], self.color, alpha=alpha)
+    #p0 = (zL-element.z0[0])*element.e3_beg + element.p_beg + p00
+
+    #p1 = p0 + (element._width/2)*element.e1_beg 
+    #p2 = p1 + effective_plot_length*element.e3_beg
+    #p3 = p2 - (element._width)*element.e1_beg
+    #p4 = p3 - effective_plot_length*element.e3_beg
+
+    #ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
+
+        
+        
+        
+        
+                         
+    
+                         
+
+                         
+
+    
+   
+        
+        
+        
+        
+    
+        
+        
 
 
 

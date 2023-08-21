@@ -1059,7 +1059,6 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
 
     f = 0.01
 
-
     zs = element.z0
     p00 = np.array([[0],[0],[0]])
     if(hasattr(element, '_e1') and hasattr(element, '_e2')):

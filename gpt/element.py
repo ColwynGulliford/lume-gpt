@@ -406,7 +406,7 @@ class Quad(Element):
         width=0.2, 
         height=0, 
         n_screens=2,
-        angles=[0,0,0],
+        angles=[0, 0, 0],
         color='b'):
 
         self._type = 'Quad'

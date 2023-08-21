@@ -4,8 +4,14 @@ from pmd_beamphysics import FieldMesh
 from pmd_beamphysics.fields.analysis import accelerating_voltage_and_phase
 
 #from . import GPT
+from .element import Quad
+from .bstatic import Sectormagnet, Bzsolenoid
 from .maps import Map2D_B, Map2D_E, Map25D_TM
 from .lattice import Lattice
+
+from scipy.constants import physical_constants
+
+MC2 = physical_constants['electron mass energy equivalent in MeV'][0]*1e6
 
 from pprint import pprint
 
@@ -50,7 +56,12 @@ def ele_info(tao, ele_id):
     edat = tao.ele_head(ele_id)
     edat.update(tao.ele_gen_attribs(ele_id))
     s = edat['s']
-    L = edat['L']
+    
+    if('L' in edat):
+        L = edat['L']
+    else:
+        L=0
+        
     edat['s_begin'] = s-L
     edat['s_center'] = (s + edat['s_begin'])/2    
     
@@ -162,34 +173,107 @@ def pack_fieldmap(ele_id, tao):
         raise NotImplementedError
     
     return info
+
+
+def pack_bend(ele_id, tao):
+
+    edat = ele_info(tao, ele_id)
+    gpt_name = edat['name'].replace('.', '_')
+    
+    gen_attrs = tao.ele_gen_attribs(ele_id)
+    
+    R = 1/np.abs(gen_attrs['G'])
+    L = gen_attrs['L']
+    theta = -(180/np.pi)*np.sign(gen_attrs['G'])*L/R
+    e1 = -(180/np.pi)*gen_attrs['E1']
+    e2 = +(180/np.pi)*gen_attrs['E2']
+    p = np.sqrt(gen_attrs['E_TOT']**2 - MC2)
+    
+    s_beg = edat['s_begin']
+    s_end = edat['s']
+    
+    return gpt_name, R, theta, p, e1, e2, s_beg, s_end
+
+
+def pack_bmad_softedge_solenoid(ele_id, tao):
+    
+    edat = ele_info(tao, ele_id)
+    gpt_name = edat['name'].replace('.', '_')
+    
+    gen_attrs = tao.ele_gen_attribs(ele_id)
+    s_beg = edat['s_start']
+    
+    return gpt_name, gen_attrs['L_SOFT_EDGE'], gen_attrs['L'], gen_attrs['R_SOLENOID'], gen_attrs['BS_FIELD'], s_beg
+    
+
+def is_grid_field(ele_id, tao):
+    
+    try:
+        tao.ele_grid_field(ele_id, 1, 'base', as_dict=False)
+        return True
+    except:
+        return False
+    
     
 def tao_create_gpt_lattice_def(tao,
                                solrf_eles=['E_Gun', 'Solenoid', 'Lcavity'], 
                                marker_eles = [], #'MARKER::*',
-                               quadrupole_eles = [], # 'quad::*' Quads not implented
-                               bend_eles = [] # Bends not implemented
+                               quadrupole_eles = 'quad', # Quads not implented
+                               bend_eles = ['Sbend'] # Bends not implemented
                               ):
     
     # Get unique name dict
     unique_name = tao_unique_names(tao)
 
     # Extract elements to use
-    all_eles_wild_card_str = '::*,'.join(solrf_eles) + '::*' # + ',' + marker_eles                           
+    all_eles_wild_card_str = '::*,'.join(solrf_eles) + '::*,' + '::*,'.join(bend_eles)+'::*'
+    
+    #print(all_eles_wild_card_str)
                             
-    ele_ixs = tao.lat_list(all_eles_wild_card_str, 'ele.ix_ele', flags='-array_out -no_slaves')
+    ele_ixs = tao.lat_list('*', 'ele.ix_ele', flags='-array_out -no_slaves')
     
     lat = Lattice('tao2gpt-lat')
+
+    last_bend_name = 'beg'
+    last_bend_s = 0
     
     for ii, ele_ix in enumerate(ele_ixs):
         
         ele_inf = ele_info(tao, ele_ix)
         
-        if(ele_inf['key'] in solrf_eles):       
+        #print(ele_ix, ele_inf['key'])
+        
+        if(ele_inf['key'] in solrf_eles and is_grid_field(ele_ix, tao)):       
 
             # Extract additional parameters required from Tao to define the map for GPT
             ele_inf = {**ele_inf, **pack_fieldmap(ele_ix, tao)}
 
-        lat.add( ele_inf['gpt_element'], ds = ele_inf['z_edge'], element_origin='beg', ref_element='beg')
+            lat.add( ele_inf['gpt_element'], ds = ele_inf['z_edge'] - last_bend_s, element_origin='beg', ref_element=last_bend_name)
+            
+        elif(ele_inf['key'] == 'Solenoid'):   
+            
+            gpt_name, LSE, L, R, B, s_beg = pack_bmad_softedge_solenoid(ele_ix, tao)
+            
+            if(LSE==0):
+                LSE = L
+            
+            S = Bzsolenoid(gpt_name, LSE, R, 1, L)
+            S.Bzmax = B
+            #S.fit_hard_edge_model(B, L)
+            
+            lat.add(S, ds=s_beg - last_bend_s, ref_element=last_bend_name, element_origin='beg')
+
+            
+        elif(ele_inf['key'] in bend_eles):
+            
+            gpt_name, R, theta, p, e1, e2, s_beg, s_end = pack_bend(ele_ix, tao)
+            lat.add(Sectormagnet(gpt_name, R, theta, p, phi_in=e1, phi_out=e2), ds=s_beg - last_bend_s, ref_element=last_bend_name)
+
+            last_bend_s = s_end
+            last_bend_name = gpt_name
+            
+            
+            
          
     return lat
 
@@ -222,6 +306,10 @@ def gpt_from_tao(tao, gpt_object=None, cls=None, workdir=None, use_tempdir=False
     gpt_object.set_variable('tmax', tmax)
     
     return gpt_object
+
+
+
+
     
     
 
