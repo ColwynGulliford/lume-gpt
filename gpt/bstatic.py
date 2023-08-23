@@ -793,6 +793,8 @@ class Bzsolenoid(Element):
         ax.plot(zpts, self.Bz(zpts)) 
         ax.set_xlabel('z (m)')
         ax.set_ylabel('$B_z(r=0)$ (T)')
+        
+        ax.plot(0, mu0*(self.L/2)/np.sqrt( (self.L/2)**2 + self.R**2 )*self.nI, '.')
             
     def Bz(self, z, r=0):
         
@@ -875,17 +877,24 @@ class Bzsolenoid(Element):
         return self.intBzdz**2 / self.intBz2dz
         
     @property
-    def Bzmax(self):
+    def max_abs_Bz(self):
         return np.abs(self.Bz(0))
     
     @property
     def B0(self):
         return self.Bz(0)
     
+    @property
+    def bs_field(self):
+        return mu0*self.nI
     
-    @Bzmax.setter
-    def Bzmax(self, B):
-        self._nI = (B/self.Bzmax)*self.nI
+    @bs_field.setter
+    def bs_field(self, bsf):
+        self._nI = bsf/mu0
+   
+    @max_abs_Bz.setter
+    def max_abs_Bz(self, B):
+        self._nI = (np.abs(B)/self.max_abs_Bz)*self.nI
         
     @B0.setter
     def B0(self, B):
@@ -904,7 +913,7 @@ class Bzsolenoid(Element):
             B, L = alpha[0], np.abs(alpha[1])
             
             self.L = L
-            self.Bzmax = B
+            self.B0 = B
             
             if(R is not None):
                 self.R = R
@@ -934,7 +943,7 @@ class Bzsolenoid(Element):
         
         lines.append(f'{name}_R = {self._R};')
         lines.append(f'{name}_L = {self.L};')
-        lines.append(f'{name}_bs_field = {self.B0};')
+        lines.append(f'{name}_bs_field = {self.bs_field};')
         lines.append(f'{name}_mu0 = {mu0};')
         lines.append(f'{name}_nI = {name}_bs_field/{name}_mu0;')      
         lines.append(f'{name}_x = 0;') 
@@ -963,7 +972,7 @@ class Bzsolenoid(Element):
             L, R = np.abs(alpha)
             
             fsol = Bzsolenoid('fitsol', L, R, 1)
-            fsol.Bzmax = B
+            fsol.B0 = B
             
             return fsol.Bz(z)
             
@@ -974,7 +983,7 @@ class Bzsolenoid(Element):
         if(set_results):
             self.L = popt[0]
             self.R = popt[1]
-            self.Bzmax = B
+            self.B0 = B
             
             
     def z_cutoff(self, f):
