@@ -255,12 +255,16 @@ def tao_create_gpt_lattice_def(tao,
             gpt_name, LSE, L, R, B, s_beg = pack_bmad_softedge_solenoid(ele_ix, tao)
             
             if(LSE==0):
+                print('Soft edge length was set to zero')
                 LSE = L
             
             S = Bzsolenoid(gpt_name, LSE, R, 1, L)
-            f = (LSE/2) / np.sqrt( (LSE/2)**2 + R**2 )
             S.bs_field = B
-            #S.fit_hard_edge_model(B, L)
+            
+            if(R==0):
+                print('Fitting an effective soft-edge model to Bmad hard edge solenoid.') 
+                S.R = 1e-2*L
+                S.fit_hard_edge_model(B, L)
             
             lat.add(S, ds=s_beg - last_bend_s, ref_element=last_bend_name, element_origin='beg')
 

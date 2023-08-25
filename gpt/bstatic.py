@@ -756,8 +756,13 @@ class Bzsolenoid(Element):
         
         if(Lbound is None):
             Lbound = L
+            
+        if(R==0):
+            width = 0.1
+        else:
+            width = 2*R
         
-        super().__init__(name, length=Lbound, width=4*R, height=0, angles=[0,0,0], color='k')
+        super().__init__(name, length=Lbound, width=width, height=0, angles=[0,0,0], color='k')
         
         self._L = L
         self._R = R
@@ -925,7 +930,7 @@ class Bzsolenoid(Element):
         
         res = optimize.minimize(chi2, [BHE, LHE])
         
-        self.Bzmax = res['x'][0]
+        self.B0 = s*res['x'][0]
         self.L = res['x'][1]
         
         return res
