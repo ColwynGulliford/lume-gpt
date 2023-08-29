@@ -705,8 +705,16 @@ class GPT:
     def auto_phase(self):
         phase_gpt(self)
         
+    @classmethod
+    def from_tao(cls, tao, workdir=None, use_tempdir=True):
+        """
+        Class method to return an GPT object a PyTao object
+        """        
+        c = cls()
+        return gpt_from_tao(c, tao, workdir=workdir, use_tempdir=use_tempdir)    
+        
     def gpt_from_tao(self, tao, cls=None, workdir=None, use_tempdir=False):
-        gpt_from_tao(tao, gpt_object=self, cls=cls, workdir=workdir, use_tempdir=use_tempdir)
+        
 
 def phase_gpt(G):
 
