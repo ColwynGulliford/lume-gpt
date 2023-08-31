@@ -290,7 +290,7 @@ def tao_create_gpt_lattice_def(tao,
          
     return lat
 
-def gpt_from_tao(tao, gpt_object=None, cls=None, workdir=None, use_tempdir=False):
+def gpt_from_tao(gpt_object, tao, workdir=None, use_tempdir=True):
     
     """
     Create a complete GPT object from a running Pytao Tao instance.
