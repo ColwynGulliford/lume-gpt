@@ -4,7 +4,7 @@ from pmd_beamphysics import FieldMesh
 from pmd_beamphysics.fields.analysis import accelerating_voltage_and_phase
 
 #from . import GPT
-from .element import Quad
+from .element import Quad, Screen
 from .bstatic import Sectormagnet, Bzsolenoid
 from .maps import Map2D_B, Map2D_E, Map25D_TM
 from .lattice import Lattice
@@ -217,16 +217,20 @@ def is_grid_field(ele_id, tao):
     
 def tao_create_gpt_lattice_def(tao,
                                solrf_eles=['E_Gun', 'Solenoid', 'Lcavity'], 
-                               marker_eles = [], #'MARKER::*',
-                               quadrupole_eles = 'quad', # Quads not implented
+                               marker_eles = ['Marker'], #'MARKER::*',
+                               quadrupole_eles = ['quad'], # Quads not implented
                                bend_eles = ['Sbend'] # Bends not implemented
                               ):
     
     # Get unique name dict
     unique_name = tao_unique_names(tao)
+    
+    
+    
+    
 
     # Extract elements to use
-    all_eles_wild_card_str = '::*,'.join(solrf_eles) + '::*,' + '::*,'.join(bend_eles)+'::*'
+    all_eles_wild_card_str = '::*,'.join(solrf_eles) + '::*,' + '::*,'.join(marker_eles) + '::*,'.join(bend_eles)+'::*'
     
     #print(all_eles_wild_card_str)
                             
@@ -240,8 +244,6 @@ def tao_create_gpt_lattice_def(tao,
     for ii, ele_ix in enumerate(ele_ixs):
         
         ele_inf = ele_info(tao, ele_ix)
-        
-        #print(ele_ix, ele_inf['key'])
         
         if(ele_inf['key'] in solrf_eles and is_grid_field(ele_ix, tao)):       
 
@@ -276,6 +278,12 @@ def tao_create_gpt_lattice_def(tao,
 
             last_bend_s = s_end
             last_bend_name = gpt_name
+            
+        elif(ele_inf['key'] == 'Marker'):
+            gpt_name = ele_inf['name'].replace('.', '_')
+            lat.add(Screen(gpt_name), ds=ele_inf['s'] - last_bend_s, ref_element=last_bend_name)
+            
+            
             
             
             

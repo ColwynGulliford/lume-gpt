@@ -908,9 +908,9 @@ class Bzsolenoid(Element):
         
     def fit_hard_edge_model(self, BHE, LHE, R=None):
         
-        s = np.sign(BHE)
-        BHE = np.abs(BHE)
-        
+        if(LHE<0):
+            raise ValueError('Hardedge Solenoid length must be positive')
+
         BLHE, B2LHE = BHE*LHE, BHE**2 * LHE
         
         def chi2(alpha):
@@ -928,9 +928,11 @@ class Bzsolenoid(Element):
             return np.sum(res**2)
         
         
-        res = optimize.minimize(chi2, [BHE, LHE])
+        bounds = ( (None, None), (0, None) )
         
-        self.B0 = s*res['x'][0]
+        res = optimize.minimize(chi2, [BHE, LHE], bounds = bounds)
+        
+        self.B0 = res['x'][0]
         self.L = res['x'][1]
         
         return res
@@ -979,8 +981,7 @@ class Bzsolenoid(Element):
             fsol = Bzsolenoid('fitsol', L, R, 1)
             fsol.B0 = B
             
-            return fsol.Bz(z)
-            
+            return fsol.Bz(z) 
             
         
         popt, pcov = optimize.curve_fit(chi2, z, Bz, guess)
@@ -993,7 +994,7 @@ class Bzsolenoid(Element):
             
     def z_cutoff(self, f):
         
-        Bf = f*self.Bzmax
+        Bf = f*self.B0
         
         res = optimize.brentq(lambda z: self.Bz(z) - Bf, 0, 100*self.L, maxiter=1000)
         
