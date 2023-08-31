@@ -712,9 +712,7 @@ class GPT:
         """        
         c = cls()
         return gpt_from_tao(c, tao, workdir=workdir, use_tempdir=use_tempdir)    
-        
-    def gpt_from_tao(self, tao, cls=None, workdir=None, use_tempdir=False):
-        
+                
 
 def phase_gpt(G):
 
