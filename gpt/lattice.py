@@ -447,7 +447,12 @@ class Lattice():
             
             if(hasattr(ele, 'source_data_file')):
                 
-                gdf_file = os.path.join(template_dir_str, ele.name+'.gdf')
+                fields_dir_str = os.path.join(template_dir_str, 'fields')
+                
+                if(not os.path.exists(fields_dir_str)):
+                    os.mkdir(fields_dir_str)
+                
+                gdf_file = os.path.join(fields_dir_str, ele.name+'.gdf')
                 ele.write_gdf(gdf_file)
 
         return template_dir, output_file

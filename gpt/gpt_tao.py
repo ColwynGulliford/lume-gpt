@@ -241,11 +241,13 @@ def tao_create_gpt_lattice_def(tao,
     last_bend_name = 'beg'
     last_bend_s = 0
     
+    
+    
     for ii, ele_ix in enumerate(ele_ixs):
         
         ele_inf = ele_info(tao, ele_ix)
         
-        if(ele_inf['key'] in solrf_eles and is_grid_field(ele_ix, tao)):       
+        if(ele_inf['key'] in solrf_eles and is_grid_field(ele_ix, tao)):    
 
             # Extract additional parameters required from Tao to define the map for GPT
             ele_inf = {**ele_inf, **pack_fieldmap(ele_ix, tao)}
