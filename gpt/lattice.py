@@ -304,7 +304,7 @@ class Lattice():
                     count=count+1
 
         if(output_file is not None):
-
+            
             with open(output_file,'w') as fid:
                 for line in lines:
                     fid.write(line)
@@ -435,14 +435,7 @@ class Lattice():
                 
         if(output_file is None):
             output_file = f'{template_dir_str}/gpt.in'
-        
-        lines = self.write_gpt_lines(template_file=template_file, 
-                                     output_file=output_file,
-                                     slices=slices,
-                                     legacy_phasing=legacy_phasing,
-                                     use_element_name_for_gdf_files=True
-                                    )
-        
+            
         for ele in self._elements:
             
             if(hasattr(ele, 'source_data_file')):
@@ -453,7 +446,15 @@ class Lattice():
                     os.mkdir(fields_dir_str)
                 
                 gdf_file = os.path.join(fields_dir_str, ele.name+'.gdf')
+
                 ele.write_gdf(gdf_file)
+                ele.source_data_file=gdf_file.replace(f'{template_dir_str}/', '')
+        
+        lines = self.write_gpt_lines(template_file=template_file, 
+                                     output_file=output_file,
+                                     slices=slices,
+                                     legacy_phasing=legacy_phasing,
+                                     use_element_name_for_gdf_files=False)
 
         return template_dir, output_file
             
