@@ -409,7 +409,7 @@ class Lattice():
             elif(mtype=='Map25D_TM'):
                 ele = Map25D_TM(ele_name, fmap_file, 0, style=style)
             else:
-                print('woah')
+                print('Unknown element.')
                 
             if(ele.z0[0]==0):
                 ele_origin = 'beg'
