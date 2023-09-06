@@ -292,7 +292,7 @@ def tao_create_gpt_lattice_def(tao,
          
     return lat
 
-def gpt_from_tao(gpt_object, tao, workdir=None, use_tempdir=True):
+def gpt_from_tao(gpt_object, tao, workdir=None, use_tempdir=True, legacy_phasing=True):
     
     """
     Create a complete GPT object from a running Pytao Tao instance.
@@ -309,7 +309,8 @@ def gpt_from_tao(gpt_object, tao, workdir=None, use_tempdir=True):
     
     lattice = tao_create_gpt_lattice_def(tao)
     
-    template_dir, output_file = lattice.create_template_dir(template_dir=workdir)
+    template_dir, output_file = lattice.create_template_dir(template_dir=workdir, 
+                                                            legacy_phasing=legacy_phasing)
     
     gpt_object.__init__(output_file, parse_layout=False)
     gpt_object.lattice = lattice

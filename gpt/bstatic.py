@@ -982,9 +982,10 @@ class Bzsolenoid(Element):
             fsol.B0 = B
             
             return fsol.Bz(z) 
-            
         
-        popt, pcov = optimize.curve_fit(chi2, z, Bz, guess)
+        bounds = ( 0, np.inf )
+            
+        popt, pcov = optimize.curve_fit(chi2, z, Bz, guess, bounds=bounds)
         
         if(set_results):
             self.L = popt[0]
