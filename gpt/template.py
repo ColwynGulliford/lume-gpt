@@ -32,9 +32,9 @@ if (space_charge == 1) {
         setrmacrodist("beam","u",tree_code_R,0) ;
         spacecharge3Dtree(tree_code_theta) ;   }
         
-    if (space_charge_type == 3) {
-        spacechargeP2Pgpu("3D", "SinglePrecision");
-        }
+    #if (space_charge_type == 3) {
+    #    spacechargeP2Pgpu("3D", "SinglePrecision");
+    #    }
 }
 Ntout=50.0;
 tmax=10e-9;
