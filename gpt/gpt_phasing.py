@@ -180,9 +180,8 @@ def gpt_phasing(path_to_input_file,
         if desired_amplitude[cav_ii] > 0:
 
             # Tell script which cavity we are phasing
-
             phase_input_text = set_variable_by_name(phase_input_text, 'cavity_phasing_index', cav_ii, False)
-
+            
             # turn on the cavity
             phase_input_text = set_variable_on_line(phase_input_text, amplitude_indices[cav_ii], desired_amplitude[cav_ii])
 
@@ -198,7 +197,7 @@ def gpt_phasing(path_to_input_file,
                                       debug_flag,
                                       workdir)
 
-                #print(gamma)
+                #print(gamma, phase)
 
                 gamma_test.append(gamma)
 
@@ -341,6 +340,8 @@ def call_os_no_output(command, workdir):
 # ---------------------------------------------------------------------------- #
 def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
 
+    #print(filename)
+    
     with open(filename, 'r') as hand:
         lines = hand.readlines()
 
@@ -348,6 +349,8 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
 
     gamma = 1.0
 
+    #print(position_lines)
+    
     if (len(position_lines) > 0):
         last_screen = position_lines[0] # Here is the assumption
 
@@ -372,6 +375,8 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
   
         print(stdout.decode("utf-8") )
         raise ValueError(f'GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
+        
+    #print('found', gamma)
     return gamma
 
 # ---------------------------------------------------------------------------- #
