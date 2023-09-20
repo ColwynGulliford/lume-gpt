@@ -56,9 +56,7 @@ class Sectormagnet(SectorBend):
         species='electron',
         plot_pole_faces=True,
         color='r',
-        fix=False,
-        place=False
-        ):
+        place=False):
 
         assert np.abs(angle)>0 and np.abs(angle)<180, 'Bend angle must be 0 < abs(angle) < 180'
         assert R>0, 'Bend radius must be > 0, if you set it negative, check the angle.'
@@ -96,8 +94,6 @@ class Sectormagnet(SectorBend):
         self._n_screen = n_screen
         self._theta_screen=None
         self._s_screen=None
-
-        self._fix = fix
 
         if(place):
             self.place()
@@ -271,10 +267,7 @@ class Sectormagnet(SectorBend):
         lines = lines + [f'{bname}_fringe_b1 = {self.b1};']    
         lines = lines + [f'{bname}_fringe_b2 = {self.b2};']  
 
-        if(self._fix):
-            btype = 'sectormagnet_fix'
-        else:
-            btype = 'sectormagnet'
+        btype = 'sectormagnet'
 
         bend_line = f'\n{btype}("{self.ccs_beg}", "{self.ccs_end}"'
         bend_line = bend_line + f', {bname}_radius, {bname}_Bfield, {bname}_phi_in/deg, {bname}_phi_out/deg'

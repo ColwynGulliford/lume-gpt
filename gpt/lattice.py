@@ -281,7 +281,7 @@ class Lattice():
 
             with open(template_file,'r') as fid:
                 for line in fid:
-                    file_lines.append(line)
+                    file_lines.append(line.strip())
 
         lines = file_lines + element_lines
 
@@ -307,6 +307,11 @@ class Lattice():
             
             with open(output_file,'w') as fid:
                 for line in lines:
+                    #print(line)
+                    if(not line.endswith('\n')):
+                        #print(line, 'fixing line')
+                        line = line + '\n'
+                    
                     fid.write(line)
 
         return lines
