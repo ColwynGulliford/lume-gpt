@@ -285,6 +285,18 @@ def tao_create_gpt_lattice_def(tao,
             gpt_name = ele_inf['name'].replace('.', '_')
             lat.add(Screen(gpt_name), ds=ele_inf['s'] - last_bend_s, ref_element=last_bend_name)
             
+        elif(ele_inf['key'] == 'Quad'):
+            print('found a quad')
+            gpt_name = ele_inf['name'].replace('.', '_')
+            
+            #ele_inf
+            
+            #lat.add(Quadrupole(gpt_name, ), ds=ele_inf['s'] - last_bend_s, ref_element=last_bend_name)
+            
+            #G, length,
+            
+            
+            
             
             
             
