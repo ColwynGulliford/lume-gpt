@@ -740,6 +740,226 @@ class QuadF(Quad):
     @property
     def d2Gdz2(self):
         return self.d2grad_dz2()
+
+
+class Quadrupole(Quad):
+
+    def __init__(self, name, G, length, width=0.2, height=0, angles=[0, 0, 0], gap=None, b1=0, npts=1000, color='b'):
+
+        super().__init__(name, length, width=width, height=height, angles=angles, color=color)
+
+        self._G = G
+
+        if(gap == None):
+            self._b1 = b1
+        elif(gap>0 and gap < float('Inf')):
+            self._b1 = 2/gap
+        else:
+            self._b1 = 0
+
+        self._gap = gap
+
+        self._dl=0
+
+        self._npts=npts
+
+    def gpt_lines(self):
+
+        lines = []
+
+        name = self.name
+  
+        lines = lines + [f'\n#***********************************************']
+        lines = lines + [f'#               Enge Quad: {self.name}         ']
+        lines = lines + [f'#***********************************************']
+        
+        lines = lines + [f'{name}_gradient = {self._G};']
+        lines = lines + [f'{name}_length = {self._length};']
+        #lines = lines + [f'{name}_fringe_dl = {self._dl};'] 
+        lines = lines + [f'{name}_fringe_b1 = {self._b1};']    
+
+        ds = np.linalg.norm( 0.5*(self.p_end + self.p_beg) - self._ccs_beg_origin) 
+
+        lines.append(f'\nquadrupole("{self.ccs_beg}", 0, 0, {ds}, 1, 0, 0, 0, 1, 0, {name}_length, {name}_gradient, {name}_fringe_b1);')
+
+        return lines
+
+    def plot_field_profile(self, ax=None, normalize=False):
+
+        if(ax == None):
+            ax = plt.gca()
+
+        z = getattr(self,'z')
+        G = getattr(self,'G')
+
+        if(normalize):
+            G = G/np.max(np.abs(G))
+
+        s = z+0.5*(self.s_beg+self._s_end)
+
+        ax.plot(s, G, self._color)
+        ax.set_xlabel('s (m)')
+
+        return ax
+
+    def plot_fringe(self):
+
+        if(self._b1!=0):
+
+            z = np.linspace(-10/self._b1, 10/self._b1, 100)
+
+            f = self._b1*(z-self._dl)
+
+            plt.plot(z, self._G/(1+np.exp(f)))
+            plt.xlabel('$\\Delta z$ (m)')
+            plt.ylabel('$G$ (T/m)')
+
+        else:
+            print('No fringe specified, skipping plot.')
+
+    def is_inside_field(self, z):
+
+        if(self._b1!=0):
+            inside = (np.abs(z) - (self.L/2+10*self._gap))<=0
+        else:
+            inside = (np.abs(z) - (self.L/2))<=0
+
+        return inside
+
+    def grad(self, z=None):
+
+        if(z is None):
+            z = getattr(self,'z')
+
+        G = np.zeros(z.shape)
+
+        # which z points are inside the field
+        inside = self.is_inside_field(z)   
+
+        p = self._b1*self.dz(z[inside])
+        f = np.exp(p)
+        G[inside] = self._G/(1+f)
+
+        return G
+
+    def dgrad_dz(self, z=None):
+
+        if(z is None):
+            z = getattr(self,'z')
+
+        dGdz = np.zeros(z.shape)
+        inside = self.is_inside_field(z)
+        f = np.exp(self._b1*self.dz(z[inside]))
+        dGdz[inside] = -np.sign(z[inside])*f*self._b1*self._G/(1+f)**2
+
+        return dGdz
+
+    def d2grad_dz2(self, z=None):
+
+        if(z is None):
+            z = getattr(self, 'z')
+
+        d2Gdz2 = np.zeros(z.shape)
+
+        inside = self.is_inside_field(z)
+
+        a = self._b1
+        dz = self.dz(z[inside])
+        f = np.exp(self._b1*dz)
+        D = (1+f)
+
+        d2Gdz2[inside] = self._G*f*(f-1)*a**2 /(1+f)**3
+
+        return d2Gdz2
+
+    def dz(self, zin):
+        dz = np.abs(zin) - (self._dl + self.L/2)
+        return dz
+
+    def plot(self, npts=101, ax=None, title=False):
+
+        if(ax is None):
+            ax = plt.gca()
+
+        z = getattr(self,'z')
+        G = getattr(self,'G')
+
+        ax.plot(z, G)
+        ax.set_xlabel('$\\Delta z$ (m)')
+        ax.set_ylabel('G(z) (T/m)')
+
+        if(title):
+            ax.set_title(f'{self.name}: G0 = {self._G:.4f} T/m, Leff = {self.Leff:.4f} m, gap = {self._gap} m.' )
+
+        return ax
+
+    def plot_dGdz(self, ax=None):
+
+        if(ax is None):
+            ax = plt.gca()
+        
+        z = getattr(self,'z')
+        dG = getattr(self,'dGdz')
+
+        ax.plot(z, dG)
+        ax.set_xlabel('z (m)')
+        ax.set_ylabel("G'(z) ($T/m^2$)")
+
+        return ax
+
+    def plot_d2Gdz2(self, ax=None):
+
+        if(ax is None):
+            ax = plt.gca()
+
+        z = getattr(self,'z')
+        dG2 = getattr(self,'d2Gdz2')
+
+        ax.plot(z, dG2)
+        ax.set_xlabel('z (m)')
+        ax.set_ylabel("G''(z) ($T/m^3$)")
+
+        return ax
+
+    @property
+    def G0(self):
+        return self._G
+
+    @G0.setter
+    def G0(self, G0):
+        self._G=G0
+
+    @property
+    def L (self):
+        return self._length
+
+    @property
+    def dGdzs(self):
+        return self._dGdzs
+
+    @property
+    def Leff(self):
+
+        z = getattr(self,'z')
+        G = self.grad(z)
+
+        return np.trapz(G, z)/self._G
+
+    @property
+    def z(self):
+        return np.linspace(-self.length, self.length, self._npts)
+
+    @property
+    def G(self):
+        return self.grad()
+
+    @property
+    def dGdz(self):
+        return self.dgrad_dz()
+
+    @property
+    def d2Gdz2(self):
+        return self.d2grad_dz2()
     
     
     

@@ -1,0 +1,42 @@
+setfile("beam", "/Users/colwyngulliford/GitHub/lume-gpt/examples/elements/temp/gpt.particles.gdf");
+time=0.0;
+auto_phase=0.0;
+space_charge=0;
+cathode=0.0;
+space_charge_type=1.0;
+RadiusMax=0.04;
+GBacc=12;
+xacc=12;
+accuracy(GBacc, xacc);
+dtmin=1e-16;
+dtmax=1e-10;
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+if (space_charge_type == 1) {
+if(cathode == 1) {
+spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+} else {
+spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+}
+}
+if (space_charge_type == 2) {
+setrmacrodist("beam","u",tree_code_R,0) ;
+spacecharge3Dtree(tree_code_theta) ;   }
+}
+Ntout=100;
+tmax=1e-08;
+ZSTART=-0.005;
+ZSTOP=3.0;
+zminmax("wcs", "I", ZSTART, ZSTOP);
+if(Ntout>0) {
+tout(time, tmax, tmax/Ntout);
+}
+q1_gradient=0.00714;
+q1_length=0.21;
+q1_fringe_b1=78.74015748031496;
+quadrupole("wcs", 0, 0, 0.355, 1, 0, 0, 0, 1, 0, q1_length, q1_gradient, q1_fringe_b1);
