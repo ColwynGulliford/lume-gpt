@@ -1,5 +1,5 @@
 from gpt import GPT
-from gpt.element import Lattice
+from gpt.lattice import Lattice
 from gpt.element import Screen
 from gpt.element import is_bend
 from  gpt.template import ztrack1_template
