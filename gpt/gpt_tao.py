@@ -5,7 +5,7 @@ from pmd_beamphysics.fields.analysis import accelerating_voltage_and_phase
 
 #from . import GPT
 from .element import Quad, Screen
-from .bstatic import Sectormagnet, Bzsolenoid
+from .bstatic import Bzsolenoid, Quadrupole, Sectormagnet
 from .maps import Map2D_B, Map2D_E, Map25D_TM
 from .lattice import Lattice
 
@@ -218,7 +218,7 @@ def is_grid_field(ele_id, tao):
 def tao_create_gpt_lattice_def(tao,
                                solrf_eles=['E_Gun', 'Solenoid', 'Lcavity'], 
                                marker_eles = ['Marker'], #'MARKER::*',
-                               quadrupole_eles = ['quad'], # Quads not implented
+                               quadrupole_eles = ['Quadrupole'], # Quads not implented
                                bend_eles = ['Sbend'] # Bends not implemented
                               ):
     
@@ -285,15 +285,27 @@ def tao_create_gpt_lattice_def(tao,
             gpt_name = ele_inf['name'].replace('.', '_')
             lat.add(Screen(gpt_name), ds=ele_inf['s'] - last_bend_s, ref_element=last_bend_name)
             
-        elif(ele_inf['key'] == 'Quad'):
-            print('found a quad')
+        elif(ele_inf['key'] == 'Quadrupole'):
+            
+            
             gpt_name = ele_inf['name'].replace('.', '_')
+            gen_attrs = tao.ele_gen_attribs(ele_ix)
+
+            L, G = gen_attrs['L'], gen_attrs['B1_GRADIENT']
+
+            if(gpt_name in lat.names):
+                print(f'Warning: duplicate element found for {gpt_name}, appending tao ele_id to gpt name.')
+                gpt_name = gpt_name+f'{ele_ix}'
+
+            # Fit hard edge?
+            b1 = 0 # TODO
+
+            #print(ele_
             
-            #ele_inf
+            lat.add(Quadrupole(gpt_name, G, L, b1=b1), ds=ele_inf['s']-L - last_bend_s, 
+                    ref_element=last_bend_name,
+                   )
             
-            #lat.add(Quadrupole(gpt_name, ), ds=ele_inf['s'] - last_bend_s, ref_element=last_bend_name)
-            
-            #G, length,
             
             
             

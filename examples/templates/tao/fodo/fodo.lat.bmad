@@ -1,0 +1,7 @@
+
+
+call, file = fodo.bmad
+call, file = markers.bmad
+
+use, FODO_CHANNEL
+

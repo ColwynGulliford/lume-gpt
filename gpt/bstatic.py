@@ -62,7 +62,7 @@ class Sectormagnet(SectorBend):
         assert R>0, 'Bend radius must be > 0, if you set it negative, check the angle.'
         assert np.abs(phi_in) <= 90, 'Entrance edge angle must be < 90'
         assert np.abs(phi_out) <= 90, 'Entrance edge angle must be < 90'
-        assert width < R, 'Dipole width must be < R'
+        assert width < 2*R, 'Dipole width must be < R'
         assert n_screen>=0, 'Number of extra screens must be >= 0.'
 
         super().__init__(name, R, angle, width=width, height=0, phi_in=phi_in, phi_out=phi_out, M=np.identity(3), plot_pole_faces=True, color=color)
@@ -222,7 +222,7 @@ class Sectormagnet(SectorBend):
         bname = self.name
   
         lines = lines + [f'\n#***********************************************']
-        lines = lines + [f'#               Sectorbend: {self.name}         ']
+        lines = lines + [f'#               Sectormagnet: {self.name}         ']
         lines = lines + [f'#***********************************************']
 
         exit_ccs_line = f'\nccs("{self.ccs_beg}", {self.name}_end_x, {bname}_end_y, {bname}_end_z'
@@ -763,6 +763,8 @@ class Quadrupole(Quad):
 
         self._npts=npts
 
+        self._type = 'quadrupole'
+
     def gpt_lines(self):
 
         lines = []
@@ -947,7 +949,7 @@ class Quadrupole(Quad):
 
     @property
     def z(self):
-        return np.linspace(-self.length, self.length, self._npts)
+        return np.linspace(-2*self.length, 2*self.length, self._npts)
 
     @property
     def G(self):
@@ -960,6 +962,12 @@ class Quadrupole(Quad):
     @property
     def d2Gdz2(self):
         return self.d2grad_dz2()
+
+    @property
+    def int_G(self):
+        return self.length * self.G0
+
+        
     
     
     

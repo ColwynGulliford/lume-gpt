@@ -137,7 +137,9 @@ class Lattice():
                    alpha=1,
                    xlim=None,
                    ylim=None,
-                   style='tao'):
+                   style='tao',
+                   screen_alpha=None
+                  ):
 
         """
         Plots the lattice in z-x floor coordinates 
@@ -157,8 +159,16 @@ class Lattice():
         ax.set_xlabel('z (m)')
         ax.set_ylabel('x (m)')
 
+        if(screen_alpha is None):
+            screen_alpha=1.0
+
         for ele in self._elements:
-            ele.plot_floor(ax=ax, axis=axis, alpha=alpha, xlim=xlim, ylim=ylim, style=style)
+            
+            if(ele.type=='screen'):
+                ele.plot_floor(ax=ax, axis=axis, alpha=screen_alpha, xlim=xlim, ylim=ylim, style=style)
+            else:
+                ele.plot_floor(ax=ax, axis=axis, alpha=alpha, xlim=xlim, ylim=ylim, style=style)
+
             
 
         if(axis=='equal'):
@@ -305,7 +315,7 @@ class Lattice():
 
         if(output_file is not None):
             
-            with open(output_file,'w') as fid:
+            with open(os.path.expandvars(output_file),'w') as fid:
                 for line in lines:
                     #print(line)
                     if(not line.endswith('\n')):
@@ -445,7 +455,7 @@ class Lattice():
             
             if(hasattr(ele, 'source_data_file')):
                 
-                fields_dir_str = os.path.join(template_dir_str, 'fields')
+                fields_dir_str = os.path.expandvars(os.path.join(template_dir_str, 'fields'))
                 
                 if(not os.path.exists(fields_dir_str)):
                     os.mkdir(fields_dir_str)
