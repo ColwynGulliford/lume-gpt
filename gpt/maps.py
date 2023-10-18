@@ -229,7 +229,20 @@ class GDFFieldMap(Element):
             data[:,ii] = self.data[var]
 
         headers = '     '.join(headers)
-        np.savetxt(temp_ascii_file, data, header=headers, comments=' ')
+        #np.savetxt(temp_ascii_file, data, header=headers, comments=' ')
+
+
+        # Write file. 
+        # Hack to delete final newline
+        # https://stackoverflow.com/questions/28492954/numpy-savetxt-stop-newline-on-final-line
+        with open(temp_ascii_file, 'w') as fout:
+            #print('wooot', temp_ascii_file)
+            NEWLINE_SIZE_IN_BYTES = 1 # 2 on Windows?
+            np.savetxt(fout, data, header=headers, comments='')
+            fout.seek(0, os.SEEK_END) # Go to the end of the file.
+            # Go backwards one byte from the end of the file.
+            fout.seek(fout.tell() - NEWLINE_SIZE_IN_BYTES, os.SEEK_SET)
+            fout.truncate() # Truncate the file to this point. 
 
         subprocess.run(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}', shell=True)
         os.remove(temp_ascii_file)

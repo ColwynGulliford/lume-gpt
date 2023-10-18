@@ -8,7 +8,7 @@ from .merit import default_gpt_merit
 
 from distgen import Generator   
 #from distgen.writers import write_gpt
-from distgen.tools import update_nested_dict
+from distgen.tools import update_nested_dict, is_key_in_nested_dict
 
 from gpt.gpt_phasing import gpt_phasing
 
@@ -37,7 +37,13 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
             print(k, 'is in gpt')
         
         if not found:
-            distgen_input = update_nested_dict(distgen_input, {k:v}, verbose=bool(verbose))
+            
+            if(is_key_in_nested_dict(distgen_input, k, sep=':', prefix='')):
+                print(k, 'is in distgen')
+                distgen_input = update_nested_dict(distgen_input, {k:v}, verbose=bool(verbose))
+            else:
+                raise ValueError(f'Input setting {k} not found in gpt or distgen input files.' )
+
             #set_nested_dict(distgen_input, k, v)    
     
     return gpt, distgen_input
