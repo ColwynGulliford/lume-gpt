@@ -1,7 +1,5 @@
 &tao_start
   n_universes = 1
-  !plot_file    = '$KYBER/bmad/tao/tao_plot.init '
-  !startup_file = '$KYBER/bmad/tao/tao.startup'
 /
 
 
