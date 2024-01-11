@@ -1,0 +1,14 @@
+# conda env create -f environment-dev.yml
+name: lume-gpt-dev
+channels:
+  - conda-forge
+dependencies:
+  - python>3.9
+  - numpy
+  - scipy>=1.0.0
+  - matplotlib
+  - h5py
+  - distgen
+  - openpmd-beamphysics
+# Developer
+  - pip
