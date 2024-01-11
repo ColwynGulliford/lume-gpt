@@ -71,13 +71,22 @@ def set_support_files(lines,
         for support_file in support_files:
 
             abs_original_path = full_path( os.path.join(original_path, os.path.expandvars(support_file)) )
-
-            #print(support_file, os.path.join(original_path, os.path.expandvars(support_file)), line)
             
             if(copy_files):
-            
-                abs_target_path = os.path.join(target_path, support_file) 
-                shutil.copyfile(abs_original_path, abs_target_path, follow_symlinks=True)            
+                #print(support_file, target)
+                abs_target_path = os.path.join(target, os.path.basename(support_file))
+
+                if(os.path.exists(abs_original_path) and abs_original_path!=abs_target_path):
+
+                    try:
+                        shutil.copyfile(abs_original_path, abs_target_path, follow_symlinks=True)  
+                    except shutil.SameFileError:
+                        pass
+                    lines[ii] = line.replace(support_file, os.path.basename(abs_target_path))
+                    
+                elif(abs_original_path!=abs_target_path and not os.path.exists(abs_target_path)):
+                    print('Warning: possible missing support file: ', abs_original_path)
+
 
                 if(verbose):
                     print("Copying file: ", abs_original_path,'->',abs_target_path)   

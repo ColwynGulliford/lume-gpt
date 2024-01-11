@@ -116,6 +116,16 @@ def write_output_h5(h5, gpt_output, name='output'):
     
     For now, only writes gpt_output['particles']
     """
+
+    if('n_tout' not in gpt_output):
+        gpt_output['n_tout']=0
+
+    if('n_screen' not in gpt_output):
+        gpt_output['n_screen']=0
+
+    if('particles' not in gpt_output):
+        gpt_output['particles'] = None
+
     g = h5.create_group(name)
     g.attrs['n_tout']=gpt_output['n_tout']
     g.attrs['n_screen']=gpt_output['n_screen']
@@ -150,9 +160,12 @@ def write_particles_h5(h5, particles, name='screen'):
     opmd_init(h5, basePath='/'+name+'/%T/', particlesPath='/' )
     
     # Loop over screens
-    for i, particle_group in enumerate(particles):
-        name = str(i)        
-        particle_group.write(g, name=name)  
+
+    if(particles):
+
+        for i, particle_group in enumerate(particles):
+            name = str(i)        
+            particle_group.write(g, name=name)  
         
         
 def read_particles_h5(h5):

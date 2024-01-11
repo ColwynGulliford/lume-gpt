@@ -60,6 +60,7 @@ class GPT:
                  kill_msgs=DEFAULT_KILL_MSGS,
                  load_fields=False,
                  parse_layout=True,
+                 copy_support_files=False,
                  n_cpu=1):
 
         # Save init
@@ -94,8 +95,9 @@ class GPT:
         self.load_fields=load_fields
         
         self.parse_layout=parse_layout
-        
+        self.copy_support_files=copy_support_files
         self.n_cpu = n_cpu
+
         
 
         # Call configure
@@ -142,7 +144,14 @@ class GPT:
             self.lattice = Lattice('lattice')
             self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
-        parsers.set_support_files(self.input['lines'], self.original_path, target=self.path)              
+        if self.initial_particles:
+            fname = self.write_initial_particles() 
+            #print(fname)
+
+            # Link input file to new particle file
+            self.set_dist_file(fname)
+
+        parsers.set_support_files(self.input['lines'], self.original_path, target=self.path, copy_files=self.copy_support_files)              
         
         self.vprint('GPT.configure_gpt:')
         self.vprint(f'   Original input file "{self.original_input_file}" in "{self.original_path}"')
@@ -164,7 +173,7 @@ class GPT:
             if('setfile' in line):
                 return parse_gpt_string(line)[1]
      
-    def set_dist_file(self,dist_file):
+    def set_dist_file(self, dist_file):
         """ Set the input distirbution file name in a GPT file """
         dist_file_set = False
         for ii, line in enumerate(self.input['lines']):
@@ -178,7 +187,7 @@ class GPT:
         if(not dist_file_set):
             self.input['lines'].append(f'setfile("beam", "{dist_file}");')  
 
-    def set_variable(self,variable,value):
+    def set_variable(self, variable, value):
         """ Set variable in the GPT input file to a new value """
         if(variable in self.input["variables"]):
             self.input['variables'][variable]=value
@@ -186,7 +195,7 @@ class GPT:
         else:
             return False
         
-    def set_support_file(self, original_file, new_file):
+    def set_support_file(self, original_file, new_file, copy_support_files=False):
         
         results = {}
         
@@ -198,11 +207,30 @@ class GPT:
                 self.input['lines'][ii]=self.input['lines'][ii].replace(original_file, new_file)
                 
                 
-        parsers.set_support_files(self.input['lines'], self.original_path, target=self.path)        
+        parsers.set_support_files(self.input['lines'], self.original_path, target=self.path, copy_files=copy_support_files)        
 
     def set_variables(self, variables):
         """ Set a list of variables (variable.keys) to new values (variables.values()) in the GPT Input file """
         return {var:self.set_variable(var,variables[var]) for var in variables.keys()}
+
+    def write_input(self, input_filename=None):
+
+        if(input_filename is not None):
+            self.input_file = os.path.join(self.path, input_filename) 
+
+        self.write_input_file()
+
+        if self.initial_particles:
+            fname = self.write_initial_particles() 
+            #print(fname)
+
+            # Link input file to new particle file
+            self.set_dist_file(fname)
+            
+        runscript = self.get_run_script()
+
+        parsers.set_support_files(self.input['lines'], self.original_path, target=self.path, copy_files=self.copy_support_files)            
+        
     
     def load_output(self, file='gpt.out.gdf'):
         """ loads the GPT raw data and puts it into particle groups """
