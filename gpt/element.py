@@ -1,6 +1,7 @@
 import numpy as np
 import os
-import math, cmath
+import math
+import cmath
 from matplotlib import pyplot as plt
 from numpy.linalg import norm 
 import copy

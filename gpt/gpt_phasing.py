@@ -374,7 +374,7 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
         stdout, stderr = p.communicate()
   
         print(stdout.decode("utf-8") )
-        raise ValueError(f'GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
+        raise ValueError('GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
         
     #print('found', gamma)
     return gamma
@@ -429,7 +429,7 @@ def get_variable_by_name(gpt_input_text, name):
     index = find_line_with_variable_name(gpt_input_text, name)
 
     if (index < 0):
-        return 0;
+        return 0
 
     gpt_input_text_new = gpt_input_text
 
@@ -519,7 +519,7 @@ def get_variable_with_string_value(line):
 # ---------------------------------------------------------------------------- #
 def find_lines_containing(lines, string):
     
-    string_lower = string.lower();
+    string_lower = string.lower()
 
     indices = []
     for ii in range(len(lines)):

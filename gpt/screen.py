@@ -1,6 +1,7 @@
 import numpy as np
 import os
-import math, cmath
+import math
+import cmath
 from scipy.integrate import cumtrapz
 from gpt.tools import rotation_matrix
 from gpt.tools import is_floatable

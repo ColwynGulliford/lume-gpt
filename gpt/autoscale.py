@@ -37,15 +37,15 @@ def autophase1(lattice, t=0, p=1e-15, z=None, workdir=None, ztrack1_through=True
 
         if(verbose):
             print('autophase1: no cavities to phase')
-            print(f'\n> Tracking: BEG:END')
+            print('\n> Tracking: BEG:END')
 
         ts.append(t)
         ps.append(p)
         zs.append(lattice[0].z_beg_ccs)
 
         fparticle = ztrack1_to_autoscale_element(lattice, 0, p, lattice[0].z_beg_ccs, workdir=None)
-        assert fparticle is not None, f'Particle tracking from BEG to END failed.'
-        assert np.abs( fparticle.screen[-1]['mean_z']-lattice[-1].z_end_ccs ) < 1e-14, f'Error tracking to END: particle was not located at cavity entrance.'
+        assert fparticle is not None, 'Particle tracking from BEG to END failed.'
+        assert np.abs( fparticle.screen[-1]['mean_z']-lattice[-1].z_end_ccs ) < 1e-14, 'Error tracking to END: particle was not located at cavity entrance.'
 
         runs.append(fparticle)
 
@@ -65,12 +65,12 @@ def autophase1(lattice, t=0, p=1e-15, z=None, workdir=None, ztrack1_through=True
 
             if(workdir is None):
                 tempdir = tempfile.TemporaryDirectory(dir=workdir)  
-                gpt_file = os.path.join(tempdir.name, f'track_lattice.gpt.in')
+                gpt_file = os.path.join(tempdir.name, 'track_lattice.gpt.in')
                 workdir = tempdir.name
 
             else:
 
-                gpt_file = os.path.join(workdir, f'gpt.temp.in' )
+                gpt_file = os.path.join(workdir, 'gpt.temp.in' )
 
             lattice.write_gpt_lines(ztrack1_template(gpt_file), output_file=gpt_file)
 
@@ -166,12 +166,12 @@ def autophase1(lattice, t=0, p=1e-15, z=None, workdir=None, ztrack1_through=True
 
         if(workdir is None):
             tempdir = tempfile.TemporaryDirectory(dir=workdir)  
-            gpt_file = os.path.join(tempdir.name, f'track_lattice.gpt.in')
+            gpt_file = os.path.join(tempdir.name, 'track_lattice.gpt.in')
             workdir = tempdir.name
 
         else:
 
-            gpt_file = os.path.join(workdir, f'track_lattice.gpt.in' )
+            gpt_file = os.path.join(workdir, 'track_lattice.gpt.in' )
 
         lattice.write_gpt_lines(ztrack1_template(gpt_file), output_file=gpt_file)
 
@@ -245,7 +245,7 @@ def autoscale1(lattice, t=0, p=1e-15, workdir=None, ztrack1_through=True, verbos
 
         if(verbose):
             print('autoscale1: no cavities to phase')
-            print(f'\n> Tracking: BEG:END')
+            print('\n> Tracking: BEG:END')
 
         ts.append(t)
         ps.append(p)
@@ -253,8 +253,8 @@ def autoscale1(lattice, t=0, p=1e-15, workdir=None, ztrack1_through=True, verbos
         ss.append(lattice[0].s_beg)
 
         fparticle = ztrack1_to_autoscale_element(lattice, 0, p, lattice[0].z_beg_ccs, workdir=None)
-        assert fparticle is not None, f'Particle tracking from BEG to END failed.'
-        assert np.abs( fparticle.screen[-1]['mean_z']-lattice[-1].z_end_ccs ) < 1e-14, f'Error tracking to END: particle was not located at cavity entrance.'
+        assert fparticle is not None, 'Particle tracking from BEG to END failed.'
+        assert np.abs( fparticle.screen[-1]['mean_z']-lattice[-1].z_end_ccs ) < 1e-14, 'Error tracking to END: particle was not located at cavity entrance.'
 
         runs.append(fparticle)
 
@@ -276,12 +276,12 @@ def autoscale1(lattice, t=0, p=1e-15, workdir=None, ztrack1_through=True, verbos
 
             if(workdir is None):
                 tempdir = tempfile.TemporaryDirectory(dir=workdir)  
-                gpt_file = os.path.join(tempdir.name, f'track_lattice.gpt.in')
+                gpt_file = os.path.join(tempdir.name, 'track_lattice.gpt.in')
                 workdir = tempdir.name
 
             else:
 
-                gpt_file = os.path.join(workdir, f'gpt.temp.in' )
+                gpt_file = os.path.join(workdir, 'gpt.temp.in' )
 
             lattice.write_gpt_lines(ztrack1_template(gpt_file), output_file=gpt_file)
 
@@ -401,12 +401,12 @@ def autoscale1(lattice, t=0, p=1e-15, workdir=None, ztrack1_through=True, verbos
 
         if(workdir is None):
             tempdir = tempfile.TemporaryDirectory(dir=workdir)  
-            gpt_file = os.path.join(tempdir.name, f'track_lattice.gpt.in')
+            gpt_file = os.path.join(tempdir.name, 'track_lattice.gpt.in')
             workdir = tempdir.name
 
         else:
 
-            gpt_file = os.path.join(workdir, f'gpt.temp.in' )
+            gpt_file = os.path.join(workdir, 'gpt.temp.in' )
 
         lattice.write_gpt_lines(ztrack1_template(gpt_file), output_file=gpt_file)
 

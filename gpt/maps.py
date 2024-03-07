@@ -1,6 +1,7 @@
 import numpy as np
 import os
-import math, cmath
+import math
+import cmath
 from scipy.integrate import cumtrapz
 import tempfile
 import subprocess
@@ -580,7 +581,7 @@ class Map1D_TM(Map1D):
 
         map_line = map_line + f', {name}_phase, '
 
-        extra_lines.append(f'{name}_frequency = {self._frequency};');
+        extra_lines.append(f'{name}_frequency = {self._frequency};')
         extra_lines.append(f'{name}_gamma = 1;')
         map_line = map_line + f'2*pi*{name}_frequency);'
 

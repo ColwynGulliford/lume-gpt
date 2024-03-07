@@ -4,7 +4,8 @@ import numpy as np
 import json
 
 import subprocess
-import os, errno
+import os
+import errno
 import datetime
 import time
 

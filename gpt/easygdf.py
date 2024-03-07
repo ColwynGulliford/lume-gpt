@@ -108,7 +108,7 @@ def load(file, tout_filter=lambda x: True, screen_filter=lambda x: True, screen_
         raise TypeError('Argument is not a file-like object')
 
     # If the file wasn't opened in binary mode
-    if not 'b' in file.mode:
+    if 'b' not in file.mode:
         # Raise an exception
         raise ValueError("File is not in binary mode.  "
                          "Try opening with option 'rb'")
@@ -363,7 +363,7 @@ def load_dict(file, tout_filter=lambda x: True, screen_filter=lambda x: True, sc
         raise TypeError('Argument is not a file-like object')
 
     # If the file wasn't opened in binary mode
-    if not 'b' in file.mode:
+    if 'b' not in file.mode:
         # Raise an exception
         raise ValueError("File is not in binary mode.  "
                          "Try opening with option 'rb'")
@@ -547,7 +547,7 @@ def load_initial_distribution(file, extra_screen_keys=[]):
         raise TypeError('Argument is not a file-like object')
 
     # If the file wasn't opened in binary mode
-    if not 'b' in file.mode:
+    if 'b' not in file.mode:
         # Raise an exception
         raise ValueError("File is not in binary mode.  "
                 "Try opening with option 'rb'")
@@ -663,7 +663,7 @@ def load_initial_distribution_dict(file):
         raise TypeError('Argument is not a file-like object')
 
     # If the file wasn't opened in binary mode
-    if not 'b' in file.mode:
+    if 'b' not in file.mode:
         # Raise an exception
         raise ValueError("File is not in binary mode.  "
                 "Try opening with option 'rb'")

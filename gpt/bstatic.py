@@ -1,6 +1,7 @@
 import numpy as np
 import os
-import math, cmath
+import math
+import cmath
 from scipy.integrate import cumtrapz
 from scipy.optimize import brent
 from gpt.tools import is_floatable
@@ -221,9 +222,9 @@ class Sectormagnet(SectorBend):
 
         bname = self.name
   
-        lines = lines + [f'\n#***********************************************']
+        lines = lines + ['\n#***********************************************']
         lines = lines + [f'#               Sectormagnet: {self.name}         ']
-        lines = lines + [f'#***********************************************']
+        lines = lines + ['#***********************************************']
 
         exit_ccs_line = f'\nccs("{self.ccs_beg}", {self.name}_end_x, {bname}_end_y, {bname}_end_z'
 
@@ -557,9 +558,9 @@ class QuadF(Quad):
 
         name = self.name
   
-        lines = lines + [f'\n#***********************************************']
+        lines = lines + ['\n#***********************************************']
         lines = lines + [f'#               Enge Quad: {self.name}         ']
-        lines = lines + [f'#***********************************************']
+        lines = lines + ['#***********************************************']
         
         lines = lines + [f'{name}_gradient = {self._G};']
         lines = lines + [f'{name}_length = {self._length};']
@@ -771,9 +772,9 @@ class Quadrupole(Quad):
 
         name = self.name
   
-        lines = lines + [f'\n#***********************************************']
+        lines = lines + ['\n#***********************************************']
         lines = lines + [f'#               Enge Quad: {self.name}         ']
-        lines = lines + [f'#***********************************************']
+        lines = lines + ['#***********************************************']
         
         lines = lines + [f'{name}_gradient = {self._G};']
         lines = lines + [f'{name}_length = {self._length};']
@@ -1165,9 +1166,9 @@ class Bzsolenoid(Element):
 
         name = self.name
   
-        lines.append(f'\n#***********************************************')
+        lines.append('\n#***********************************************')
         lines.append(f'#               Bzsolenoid: {self.name}         ')
-        lines.append(f'#***********************************************')
+        lines.append('#***********************************************')
         
         lines.append(f'{name}_R = {self._R};')
         lines.append(f'{name}_L = {self.L};')
