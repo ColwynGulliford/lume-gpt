@@ -1,22 +1,13 @@
 import numpy as np
-import os
-import math
-import cmath
-from scipy.integrate import cumtrapz
-from scipy.optimize import brent
-from gpt.tools import is_floatable
 from gpt.tools import cvector
 from gpt.tools import rotation_matrix
-from gpt.tools import deg, rad
 from gpt.tools import get_arc
 from gpt.tools import write_ecs
 from gpt.tools import in_ecs
 from gpt.element import p_in_ccs
-from gpt.template import basic_template
 
 from matplotlib import pyplot as plt
 
-from numpy.linalg import norm 
 
 from gpt.element import SectorBend
 from gpt.element import Element
@@ -25,9 +16,7 @@ from gpt.element import Beg
 
 #from . import GPT
 
-import tempfile
 
-from pmd_beamphysics import single_particle
 
 from scipy.constants import physical_constants
 mu0 = physical_constants['mag. constant'][0]

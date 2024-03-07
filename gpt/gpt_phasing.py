@@ -3,19 +3,15 @@
 # USAGE:  (last two arguments are optional)
 # python gpt_phasing input_file.in /path/to/gpt_exe/ /path/to/fields/
 
-import sys
-import math
 import re
 import os
 import subprocess
 import numpy
-import scipy
 import scipy.optimize as sp
 from optparse import OptionParser
 
 from pathlib import Path
 
-from time import time
 
 def main():
 

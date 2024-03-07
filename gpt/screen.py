@@ -1,15 +1,9 @@
 import numpy as np
-import os
-import math
-import cmath
-from scipy.integrate import cumtrapz
 from gpt.tools import rotation_matrix
-from gpt.tools import is_floatable
 from gpt.tools import cvector
 
 from matplotlib import pyplot as plt
 
-from numpy.linalg import norm 
 
 
 class ScreenZXS():

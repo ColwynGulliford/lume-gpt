@@ -1,21 +1,14 @@
 import numpy as np
 import os
-import math
-import cmath
 from matplotlib import pyplot as plt
-from numpy.linalg import norm 
-import copy
 
 #from gpt.maps import Map1D_E, Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
 
 from gpt.tools import rotation_matrix
 from gpt.tools import cvector
-from gpt.tools import rad, deg
+from gpt.tools import rad
 from gpt.tools import get_arc
-from gpt.tools import is_floatable
-from gpt.tools import full_path
 
-from gpt.template import BASIC_TEMPLATE
 
 
 def p_in_ccs(p, ccs_origin, ccs_M):

@@ -1,4 +1,3 @@
-import copy
 from . import easygdf
 import time
 import numpy as np

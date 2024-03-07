@@ -1,8 +1,6 @@
 import numpy as np
 import os
 import math
-import cmath
-from scipy.integrate import cumtrapz
 import tempfile
 import subprocess
 
@@ -12,12 +10,11 @@ from gpt.tools import cvector
 from gpt.tools import in_ecs
 from gpt.element import Element
 from gpt.element import Beg
-from gpt.template import basic_template
 from gpt.template import ztrack1_template
 
 from matplotlib import pyplot as plt
 
-from pmd_beamphysics import single_particle, FieldMesh
+from pmd_beamphysics import FieldMesh
 
 from scipy.optimize import brent
 import scipy.constants

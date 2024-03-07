@@ -12,7 +12,7 @@ from gpt.element import is_bend
 from gpt.template import BASIC_TEMPLATE
 from gpt.tools import full_path
 from gpt.tools import is_floatable
-from gpt.maps import Map1D_E, Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
+from gpt.maps import Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
 import numpy as np
 
 from matplotlib import pyplot as plt

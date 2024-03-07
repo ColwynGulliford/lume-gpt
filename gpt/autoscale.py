@@ -1,7 +1,5 @@
 from gpt import GPT
 from gpt.lattice import Lattice
-from gpt.element import Screen
-from gpt.element import is_bend
 from  gpt.template import ztrack1_template
 
 import tempfile
@@ -9,7 +7,7 @@ import os
 import numpy as np
 import time 
 
-from distgen.physical_constants import qe, c, MC2
+from distgen.physical_constants import c, MC2
 MC2=MC2.magnitude
 c = c.magnitude
 
