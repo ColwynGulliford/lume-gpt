@@ -489,7 +489,7 @@ def sort_lines_by_first_integer(lines, indices):
     
     for ii in indices:
         line = lines[ii]
-        m = re.search("\d+", line)
+        m = re.search(r"\d+", line)
         integer_string = m.group(0)
         numbers.append(float(integer_string))
    
