@@ -136,7 +136,7 @@ class Element:
 
     def plot_floor(self, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         p1 = self.p_beg + (self._width/2)*cvector(self._M_beg[:,0])
@@ -504,7 +504,7 @@ class SectorBend(Element):
 
     def plot_floor(self, axis='equal', ax=None, alpha=1):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         e1_beg = cvector(self._M_beg[:,0])

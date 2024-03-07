@@ -71,7 +71,7 @@ class Sectormagnet(SectorBend):
 
         self._gap=gap
 
-        if(gap == None):
+        if gap is None:
             self._b1 = b1
         elif(gap>0 and gap < float('Inf')):
             self._b1 = 2/gap
@@ -202,7 +202,7 @@ class Sectormagnet(SectorBend):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
     def gpt_lines(self):
@@ -434,7 +434,7 @@ class Sectormagnet(SectorBend):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         s = getattr(self,'s')
@@ -528,7 +528,7 @@ class QuadF(Quad):
 
         self._G = G
 
-        if(gap == None):
+        if gap is None:
             self._b1 = b1
         elif(gap>0 and gap < float('Inf')):
             self._b1 = 2/gap
@@ -564,7 +564,7 @@ class QuadF(Quad):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         z = getattr(self,'z')
@@ -740,7 +740,7 @@ class Quadrupole(Quad):
 
         self._G = G
 
-        if(gap == None):
+        if gap is None:
             self._b1 = b1
         elif(gap>0 and gap < float('Inf')):
             self._b1 = 2/gap
@@ -778,7 +778,7 @@ class Quadrupole(Quad):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         z = getattr(self,'z')

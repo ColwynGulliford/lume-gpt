@@ -1102,7 +1102,7 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
 
     #print(effective_plot_length)
 
-    if(ax == None):
+    if ax is None:
         ax = plt.gca()
 
     #pc = 0.5*(element.p_beg + element.p_end)
@@ -1157,7 +1157,7 @@ def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
         ax: returns current axis handle being used
     """
 
-    if(ax == None):
+    if ax is None:
         ax = plt.gca()
 
     Fz = element.Fz

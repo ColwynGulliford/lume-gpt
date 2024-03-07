@@ -31,7 +31,7 @@ class ScreenZXS():
 
     def plot(self, axis=None, alpha=1.0, ax=None):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         if(self._ccs_origin is not None):

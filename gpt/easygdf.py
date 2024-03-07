@@ -223,7 +223,7 @@ def load(file, tout_filter=lambda x: True, screen_filter=lambda x: True, screen_
                         screen_tout_arrays = {}
                     else:
                         # If we are given the number of particles and elements in a tout
-                        if ((tout_block_size != None) and (first_tout == False)):
+                        if (tout_block_size is not None) and not first_tout:
                             # Try to skip by the correct amount
                             file.seek(tout_block_size, 1)
 
@@ -244,7 +244,7 @@ def load(file, tout_filter=lambda x: True, screen_filter=lambda x: True, screen_
                         screen_tout_arrays = {}
                     else:
                         # If we are given the number of particles and elements in a tout
-                        if (screen_block_size != None):
+                        if (screen_block_size is not None):
                             # Try to skip by the correct amount
                             file.seek(screen_block_size, 1)
 
@@ -446,7 +446,7 @@ def load_dict(file, tout_filter=lambda x: True, screen_filter=lambda x: True, sc
                         screen_tout_arrays = {}
                     else:
                         # If we are given the number of particles and elements in a tout
-                        if ((tout_block_size != None) and (first_tout == False)):
+                        if ((tout_block_size is not None) and not first_tout):
                             # Try to skip by the correct amount
                             file.seek(tout_block_size, 1)
 
@@ -467,7 +467,7 @@ def load_dict(file, tout_filter=lambda x: True, screen_filter=lambda x: True, sc
                         screen_tout_arrays = {}
                     else:
                         # If we are given the number of particles and elements in a tout
-                        if (screen_block_size != None):
+                        if (screen_block_size is not None):
                             # Try to skip by the correct amount
                             file.seek(screen_block_size, 1)
 
