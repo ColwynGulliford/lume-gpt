@@ -5,7 +5,7 @@ from pmd_beamphysics import ParticleGroup
 
 import numpy as np
 
-from .tools import isotime, native_type
+from .tools import isotime
 from . import _version
 __version__ = _version.get_versions()['version']
 

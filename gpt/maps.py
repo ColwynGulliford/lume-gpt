@@ -1,7 +1,6 @@
 import numpy as np
 import os
-import math, cmath
-from scipy.integrate import cumtrapz
+import math
 import tempfile
 import subprocess
 
@@ -11,12 +10,11 @@ from gpt.tools import cvector
 from gpt.tools import in_ecs
 from gpt.element import Element
 from gpt.element import Beg
-from gpt.template import basic_template
 from gpt.template import ztrack1_template
 
 from matplotlib import pyplot as plt
 
-from pmd_beamphysics import single_particle, FieldMesh
+from pmd_beamphysics import FieldMesh
 
 from scipy.optimize import brent
 import scipy.constants
@@ -580,7 +578,7 @@ class Map1D_TM(Map1D):
 
         map_line = map_line + f', {name}_phase, '
 
-        extra_lines.append(f'{name}_frequency = {self._frequency};');
+        extra_lines.append(f'{name}_frequency = {self._frequency};')
         extra_lines.append(f'{name}_gamma = 1;')
         map_line = map_line + f'2*pi*{name}_frequency);'
 
@@ -1104,7 +1102,7 @@ def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None
 
     #print(effective_plot_length)
 
-    if(ax == None):
+    if ax is None:
         ax = plt.gca()
 
     #pc = 0.5*(element.p_beg + element.p_end)
@@ -1159,7 +1157,7 @@ def plot_clyindrical_map_field_profile(element, ax=None, normalize=False):
         ax: returns current axis handle being used
     """
 
-    if(ax == None):
+    if ax is None:
         ax = plt.gca()
 
     Fz = element.Fz

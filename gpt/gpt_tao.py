@@ -4,7 +4,7 @@ from pmd_beamphysics import FieldMesh
 from pmd_beamphysics.fields.analysis import accelerating_voltage_and_phase
 
 #from . import GPT
-from .element import Quad, Screen
+from .element import Screen
 from .bstatic import Bzsolenoid, Quadrupole, Sectormagnet
 from .maps import Map2D_B, Map2D_E, Map25D_TM
 from .lattice import Lattice
@@ -13,7 +13,6 @@ from scipy.constants import physical_constants
 
 MC2 = physical_constants['electron mass energy equivalent in MeV'][0]*1e6
 
-from pprint import pprint
 
 import numpy as np
 

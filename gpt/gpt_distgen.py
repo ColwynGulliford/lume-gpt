@@ -2,7 +2,6 @@ from gpt import GPT
 from . import tools
 from .gpt import run_gpt
 
-from .tools import full_path
 
 from .merit import default_gpt_merit
 
