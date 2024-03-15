@@ -1,0 +1,331 @@
+
+
+sct = 6;
+#1 for 3Dmesh with Cathode 
+#6 for PMP
+
+gun_voltage=225;
+sol_1_current=2.42543;
+sol_2_current=0.646768;
+
+
+buncher_voltage=26.3247;
+phiCTB01_0=216.775254681;
+phiCTB01_off=-98.9637;
+phiCTB01=(phiCTB01_0 + phiCTB01_off)*pi/180;
+
+
+
+
+
+
+use_new_buncher = 0;
+auto_phase=0;
+space_charge=1.0;
+viewscreens_on=0.0;
+kill_backwards_particles = 0;
+optimize_on = 1;
+use_gpt_distribution = 0;
+
+use_HO_bzsol = 0;
+
+variable_iris_on = 0;
+sample_iris_on = 0;
+beampipe_boundary_on = 1;
+anode_iris_on = 1;
+buncher_boundary_on = 1;
+
+
+
+
+
+
+xoffset=0;
+yoffset=0;
+
+if (auto_phase == 1) {
+
+	setparticles("beam", 10, me, qe, 0);
+#	setxoffset("beam",xoffset);
+#	setyoffset("beam",yoffset);
+	mc2 = m*c*c/abs(qe);
+	KE = 1e-3;
+	G  = 1+KE/mc2 ;
+	setGdist( "beam", "u", G, 0) ;
+
+} else if (use_gpt_distribution == 1) {
+	
+        n_particles = 6000;
+	Qtot = -1.0e-12; 		
+	xyrms = 0.5e-3;  		
+	trms = 8.0e-12;  		
+	MTE = 0.0025;      		
+
+	setparticles("beam", n_particles, me, qe, Qtot);
+
+	
+	setxdist("beam","g",0,xyrms,5,5);
+	setydist("beam","g",0,xyrms,5,5);
+
+        
+	tlength = sqrt(12)*trms;
+	settdist("beam","u",0,tlength);
+	
+	mc2 = me*c*c/abs(qe);
+
+        sigma_GBx = sqrt(MTE/mc2);
+	sigma_GBy = sqrt(MTE/mc2);
+	sigma_GBz = sqrt(MTE/mc2);
+
+	setGBxdist("beam","g",0,sigma_GBx,5,5);
+        setGBydist("beam","g",0,sigma_GBy,5,5);  
+	setGBzdist("beam","u",sigma_GBz,0);
+
+} else{
+setfile("beam","1000PS.dis.gdf");
+}
+
+
+
+
+
+
+RadiusMax = 0.04;
+
+GBacc =5.5;
+xacc  =6.5;
+accuracy(GBacc, xacc);
+dtmin = 1e-16;
+
+Zdcgun = 0.0;
+anode_z_position = 0.02;
+Maxdcgun  = 300.0;
+Edcgun    = gun_voltage / Maxdcgun;
+Map2D_E("wcs", "z", Zdcgun, "fields/dcgun_analytic_5_20mm_2D.gdf", "R", "Z", "Er", "Ez", Edcgun);
+
+
+dZmin_gun_to_sol_1 = 0.15; 
+
+
+SLAPolarity = -1;
+LSLA01 = 0.6;
+XSLA01 = 0.0;
+YSLA01 = 0.0;
+dZSLA01 = 0.107407;
+ZSLA01 = anode_z_position + dZmin_gun_to_sol_1 + dZSLA01;
+
+
+
+
+
+
+turns = 27000;
+R =  0.0294;
+L =  0.0332;
+if(use_HO_bzsol==1) {
+	#bzsolenoidO3("wcs", "z", ZSLA01, R, L, turns*sol_1_current);
+} else {
+	bzsolenoid("wcs", "z", ZSLA01, R, L, turns*sol_1_current);
+}
+
+
+dZmin_sol_1_to_buncher = 0.1; 
+
+
+gammaCTB01=1.432725225;
+XCTB01 = 0.00;
+YCTB01 = 0.00;
+dZCTB01 = 0.320658;
+ZCTB01 = ZSLA01 + dZmin_sol_1_to_buncher + dZCTB01;
+
+if (use_new_buncher == 1) {
+	Master_RF = 3.9e9;
+	MaxECTB = 431.3825;  
+	UnitsECTB = 0.1305;  
+	ECTB01 = buncher_voltage / MaxECTB * UnitsECTB;
+	map3D_Ecomplex("wcs", XCTB01,YCTB01,ZCTB01, 1,0,0, 0,1,0, "fields/3.9GHzBuncher3D_E.gdf", "x","y","z", "ExRe","EyRe","EzRe", "ExIm","EyIm","EzIm", ECTB01, phiCTB01, 2*pi*Master_RF);
+	map3D_Hcomplex("wcs", XCTB01,YCTB01,ZCTB01, 1,0,0, 0,1,0, "fields/3.9GHzBuncher3D_H.gdf", "x","y","z", "HxRe","HyRe","HzRe", "HxIm","HyIm","HzIm", ECTB01, phiCTB01, 2*pi*Master_RF);    
+        buncher_length = 0.031;
+	buncher_radius = 0.0025;    
+} else {
+	Master_RF = 3.0e9;
+	MaxECTB = 6.2250;  
+	UnitsECTB = 1.0/6.0459; 
+	ECTB01 = buncher_voltage / MaxECTB * UnitsECTB;
+	Map25D_TM("wcs", XCTB01,YCTB01,ZCTB01,  1,0,0, 0,1,0, "fields/eindhoven_rf_4mm_center.gdf", "R", "Z", "Er", "Ez", "H", ECTB01, 0, phiCTB01, 2*pi*Master_RF);
+        
+        buncher_length = 0.04;
+	buncher_radius = 0.002;
+}
+
+
+
+dZmin_buncher_to_sol_2 = 0.1; 
+
+
+LSLA02 = 0.6;
+XSLA02 = 0.0;
+YSLA02 = 0.0;
+dZSLA02 = 0.0578299;
+ZSLA02 = ZCTB01 + dZmin_buncher_to_sol_2 + dZSLA02;
+BSLA02 = sol_2_current * SLAPolarity;
+
+
+
+
+
+turns = 27000;
+R =  0.0294;
+L =  0.0332;
+if (use_HO_bzsol==1) {
+	#bzsolenoidO3("wcs", "z", ZSLA02, R, L, turns*sol_2_current);
+} else {
+	bzsolenoid("wcs", "z", ZSLA02, R, L, turns*sol_2_current);
+}
+
+
+
+
+
+
+beam_pipe_radius = 0.0254/2;  
+
+
+anode_diameter = 0.005;
+forwardscatter("wcs","I","remove",0);
+
+if(anode_iris_on==1) {
+	scatteriris("wcs", "z", anode_z_position, anode_diameter/2, beam_pipe_radius) scatter="remove";    
+}
+
+
+
+
+
+
+
+pinhole_1_z = ZSLA01;
+pinhole_1_rmin = 0.00385156;
+
+if(variable_iris_on == 1) {
+	scatteriris("wcs", "z", pinhole_1_z, pinhole_1_rmin, beam_pipe_radius) scatter="remove";        
+}
+
+
+
+dZmin_solenoid_2_to_pinhole_2 = 0.0;
+
+
+dZ_pinhole_2 = 0.146929;
+pinhole_2_z = ZSLA02 + dZmin_solenoid_2_to_pinhole_2 + dZ_pinhole_2;  	
+pinhole_2_rmin = 100.0e-6; 
+
+if(sample_iris_on == 1) { 
+	scatteriris("wcs", "z", pinhole_2_z, pinhole_2_rmin, beam_pipe_radius) scatter="remove";
+}
+
+
+beam_pipe_length = pinhole_2_z;
+
+if(beampipe_boundary_on ==1 ) {
+	scatterpipe("wcs","I",0,beam_pipe_length,beam_pipe_radius) scatter="remove";  
+}
+
+
+
+
+
+if(buncher_boundary_on == 1) {
+	scatteriris("wcs", "z", ZCTB01 - 0.5*buncher_length, buncher_radius,beam_pipe_radius) scatter="remove";
+	scatterpipe("wcs","I",ZCTB01 - 0.5*buncher_length,ZCTB01 + 0.5*buncher_length,buncher_radius) scatter="remove";
+}
+
+
+tmax = 70e-9;
+z_sample = pinhole_2_z;
+
+
+
+
+
+
+Alpha  = 1.7;   
+Fn     = 0.18;  
+verror = 0.0020; 
+Nstd   = 12;
+
+#Alpha  = 1.5;
+#Fn     = 0.25;
+#verror = 0.0020;
+#Nstd   = 10;
+
+    
+if (space_charge == 1) {
+	if (sct == 0) {
+		setcharge2Dcircle("beam", total_charge);
+		spacecharge2Dcircle();
+	}
+	if (sct == 1) {
+		spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+		#spacecharge3Dmesh("Cathode");
+	}
+        if (sct == 2) {
+        setrmacrodist("beam","u",1e-10,0);
+	spacecharge3DTree(.3);
+	}
+        if (sct == 3) {
+               spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        }
+        if (sct == 4) {
+#        setrmacrodist("beam","u",1e-10,0);
+#        Imsctree(.4,0,1E-2,1e-6);
+#        Imsctree(.3,-10,1E-15,3e-9);
+        }
+        if (sct == 5) {
+        setrmacrodist("beam","u",1e-10,0);
+        SpaceCharge3D();
+        }
+        if (sct == 6) {
+        setrmacrodist("beam","u",1e-10,0);
+	    spacecharge3DTree(.3);
+#        spacecharge3DTree(.6);
+        spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd,"FieldFactor",-1);
+        }
+}
+
+
+
+
+time = 0;
+
+
+if (auto_phase == 1) {
+	zmax = z_sample+0.1;
+	screen("wcs","I",z_sample);
+
+	ZSTART = -0.005;
+	zminmax("wcs","I",ZSTART,zmax);
+} else if (optimize_on == 1) {
+	zmax = z_sample*1.5;
+        screen("wcs","I",z_sample/200,z_sample*1.2,z_sample/200);
+        tmax = 6e-9;
+        ZSTART = -0.00005;
+        zminmax("wcs","I",ZSTART,zmax);
+} else {
+	ZSTART = -0.005;
+	zminmax("wcs","I",ZSTART,ZSTOP);
+	dtout =2e-10;
+	tout(0,tmax,dtout);
+	if (kill_backwards_particles == 1) {
+	
+	}
+	
+}
+
+
+phasing_amplitude_0 = buncher_voltage;
+phasing_on_crest_0 = phiCTB01_0;
+phasing_relative_0 = phiCTB01_off;
+phasing_gamma_0 = gammaCTB01;
+
