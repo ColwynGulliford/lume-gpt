@@ -1,21 +1,13 @@
 import numpy as np
-import os
-import math, cmath
-from scipy.integrate import cumtrapz
-from scipy.optimize import brent
-from gpt.tools import is_floatable
 from gpt.tools import cvector
 from gpt.tools import rotation_matrix
-from gpt.tools import deg, rad
 from gpt.tools import get_arc
 from gpt.tools import write_ecs
 from gpt.tools import in_ecs
 from gpt.element import p_in_ccs
-from gpt.template import basic_template
 
 from matplotlib import pyplot as plt
 
-from numpy.linalg import norm 
 
 from gpt.element import SectorBend
 from gpt.element import Element
@@ -24,9 +16,7 @@ from gpt.element import Beg
 
 #from . import GPT
 
-import tempfile
 
-from pmd_beamphysics import single_particle
 
 from scipy.constants import physical_constants
 mu0 = physical_constants['mag. constant'][0]
@@ -81,7 +71,7 @@ class Sectormagnet(SectorBend):
 
         self._gap=gap
 
-        if(gap == None):
+        if gap is None:
             self._b1 = b1
         elif(gap>0 and gap < float('Inf')):
             self._b1 = 2/gap
@@ -212,7 +202,7 @@ class Sectormagnet(SectorBend):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
     def gpt_lines(self):
@@ -221,9 +211,9 @@ class Sectormagnet(SectorBend):
 
         bname = self.name
   
-        lines = lines + [f'\n#***********************************************']
+        lines = lines + ['\n#***********************************************']
         lines = lines + [f'#               Sectormagnet: {self.name}         ']
-        lines = lines + [f'#***********************************************']
+        lines = lines + ['#***********************************************']
 
         exit_ccs_line = f'\nccs("{self.ccs_beg}", {self.name}_end_x, {bname}_end_y, {bname}_end_z'
 
@@ -444,7 +434,7 @@ class Sectormagnet(SectorBend):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         s = getattr(self,'s')
@@ -538,7 +528,7 @@ class QuadF(Quad):
 
         self._G = G
 
-        if(gap == None):
+        if gap is None:
             self._b1 = b1
         elif(gap>0 and gap < float('Inf')):
             self._b1 = 2/gap
@@ -557,9 +547,9 @@ class QuadF(Quad):
 
         name = self.name
   
-        lines = lines + [f'\n#***********************************************']
+        lines = lines + ['\n#***********************************************']
         lines = lines + [f'#               Enge Quad: {self.name}         ']
-        lines = lines + [f'#***********************************************']
+        lines = lines + ['#***********************************************']
         
         lines = lines + [f'{name}_gradient = {self._G};']
         lines = lines + [f'{name}_length = {self._length};']
@@ -574,7 +564,7 @@ class QuadF(Quad):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         z = getattr(self,'z')
@@ -750,7 +740,7 @@ class Quadrupole(Quad):
 
         self._G = G
 
-        if(gap == None):
+        if gap is None:
             self._b1 = b1
         elif(gap>0 and gap < float('Inf')):
             self._b1 = 2/gap
@@ -771,9 +761,9 @@ class Quadrupole(Quad):
 
         name = self.name
   
-        lines = lines + [f'\n#***********************************************']
+        lines = lines + ['\n#***********************************************']
         lines = lines + [f'#               Enge Quad: {self.name}         ']
-        lines = lines + [f'#***********************************************']
+        lines = lines + ['#***********************************************']
         
         lines = lines + [f'{name}_gradient = {self._G};']
         lines = lines + [f'{name}_length = {self._length};']
@@ -788,7 +778,7 @@ class Quadrupole(Quad):
 
     def plot_field_profile(self, ax=None, normalize=False):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         z = getattr(self,'z')
@@ -1165,9 +1155,9 @@ class Bzsolenoid(Element):
 
         name = self.name
   
-        lines.append(f'\n#***********************************************')
+        lines.append('\n#***********************************************')
         lines.append(f'#               Bzsolenoid: {self.name}         ')
-        lines.append(f'#***********************************************')
+        lines.append('#***********************************************')
         
         lines.append(f'{name}_R = {self._R};')
         lines.append(f'{name}_L = {self.L};')

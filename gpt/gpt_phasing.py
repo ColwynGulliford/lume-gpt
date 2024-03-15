@@ -3,19 +3,15 @@
 # USAGE:  (last two arguments are optional)
 # python gpt_phasing input_file.in /path/to/gpt_exe/ /path/to/fields/
 
-import sys
-import math
 import re
 import os
 import subprocess
 import numpy
-import scipy
 import scipy.optimize as sp
 from optparse import OptionParser
 
 from pathlib import Path
 
-from time import time
 
 def main():
 
@@ -58,7 +54,7 @@ def gpt_phasing(path_to_input_file,
 
     #print(path_to_input_file, path_to_gpt_bin, path_to_phasing_dist)
 
-    if (verbose == True):
+    if verbose:
         print("\nPhasing: " + path_to_input_file )
 
     # Interpret input arguments
@@ -170,7 +166,7 @@ def gpt_phasing(path_to_input_file,
     phase_step = 20
     phase_test = numpy.arange(0, 360, phase_step)
 
-    if (verbose == True):
+    if verbose:
         print(" ")
 
     for cav_ii in range(len(amplitude_indices)):
@@ -211,7 +207,7 @@ def gpt_phasing(path_to_input_file,
 
             bracket = [left_bound, best_phase, right_bound]
 
-            if (verbose == True):
+            if verbose:
                 print("Cavity " + str(cav_ii) + ": Bracketed between " + str(left_bound) + " and " + str(right_bound))
         
             if (numpy.std(gamma_test) == 0):
@@ -233,7 +229,7 @@ def gpt_phasing(path_to_input_file,
             if (len(gamma_indices) > 0):
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
 
-            if (verbose == True):
+            if verbose:
                 print("Cavity " + str(cav_ii) + ": Best phase = " + str(best_phase) + ", final gamma = " + str(final_gamma))
                 print(" ")
 
@@ -247,7 +243,7 @@ def gpt_phasing(path_to_input_file,
             if (len(gamma_indices) > 0):
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
 
-            if (verbose == True):
+            if verbose:
                 print("Skipping: Cavity " + str(cav_ii) + ": Best phase = " + str(best_phase) + ", final gamma = " + str(final_gamma))
                 print(" ")
 
@@ -374,7 +370,7 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
         stdout, stderr = p.communicate()
   
         print(stdout.decode("utf-8") )
-        raise ValueError(f'GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
+        raise ValueError('GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
         
     #print('found', gamma)
     return gamma
@@ -391,7 +387,7 @@ def set_variable_by_name(gpt_input_text, name, value, crash_on_error):
     if (index > -1):
         gpt_input_text_new = set_variable_on_line(gpt_input_text_new, index, value)
     else:
-        if (crash_on_error == True):
+        if crash_on_error:
             raise ValueError("GPT PHASING ERROR: variable " + name + " not found.")
 
     return gpt_input_text_new
@@ -429,7 +425,7 @@ def get_variable_by_name(gpt_input_text, name):
     index = find_line_with_variable_name(gpt_input_text, name)
 
     if (index < 0):
-        return 0;
+        return 0
 
     gpt_input_text_new = gpt_input_text
 
@@ -489,7 +485,7 @@ def sort_lines_by_first_integer(lines, indices):
     
     for ii in indices:
         line = lines[ii]
-        m = re.search("\d+", line)
+        m = re.search(r"\d+", line)
         integer_string = m.group(0)
         numbers.append(float(integer_string))
    
@@ -519,7 +515,7 @@ def get_variable_with_string_value(line):
 # ---------------------------------------------------------------------------- #
 def find_lines_containing(lines, string):
     
-    string_lower = string.lower();
+    string_lower = string.lower()
 
     indices = []
     for ii in range(len(lines)):

@@ -1,14 +1,9 @@
 import numpy as np
-import os
-import math, cmath
-from scipy.integrate import cumtrapz
 from gpt.tools import rotation_matrix
-from gpt.tools import is_floatable
 from gpt.tools import cvector
 
 from matplotlib import pyplot as plt
 
-from numpy.linalg import norm 
 
 
 class ScreenZXS():
@@ -36,7 +31,7 @@ class ScreenZXS():
 
     def plot(self, axis=None, alpha=1.0, ax=None):
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         if(self._ccs_origin is not None):

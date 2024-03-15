@@ -12,7 +12,7 @@ from gpt.element import is_bend
 from gpt.template import BASIC_TEMPLATE
 from gpt.tools import full_path
 from gpt.tools import is_floatable
-from gpt.maps import Map1D_E, Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
+from gpt.maps import Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
 import numpy as np
 
 from matplotlib import pyplot as plt
@@ -150,7 +150,7 @@ class Lattice():
             ax: axes handle used for plots
         """
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         orbit = self.orbit_ref
@@ -194,7 +194,7 @@ class Lattice():
             ax: axes handle used for plots
         """
 
-        if(ax == None):
+        if ax is None:
             ax = plt.gca()
 
         for ele in self._elements:
@@ -441,7 +441,7 @@ class Lattice():
                             slices=None, 
                             legacy_phasing=False):
         
-        if(template_dir==None):
+        if template_dir is None:
             self.template_dir = tempfile.TemporaryDirectory()
             template_dir_str = str(self.template_dir.name)          
         else:

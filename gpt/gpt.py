@@ -420,7 +420,7 @@ class GPT:
             self.set_dist_file(fname)
         
         #init_dir = os.getcwd()
-        self.vprint(f'   Running GPT...')
+        self.vprint('   Running GPT...')
 
         # Write input file from internal dict
         self.write_input_file()
