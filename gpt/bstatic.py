@@ -20,6 +20,8 @@ from gpt.element import Beg
 
 from scipy.constants import physical_constants
 mu0 = physical_constants['mag. constant'][0]
+qe = -np.abs(physical_constants['elementary charge'][0])
+
 #c = physical_constants['c'][0]
 
 from scipy.constants import c
@@ -59,8 +61,10 @@ class Sectormagnet(SectorBend):
 
         self._type = 'Sectormagnet'
 
-        if(species == 'electron'):
-            self._q = -1.60217662e-19
+        if(species == 'electron' or species == 'muon'):
+            self._q = qe
+        elif(species == 'positron'):
+            self._q = np.abs(qe)
         else:
             raise ValueError(f'Unknown particle type: {species}')
 
