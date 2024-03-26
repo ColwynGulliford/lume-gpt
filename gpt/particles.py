@@ -1,5 +1,8 @@
 from pmd_beamphysics import ParticleGroup
 from pmd_beamphysics.units import c_light, e_charge, mec2
+from pmd_beamphysics.species import mass_of
+
+from scipy.constants import physical_constants
 
 
 from gpt.tools import transform_to_centroid_coordinates
@@ -15,25 +18,29 @@ def identify_species(mass, charge):
     Finds species:
         'electron'
         'positron'
+        'proton'
         'H2+'
     
     TODO: more species
     
     """
-    
-    
-    if mass == 3.347115e-27 and charge== 1.602e-19:
+
+    qelem = physical_constants['elementary charge'][0]
+
+    if np.isclose(mass, 3.347115e-27, atol=0) and np.isclose(charge, qelem, atol=0):
         return 'H2+'
-    
-    m = round(mass*1e32)/1e32
-    q = round(charge*1e20)/1e20
-    if m == 9.1e-31:
-        if q == 1.6e-19:
-            return 'positron'
-        if q == -1.6e-19:
-            return 'electron'
+
+    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0) and np.isclose(charge, -qelem, atol=0):
+        return 'electron'
+
+    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0) and np.isclose(charge, +qelem, atol=0):
+        return 'positron'
+
+    elif np.isclose(mass,  physical_constants['proton mass'][0], atol=0) and np.isclose(charge, +qelem, atol=0):
+        return 'proton'
         
-    raise Exception(f'Cannot identify species with mass {mass} and charge {charge}')
+    else:
+        raise ValueError(f'Cannot identify species with mass {mass} and charge {charge}')
    
 
 def raw_data_to_particle_data(gpt_output_dict, verbose=False):
@@ -67,11 +74,11 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     #data['py'] = gpt_output_dict['GBy']*gpt_output_dict['m']*factor
     #data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
 
-    mec = mec2 #[mc] in eV/c
+    mc = mass_of(species)  # Returns rest energy in eV, which corresponds to same numeric value of mc [eV/c] 
 
-    data['px'] = gpt_output_dict['GBx']*mec
-    data['py'] = gpt_output_dict['GBy']*mec
-    data['pz'] = gpt_output_dict['GBz']*mec
+    data['px'] = gpt_output_dict['GBx']*mc
+    data['py'] = gpt_output_dict['GBy']*mc
+    data['pz'] = gpt_output_dict['GBz']*mc
 
     data['t'] = gpt_output_dict['t']
     data['status'] = np.full(n_particle, 1)
