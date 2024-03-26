@@ -963,14 +963,14 @@ class Quadrupole(Quad):
     
 class Bzsolenoid(Element):
     
-    def __init__(self, name, L, R, nI, Lbound=None):
+    def __init__(self, name, L, R, nI, Lbound=None, width=None):
         
         if(Lbound is None):
             Lbound = L
             
         if(R==0):
             width = 0.1
-        else:
+        elif width is None:
             width = 2*R
         
         super().__init__(name, length=Lbound, width=width, height=0, angles=[0,0,0], color='k')

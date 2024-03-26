@@ -1,4 +1,5 @@
 n_particle: 2000
+species: electron
 random_type: hammersley
 start:
     MTE:

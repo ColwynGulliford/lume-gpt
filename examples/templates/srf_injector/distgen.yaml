@@ -1,4 +1,5 @@
 n_particle: 10000
+species: electron
 r_dist:
   n_sigma_cutoff: 1
   sigma_xy:

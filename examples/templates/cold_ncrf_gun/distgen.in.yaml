@@ -1,5 +1,6 @@
 n_particle: 20000
 random_type: hammersley
+species: electron
 
 total_charge:
   units: nC

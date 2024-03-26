@@ -1,0 +1,179 @@
+
+setfile("beam", "gpt_particles.gdf");
+time=0.0;
+
+auto_phase=0.0;
+space_charge=0.0;
+cathode=0.0;
+space_charge_type=1.0;
+RadiusMax=0.04;
+GBacc=5.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=1e-16;
+dtmax=1e-10;
+ 
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+
+    if (space_charge_type == 1) {
+        if(cathode == 1) {
+            spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        } else {
+            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        }
+    }
+    if (space_charge_type == 2) {
+        setrmacrodist("beam","u",tree_code_R,0) ;
+        spacecharge3Dtree(tree_code_theta) ;   }
+        
+    #if (space_charge_type == 3) {
+    #    spacechargeP2Pgpu("3D", "SinglePrecision");
+    #    }
+}
+Ntout=50.0;
+tmax=10e-9;
+ZSTART=-0.005;
+ZSTOP=3;
+zminmax("wcs", "I", ZSTART, ZSTOP);
+
+if(Ntout>0) {
+    tout(time, tmax, tmax/Ntout);
+}
+
+
+# b1
+
+#***********************************************
+#               Sectormagnet: b1         
+#***********************************************
+b1_end_x = 0.00759612349389599;
+b1_end_y = 0.0;
+b1_end_z = 0.33682408883346515;
+
+ccs("wcs", b1_end_x, b1_end_y, b1_end_z, 0.9848077530122082, 0.0, -0.17364817766693036, 0, 1, 0, "b1_ccs_end");
+
+b1_radius = 0.5;
+b1_Bfield = 0.006671281903963041;
+b1_phi_in = 0;
+b1_phi_out = 10;
+b1_fringe_dl = 0;
+b1_fringe_b1 = 0;
+b1_fringe_b2 = 0;
+
+sectormagnet("wcs", "b1_ccs_end", b1_radius, b1_Bfield, b1_phi_in/deg, b1_phi_out/deg, b1_fringe_dl, b1_fringe_b1, b1_fringe_b2);
+
+# b2
+
+#***********************************************
+#               Sectormagnet: b2         
+#***********************************************
+b2_end_x = -0.00759612349389599;
+b2_end_y = 0.0;
+b2_end_z = 0.18682408883346513;
+
+ccs("b1_ccs_end", b2_end_x, b2_end_y, b2_end_z, 0.9848077530122082, 0.0, 0.17364817766693036, 0, 1, 0, "b2_ccs_end");
+
+b2_radius = 0.5;
+b2_Bfield = 0.006671281903963041;
+b2_phi_in = 10;
+b2_phi_out = 0;
+b2_fringe_dl = 0;
+b2_fringe_b1 = 0;
+b2_fringe_b2 = 0;
+
+sectormagnet("b1_ccs_end", "b2_ccs_end", b2_radius, b2_Bfield, b2_phi_in/deg, b2_phi_out/deg, b2_fringe_dl, b2_fringe_b1, b2_fringe_b2);
+
+# b3
+
+#***********************************************
+#               Sectormagnet: b3         
+#***********************************************
+b3_end_x = -0.29999999999999993;
+b3_end_y = 0.0;
+b3_end_z = 0.39999999999999997;
+
+ccs("b2_ccs_end", b3_end_x, b3_end_y, b3_end_z, 6.123233995736766e-17, 0.0, 1.0, 0, 1, 0, "b3_ccs_end");
+
+b3_radius = 0.3;
+b3_Bfield = 0.011118803173271736;
+b3_phi_in = 0;
+b3_phi_out = 0;
+b3_fringe_dl = 0;
+b3_fringe_b1 = 0;
+b3_fringe_b2 = 0;
+
+sectormagnet("b2_ccs_end", "b3_ccs_end", b3_radius, b3_Bfield, b3_phi_in/deg, b3_phi_out/deg, b3_fringe_dl, b3_fringe_b1, b3_fringe_b2);
+
+# b4
+
+#***********************************************
+#               Sectormagnet: b4         
+#***********************************************
+b4_end_x = -0.29999999999999993;
+b4_end_y = 0.0;
+b4_end_z = 0.3;
+
+ccs("b3_ccs_end", b4_end_x, b4_end_y, b4_end_z, 6.123233995736766e-17, 0.0, 1.0, 0, 1, 0, "b4_ccs_end");
+
+b4_radius = 0.3;
+b4_Bfield = 0.011118803173271736;
+b4_phi_in = 0;
+b4_phi_out = 0;
+b4_fringe_dl = 0;
+b4_fringe_b1 = 0;
+b4_fringe_b2 = 0;
+
+sectormagnet("b3_ccs_end", "b4_ccs_end", b4_radius, b4_Bfield, b4_phi_in/deg, b4_phi_out/deg, b4_fringe_dl, b4_fringe_b1, b4_fringe_b2);
+
+# b5
+
+#***********************************************
+#               Sectormagnet: b5         
+#***********************************************
+b5_end_x = -0.00759612349389599;
+b5_end_y = 0.0;
+b5_end_z = 0.18682408883346513;
+
+ccs("b4_ccs_end", b5_end_x, b5_end_y, b5_end_z, 0.9848077530122082, 0.0, 0.17364817766693036, 0, 1, 0, "b5_ccs_end");
+
+b5_radius = 0.5;
+b5_Bfield = 0.006671281903963041;
+b5_phi_in = 0;
+b5_phi_out = 10;
+b5_fringe_dl = 0;
+b5_fringe_b1 = 0;
+b5_fringe_b2 = 0;
+
+sectormagnet("b4_ccs_end", "b5_ccs_end", b5_radius, b5_Bfield, b5_phi_in/deg, b5_phi_out/deg, b5_fringe_dl, b5_fringe_b1, b5_fringe_b2);
+
+# b6
+
+#***********************************************
+#               Sectormagnet: b6         
+#***********************************************
+b6_end_x = 0.00759612349389599;
+b6_end_y = 0.0;
+b6_end_z = 0.18682408883346513;
+
+ccs("b5_ccs_end", b6_end_x, b6_end_y, b6_end_z, 0.9848077530122082, 0.0, -0.17364817766693036, 0, 1, 0, "b6_ccs_end");
+
+b6_radius = 0.5;
+b6_Bfield = 0.006671281903963041;
+b6_phi_in = 10;
+b6_phi_out = 0;
+b6_fringe_dl = 0;
+b6_fringe_b1 = 0;
+b6_fringe_b2 = 0;
+
+sectormagnet("b5_ccs_end", "b6_ccs_end", b6_radius, b6_Bfield, b6_phi_in/deg, b6_phi_out/deg, b6_fringe_dl, b6_fringe_b1, b6_fringe_b2);
+
+# beg
+
+# s1
+screen("b6_ccs_end", 0, 0, -1.9415436464758038, 1, 0, 0, 0, 1, 0, 2.191543646475804);
