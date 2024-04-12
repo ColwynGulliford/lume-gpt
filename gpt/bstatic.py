@@ -1216,7 +1216,7 @@ class Bzsolenoid(Element):
         
         return res
     
-    def plot_floor(self, ax = None, axis=None, alpha=1, xlim=None, ylim=None, style=None):
+    def plot_floor(self, ax = None, axis=None, alpha=1, xlim=None, ylim=None, style=None, field_tol=1e-2):
         
         if(ax is None):
             ax = plt.gca()
@@ -1242,8 +1242,23 @@ class Bzsolenoid(Element):
         
         ps = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
         
-        ax.plot(ps[2], ps[0], self.color, alpha=0.5)
-        ax.plot(ps[2], ps[0], self.color, alpha=0.5)
+        ax.plot(ps[2], ps[0], self.color)
+        ax.plot([p1[2], p3[2]], [p1[0], p4[0]], self.color)
+        ax.plot([p1[2], p3[2]], [p4[0], p3[0]], self.color)
+
+        z_cutoff = self.z_cutoff(field_tol)
+
+        dp = 2*z_cutoff*self.e3_beg
+
+        p1 = pc + (self.R)*cvector(self._M_beg[:,0]) - 0.5*dp
+        p2 = pc - (self.R)*cvector(self._M_beg[:,0]) - 0.5*dp
+        p3 = pc + (self.R)*cvector(self._M_end[:,0]) + 0.5*dp
+        p4 = pc - (self.R)*cvector(self._M_end[:,0]) + 0.5*dp
+
+        ps = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
+
+        ax.plot(ps[2], ps[0], self.color, alpha=0.25)
+
 
         
         #ax.plot([p1o[2], p3o[2]], [p1o[0], p3o[0]], self.color, alpha=alpha)
@@ -1257,6 +1272,32 @@ class Bzsolenoid(Element):
 
     #ps2 = np.concatenate( (p1, p2, p3, p4, p1), axis=1)
 
+    def plot_field_profile(self, ax=None, normalize=False, field_tol=1e-3):
+
+        if ax is None:
+            ax = plt.gca()
+
+        z_cutoff = self.z_cutoff(field_tol)
+
+        sc = 0.5*(self.s_beg + self.s_end)
+
+        ds = np.linspace(-z_cutoff, +z_cutoff, 100)
+        s = sc + ds
+        B = self.Bz(ds)
+        if normalize:
+            B = B/B[np.argmax(np.abs(B))]
+
+        ax.plot(s, B)
+        ax.set_xlabel('s (m)')
+
+        if not normalize:
+            ax.set_ylabel('Bz (T)')
+
+        
+
+        
+
+        
         
         
         
