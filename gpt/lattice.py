@@ -13,6 +13,7 @@ from gpt.template import BASIC_TEMPLATE
 from gpt.tools import full_path
 from gpt.tools import is_floatable
 from gpt.maps import Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
+from gpt.bstatic import Bzsolenoid
 import numpy as np
 
 from matplotlib import pyplot as plt
@@ -339,7 +340,7 @@ class Lattice():
         return {ele._name:ele.to_dict() for ele in self._elements}
 
     def parse(self, gpt_file, style=None):
-        
+
         abs_gpt_file = full_path(gpt_file)
         
         with open(gpt_file, 'r') as fid:
@@ -349,15 +350,29 @@ class Lattice():
             variables = { line.split("=")[0].strip():float(line.split("=")[1][:-1].strip()) for line in lines if( len(line.split("="))==2 and is_floatable(line.split("=")[1][:-1])) }
             
             map_lines = [line for line in lines if line.startswith('Map')]
-            
+        
             for mline in map_lines: 
                 
-                #try:
-                self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
-                #except:
-                #    print(f'Could not parse: {mline}')
+                try:
+                    self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
+                except:
+                    print(f'Could not parse fieldmap: {mline}')
                     
             #fmap = [self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style) for mline in map_lines]
+
+
+            bstatic_lines = [line for line in lines if line.split('(')[0] in ['bzsolenoid', 
+                                                                              'quadrupole', 
+                                                                              'sectormagnet']]
+
+            for bline in bstatic_lines:
+
+                #try:
+                self.parse_bstatic_element(bline, variables, style=style)
+                #except:
+                #    print(f'Could not parse bstatic element: {bline}')
+                    
+                
         
 
 
@@ -432,7 +447,50 @@ class Lattice():
                 ele_origin = 'center'
                 
             self.add(ele, ds=zpos, ref_element='beg', element_origin=ele_origin)
+
+    def parse_bstatic_element(self, bline, variables, style=None):
+
+        btype = bline.split('(')[0]
+        
+        tokens = [t.strip() for t in bline.split(',')]
+        tokens[0] = tokens[0].split('(')[1]
+        tokens[-1] = tokens[-1].split(')')[0]
+
+        bname = tokens[10].split('_')[0]
+
+        if(tokens[0]=='"wcs"'):    
+        
+            zstr = tokens[3]
+            if(is_floatable(zstr)):
+                zpos=float(zstr)
+            elif(zstr in variables):
+                zpos=variables[zstr]
+                
+            else:
+                print('Could not parse z-position for bline')
+
+            #print(zpos)
+
+            assert( int(tokens[4])==1 and #xhat = (1, 0, 0)
+               int(tokens[5])==0 and 
+               int(tokens[6])==0 and 
+               int(tokens[7])==0 and #yhat = (0, 1, 0)
+               int(tokens[8])==1 and 
+               int(tokens[9])==0) 
             
+            ele_name = f'ele_{len(self._elements) + 1}'
+
+                
+        if(btype=='bzsolenoid'):
+
+            ele = Bzsolenoid(ele_name, 
+                             variables[tokens[11]], 
+                             variables[tokens[10]], 
+                             variables[bname+'_bs_field']/variables[bname+'_mu0'])
+        
+        
+            self.add(ele, ds=zpos, ref_element='beg', element_origin='center')
+        
             
     def create_template_dir(self, 
                             template_dir=None, 
