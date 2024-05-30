@@ -27,16 +27,16 @@ def identify_species(mass, charge):
 
     qelem = physical_constants['elementary charge'][0]
 
-    if np.isclose(mass, 3.347115e-27, atol=0) and np.isclose(charge, qelem, atol=0):
+    if np.isclose(mass, 3.347115e-27, atol=0) and np.isclose(charge, qelem, atol=0, rtol=1e-04):
         return 'H2+'
 
-    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0) and np.isclose(charge, -qelem, atol=0):
+    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0, rtol=1e-04) and np.isclose(charge, -qelem, atol=0, rtol=1e-04):
         return 'electron'
 
-    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0) and np.isclose(charge, +qelem, atol=0):
+    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0, rtol=1e-04) and np.isclose(charge, +qelem, atol=0, rtol=1e-04):
         return 'positron'
 
-    elif np.isclose(mass,  physical_constants['proton mass'][0], atol=0) and np.isclose(charge, +qelem, atol=0):
+    elif np.isclose(mass,  physical_constants['proton mass'][0], atol=0, rtol=1e-04) and np.isclose(charge, +qelem, atol=0, rtol=1e-04):
         return 'proton'
         
     else:
