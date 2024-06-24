@@ -1095,6 +1095,10 @@ class Bzsolenoid(Element):
     @property
     def L_hard_edge(self):
         return self.intBzdz**2 / self.intBz2dz
+
+    @property
+    def B0_hard_edge(self):
+        return self.intBz2dz / self.intBzdz
         
     @property
     def max_abs_Bz(self):

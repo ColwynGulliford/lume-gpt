@@ -941,6 +941,94 @@ class Map25D_TM(Map2D):
 
 
 
+class Map3D_E(GDFFieldMap):
+
+    def __init__(self, 
+        name, 
+        source_data, 
+        scale=1,
+        gdf2a_bin='$GDF2A_BIN', 
+        column_names={'x':'x', 'y':'y', 'z':'z', 'Ex':'Ey', 'Ez':'Ez'}, 
+        required_columns=['x', 'y', 'z', 'Ex', 'Ey', 'Ez'],
+    #             e1=[1, 0, 0], 
+    #             e2=[0, 1, 0],
+        color='tab:blue',
+        style=None):
+
+        self.column_names = column_names
+
+        GDFFieldMap.__init__(self, source_data, gdf2a_bin=gdf2a_bin, use_temp_file=True)
+
+        self._name = name
+        self._scale = scale
+        self._type = 'Map3D_E'
+        self._length = max(self['z']) - min(self['z'])
+        self._width =  max(self['x']) - min(self['x'])
+        self._height = max(self['y']) - min(self['y']) 
+        self._style = style
+        self._color = color
+
+        #self.column_names = column_names
+        self.required_columns = required_columns
+
+    @property
+    def x(self):
+        return np.unique(self['x'])
+
+    @property
+    def y(self):
+        return np.unique(self['y'])
+
+    @property
+    def z(self):
+        return np.unique(self['z'])
+
+    @property
+    def Ex(self):
+        return np.unique(self['Ex'])
+
+    @property
+    def Ey(self):
+        return np.unique(self['Ey'])
+
+    @property
+    def Ez(self):
+        return np.unique(self['Ez'])
+
+    @property
+    def Ez0(self):
+        return self['Ez'][ (self['x']==0) & (self['y']==0)]
+
+    def plot_field_profile(self, ax=None, normalize=True):
+
+        if ax is None:
+            ax=plt.gca()
+
+        if normalize:
+            f = 1/max(np.abs(self.Ez0))
+        else:
+            f=1
+
+        ax.plot(self.z, f*self.Ez0)
+        ax.set_xlabel('z (m)')
+        if normalize:
+            ax.set_ylabel('Field Profile (arb)')
+        else:
+            ax.set_ylabel('$E_z(x=y=0)$ (V/m)')
+
+        return ax
+
+
+    
+
+        
+    
+
+
+
+
+
+
 def write_1d_map(element, filename=None, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN')):
 
     if(element.type in ['Map2D_E', 'Map2D_B', 'Map25D_TM']):
