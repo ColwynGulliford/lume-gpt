@@ -14,7 +14,7 @@ def fstr(s):
     """
     Makes a fixed string for h5 files
     """
-    return np.string_(s)
+    return np.bytes_(s)
 
 
 def gpt_init(h5, version=__version__):
@@ -53,7 +53,7 @@ def opmd_init(h5, basePath='/screen/%T/', particlesPath='/' ):
 #----------------------------        
 # Searching archives
 
-def is_gpt_archive(h5, key='dataType', value=np.string_('lume-gpt')):
+def is_gpt_archive(h5, key='dataType', value=np.bytes_('lume-gpt')):
     """
     Checks if an h5 handle is a lume-gpt archive
     """
