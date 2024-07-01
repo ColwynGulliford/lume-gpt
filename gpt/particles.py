@@ -1,6 +1,8 @@
 from pmd_beamphysics import ParticleGroup
 from pmd_beamphysics.units import c_light, e_charge, mec2
-from pmd_beamphysics.species import mass_of
+from pmd_beamphysics.species import mass_of, MASS_OF
+from pmd_beamphysics.species import charge_of, CHARGE_OF
+from pmd_beamphysics.species import mH2pc2
 
 from scipy.constants import physical_constants
 
@@ -25,9 +27,20 @@ def identify_species(mass, charge):
     
     """
 
+    for species, mc2 in MASS_OF.items():
+
+        MC2 = mass * c_light**2 / e_charge
+
+        if np.isclose(MC2, mc2, atol=0, rtol=1e-04) and np.isclose(charge, charge_of(species), atol=0, rtol=1e-04):
+            return species
+
+    raise ValueError(f'Cannot identify species with mass {mass} and charge {charge}')
+
+
+    """
     qelem = physical_constants['elementary charge'][0]
 
-    if np.isclose(mass, 3.347115e-27, atol=0) and np.isclose(charge, qelem, atol=0, rtol=1e-04):
+    if np.isclose(mass, mH2pc2, atol=0) and np.isclose(charge, qelem, atol=0, rtol=1e-04):
         return 'H2+'
 
     elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0, rtol=1e-04) and np.isclose(charge, -qelem, atol=0, rtol=1e-04):
@@ -41,7 +54,7 @@ def identify_species(mass, charge):
         
     else:
         raise ValueError(f'Cannot identify species with mass {mass} and charge {charge}')
-   
+    """
 
 def raw_data_to_particle_data(gpt_output_dict, verbose=False):
 
