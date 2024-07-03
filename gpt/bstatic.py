@@ -717,7 +717,7 @@ class QuadF(Quad):
         z = getattr(self,'z')
         G = self.grad(z)
 
-        return np.trapz(G, z)/self._G
+        return np.trapezoid(G, z)/self._G
 
     @property
     def z(self):
@@ -939,7 +939,7 @@ class Quadrupole(Quad):
         z = getattr(self,'z')
         G = self.grad(z)
 
-        return np.trapz(G, z)/self._G
+        return np.trapezoid(G, z)/self._G
 
     @property
     def z(self):
@@ -1186,8 +1186,8 @@ class Bzsolenoid(Element):
                          
     def fit_to_1d_map(self, z, Bz, set_results=True):
         
-        intBzdz = np.trapz(Bz, z)
-        intBz2dz = np.trapz(Bz**2, z)
+        intBzdz = np.trapezoid(Bz, z)
+        intBz2dz = np.trapezoid(Bz**2, z)
         
         Leff = intBz2dz/intBzdz
         B = Bz[np.argmax(np.abs(Bz))]
