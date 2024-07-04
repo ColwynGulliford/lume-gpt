@@ -361,7 +361,7 @@ class Map1D(GDFFieldMap):
     @property
     def field_integral(self):
         """ Returns the on axis integral of the Fz """
-        return np.trapz(self.Fz, self.z0)
+        return np.trapezoid(self.Fz, self.z0)
 
     @property
     def z0(self):
@@ -496,7 +496,7 @@ class Map1D_B(Map1D):
 
     @property
     def Bz2_integral(self):
-        return np.trapz(self.Fz**2, self.z0)
+        return np.trapezoid(self.Fz**2, self.z0)
 
     def to_dict(self):
 
@@ -656,7 +656,7 @@ class Map2D(GDFFieldMap):
         Outputs:
             float, integral ( Fz(r=0) dz)
         """
-        return np.trapz(self.Fz, self.z0)
+        return np.trapezoid(self.Fz, self.z0)
 
     @property
     def z0(self):
@@ -1311,7 +1311,7 @@ def cavity_voltage(cavity):
 
     Ez = cavity.Ez0*np.exp(1j*w*zs/c)
 
-    return np.absolute( np.trapz(Ez , zs) )
+    return np.absolute( np.trapezoid(Ez , zs) )
 
 
 def track_on_axis(element, t, p, xacc=6.5, GBacc=12, dtmin=1e-15, dtmax=1e-8, n_screen=1, workdir=None):

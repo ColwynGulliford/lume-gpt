@@ -387,7 +387,7 @@ def transform_to_centroid_coordinates(particles, e2=cvector([0,1,0])):
 
     def max_energy_gain(z, Ez, w):
 
-        return np.abs( np.trapz( Ez*np.exp(1j*w*z/c), z) )
+        return np.abs( np.trapezoid( Ez*np.exp(1j*w*z/c), z) )
 
 
 
