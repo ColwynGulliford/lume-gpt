@@ -59,6 +59,7 @@ class GPT:
                  ref_ccs=False,
                  kill_msgs=DEFAULT_KILL_MSGS,
                  load_fields=False,
+                 spin_tracking=False,
                  parse_layout=True,
                  copy_support_files=False,
                  n_cpu=1):
@@ -93,6 +94,7 @@ class GPT:
         self.ref_ccs = ref_ccs
         self.kill_msgs=kill_msgs
         self.load_fields=load_fields
+        self.spin_tracking=spin_tracking
         
         self.parse_layout=parse_layout
         self.copy_support_files=copy_support_files
@@ -237,7 +239,11 @@ class GPT:
 
         self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
         
-        touts, screens, fields = parsers.read_gdf_file(file, self.verbose, load_fields=self.load_fields)  # Raw GPT data
+        touts, screens, fields, spins = parsers.read_gdf_file(file, 
+                                                              self.verbose, 
+                                                              load_fields=self.load_fields,
+                                                              spin_tracking=True
+                                                             )  # Raw GPT data
 
         #print(self.load_fields, fields)
 
@@ -246,6 +252,7 @@ class GPT:
         self.output['n_screen'] = len(screens)
         
         self.output['fields']=fields
+        self.output['spin']=spins
 
     @property
     def n_tout(self):
@@ -360,6 +367,11 @@ class GPT:
     def fields(self):
         if('fields' in self.output):
             return self.output['fields']
+
+    @property
+    def spin(self):
+        if('spin' in self.output):
+            return self.outputs['spin']
    
 
     def run(self, gpt_verbose=False):
@@ -384,8 +396,11 @@ class GPT:
             outfile = '.'.join(tokens[:-1])+'.out.gdf'
         else:
             outfile = tokens[0]+'.out.gdf'
-        
-        runscript = [self.gpt_bin, f'-j{self.n_cpu}', '-v', '-o', self.get_gpt_output_file(), self.input_file]
+
+        if self.spin_tracking:
+            runscript = [self.gpt_bin, f'-j{self.n_cpu}', '-v', '-s', '-o', self.get_gpt_output_file(), self.input_file]
+        else:
+            runscript = [self.gpt_bin, f'-j{self.n_cpu}', '-v', '-o', self.get_gpt_output_file(), self.input_file]
             
         if write_to_path:
             with open(os.path.join(self.path, 'run'), 'w') as f:

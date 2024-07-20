@@ -190,7 +190,10 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
         if(ccs_beg!="wcs"):
             f.write(f'settransform("{ccs_beg}", 0,0,0, 1,0,0, 0,1,0, "beam");\n')
 
-def read_particle_gdf_file(gdffile, verbose=0.0, extra_screen_keys=['q','nmacro'], load_files=False): #,'ID', 'm']):
+def read_particle_gdf_file(gdffile, 
+                           verbose=0.0, 
+                           extra_screen_keys=['q','nmacro'], 
+                           load_files=False): #,'ID', 'm']):
 
     with open(gdffile, 'rb') as f:
         data = easygdf.load_initial_distribution(f, extra_screen_keys=extra_screen_keys)
@@ -222,7 +225,7 @@ def read_particle_gdf_file(gdffile, verbose=0.0, extra_screen_keys=['q','nmacro'
 
     return screen
 
-def read_gdf_file(gdffile, verbose=False, load_fields=False):
+def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False):
       
     # Read in file:
 
@@ -230,12 +233,16 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False):
     #self.vprint("Current file: '"+data_file+"'",1,True)
     #self.vprint("Reading data...",1,False)
     t1 = time.time()
+
+    extra_tout_keys   = ['q', 'nmacro', 'ID', 'm']
+    
     with open(gdffile, 'rb') as f:
         
         if(load_fields):
-            extra_tout_keys   = ['q', 'nmacro', 'ID', 'm', 'fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
-        else:
-            extra_tout_keys   = ['q', 'nmacro', 'ID', 'm']
+            extra_tout_keys = extra_tout_keys + ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
+
+        if spin_tracking:
+            extra_tout_keys = extra_tout_keys + ['spinx', 'spiny', 'spinz', 'sping']
         
         touts, screens = easygdf.load(f, extra_screen_keys=['q','nmacro', 'ID', 'm'], extra_tout_keys=extra_tout_keys)
         
@@ -245,18 +252,19 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False):
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 
-    tdata, fields = make_tout_dict(touts, load_fields=load_fields)
+    tdata, fields, spins = make_tout_dict(touts, load_fields=load_fields)
     pdata = make_screen_dict(screens)
 
-    return (tdata, pdata, fields)
+    return (tdata, pdata, fields, spins)
 
 
 
 
-def make_tout_dict(touts, load_fields=False):
+def make_tout_dict(touts, load_fields=False, spin_tracking=False):
 
     tdata=[]
     fields = []
+    spins=[]
     count = 0
     for data in touts:
         n=len(data[0,:])
@@ -290,7 +298,7 @@ def make_tout_dict(touts, load_fields=False):
             tout["n"]=len(tout["x"])
             tout["number"]=count
             
-            if(load_fields):
+            if load_fields:
                 field = {'Ex':data[11,:], 'Ey':data[12,:], 'Ez':data[13,:],
                          'Bx':data[14,:], 'By':data[15,:], 'Bz':data[16,:]}
             else:
@@ -298,10 +306,16 @@ def make_tout_dict(touts, load_fields=False):
             
             fields.append(field)
 
+            if spin_tracking:
+                spin = {}
+            else:
+                spin = None
+            spins.append(spin)
+
             count=count+1
             tdata.append(tout)
 
-    return tdata, fields
+    return tdata, fields, spins
 
 def make_screen_dict(screens):
 

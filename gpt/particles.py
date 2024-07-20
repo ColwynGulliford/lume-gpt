@@ -128,21 +128,23 @@ def raw_data_to_particle_groups(touts, screens, verbose=False, ref_ccs=False):
         return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
 
-def gdf_to_particle_groups(gdffile, verbose=False, load_fields=False):
+def gdf_to_particle_groups(gdffile, verbose=False, load_fields=False, spin_tracking=False):
 
     """
     Read an output gdf file from GPT into a lists of tout and screen particle groups
     """
-    print(load_fields)
 
-    (tdata, pdata, fields) = read_gdf_file(gdffile, verbose=verbose, load_fields=load_fields)
+    (tdata, pdata, fields, spin) = read_gdf_file(gdffile, 
+                                                 verbose=verbose, 
+                                                 load_fields=load_fields,
+                                                 spin_tracking=spin_tracking)
 
     all_pgs = raw_data_to_particle_groups(tdata, pdata, verbose=verbose)
 
     touts = all_pgs[:len(tdata)]
     screens = all_pgs[len(tdata):]
 
-    return (touts, screens, fields)
+    return (touts, screens, fields, spin)
 
 def initial_beam_to_particle_group(gdffile, verbose=0, extra_screen_keys=['q','nmacro','ID', 'm'], missing_data=None):
 
