@@ -242,8 +242,7 @@ class GPT:
         touts, screens, fields, spins = parsers.read_gdf_file(file, 
                                                               self.verbose, 
                                                               load_fields=self.load_fields,
-                                                              spin_tracking=True
-                                                             )  # Raw GPT data
+                                                              spin_tracking=self.spin_tracking)  # Raw GPT data
 
         #print(self.load_fields, fields)
 
@@ -371,7 +370,7 @@ class GPT:
     @property
     def spin(self):
         if('spin' in self.output):
-            return self.outputs['spin']
+            return self.output['spin']
    
 
     def run(self, gpt_verbose=False):

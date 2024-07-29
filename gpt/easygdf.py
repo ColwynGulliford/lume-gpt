@@ -161,6 +161,8 @@ def load(file, tout_filter=lambda x: True, screen_filter=lambda x: True, screen_
 
                 # For each extra one
                 for key in extra_tout_keys:
+
+                    print('boot', key)
                     # Append it
                     phase_space_array = numpy.append(phase_space_array, [screen_tout_arrays[key]], axis=0)
 
@@ -641,7 +643,7 @@ def load_initial_distribution(file, extra_screen_keys=[]):
     return screen
 
 
-def load_initial_distribution_dict(file):
+def load_initial_distribution_dict(file, spin_tracking=False):
     '''Reads an initial distributions file.  The output of this function is a dict where the keys to the dict are the
     keys corresponding to the arrays in the GDF file. The spatial coordinates have units of meters and BGx, BGy,
     BGz refer to the components of the normalized relativistic momentum Beta*Gamma and are unitless.  Here,
@@ -719,6 +721,9 @@ def load_initial_distribution_dict(file):
         # Write out the list of parameters we care about
         parameter_names = ['x', 'y', 'z', 'GBx', 'GBy', 'GBz', 't', 'q',
                 'nmacro']
+
+        if spin_tracking:
+            parameter_names = parameter_names + [f'spin{v}' for v in 'x,y,z,g'.split(',')]
 
         # If we are the start of a tout block
         if(block_name in parameter_names):

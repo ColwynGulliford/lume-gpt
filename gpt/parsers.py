@@ -243,16 +243,16 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False
 
         if spin_tracking:
             extra_tout_keys = extra_tout_keys + ['spinx', 'spiny', 'spinz', 'sping']
-        
+
         touts, screens = easygdf.load(f, extra_screen_keys=['q','nmacro', 'ID', 'm'], extra_tout_keys=extra_tout_keys)
-        
+
     t2 = time.time()
     if(verbose):
         print(f'   GDF data loaded, time ellapsed: {t2-t1:G} (sec).')
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 
-    tdata, fields, spins = make_tout_dict(touts, load_fields=load_fields)
+    tdata, fields, spins = make_tout_dict(touts, load_fields=load_fields, spin_tracking=spin_tracking)
     pdata = make_screen_dict(screens)
 
     return (tdata, pdata, fields, spins)
@@ -266,6 +266,9 @@ def make_tout_dict(touts, load_fields=False, spin_tracking=False):
     fields = []
     spins=[]
     count = 0
+
+    spin_index = 11 + int(load_fields) * 6
+    
     for data in touts:
         n=len(data[0,:])
         
@@ -307,7 +310,7 @@ def make_tout_dict(touts, load_fields=False, spin_tracking=False):
             fields.append(field)
 
             if spin_tracking:
-                spin = {}
+                spin = {'spinx':data[spin_index,:], 'spiny':data[spin_index+1,:], 'spinz':data[spin_index+2,:]}
             else:
                 spin = None
             spins.append(spin)
