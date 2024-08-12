@@ -244,8 +244,13 @@ class GPT:
                                                load_fields=self.load_fields,
                                                spin_tracking=self.spin_tracking)  # Raw GPT data
 
-        #print(self.load_fields, fields)
+        spins = ['sx', 'sy', 'sz']
+        fields = ['Ex', 'Ey', 'Ez', 'Bx', 'By', 'Bz']
 
+        # Defines all data not stored in ParticleGroup
+        self.output['tout_data'] = [{k:tout[k] for k in spins + fields if k in tout} for tout in touts]
+        self.output['screen_data'] = [{k:screen[k] for k in spins if k in screen} for screen in screens]
+                
         self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose, ref_ccs=self.ref_ccs) 
         self.output['n_tout'] = len(touts)
         self.output['n_screen'] = len(screens)
@@ -309,13 +314,13 @@ class GPT:
         return np.array(s)
     
     
-    def tout_stat(self, key=None):
+    def tout_stat(self, key=None, **kwargs):
         """ Returns array of stats for key from tout particle groups """
-        return self.stat(key, data_type='tout')
+        return self.stat(key, data_type='tout', **kwargs)
 
-    def tout_ccs_stat(self, key=None):
+    def tout_ccs_stat(self, key=None, **kwargs):
         """ Returns array of stats for key from tout particle groups """
-        return self.stat(key, data_type='tout_ccs')
+        return self.stat(key, data_type='tout_ccs', **kwargs)
 
     @property
     def screen(self):
@@ -323,9 +328,21 @@ class GPT:
         if('particles' in self.output):
             return self.output['particles'][self.output['n_tout']:]
 
-    def screen_stat(self, key):
+    @property
+    def tout_fields(self):
+        return [{k: tout[k] for k in tout.keys() if k in ['Ex', 'Ey', 'Ez', 'Bx', 'By', 'Bz']} for tout in self.output['tout_data']]
+
+    @property
+    def tout_spin(self):
+        return [{k: tout[k] for k in tout.keys() if k in ['sx', 'sy', 'sz']} for tout in self.output['tout_data']]
+
+    @property
+    def screen_spin(self):
+        return [{k: screen[k] for k in screen.keys() if k in ['sx', 'sy', 'sz']} for tout in self.output['screen_data']]
+
+    def screen_stat(self, key, **kwargs):
         """ Returns array of stats for key from screen particle groups """
-        return self.stat(key, data_type='screen')
+        return self.stat(key, data_type='screen', **kwargs)
 
     @property
     def particles(self):
@@ -489,7 +506,7 @@ class GPT:
                            include_legend=include_legend,
                            return_figure=return_figure, **kwargs)     
     
-    def stat(self, key, data_type='all'):
+    def stat(self, key, data_type='all', **kwargs):
         """
         Calculates any statistic that the ParticleGroup class can calculate, on all particle groups, or just touts, or screens
         """
@@ -508,7 +525,25 @@ class GPT:
         else:
             raise ValueError(f'Unsupported GPT data type: {data_type}')
 
-        return particle_stats(particle_groups, key)
+        base_key = key.replace('mean_', '').replace('sigma_', '')
+
+        field_keys = ['Ex', 'Ey', 'Ez', 'Bx', 'By', 'Bz']
+        spin_keys = ['sx', 'sy', 'sz']
+            
+        if base_key in field_keys + spin_keys:
+            
+            v = self.output[f'{data_type}_data']
+
+            #print( np.sum(particle_groups[0].weight/particle_groups[0].charge) )
+
+            if key.startswith('mean_'):
+                return np.array( [np.sum( (particle_groups[ii].weight/particle_groups[ii].charge)*vii[base_key]) for ii, vii in enumerate(v)] )
+
+            elif key.startswith('sigma_'):
+                return np.array( [np.sqrt(np.sum((particle_groups[ii].weight/particle_groups[ii].charge)*(vii[base_key] - np.sum(particle_groups[ii].weight*vii[base_key]))**2)) for ii, vii in enumerate(v)] )
+
+        else:
+            return particle_stats(particle_groups, key)
     
     def units(self, key):
         """
