@@ -123,14 +123,14 @@ def raw_data_to_particle_groups(touts, screens, verbose=False, ref_ccs=False):
 
     if(ref_ccs):
 
-        pg_touts = [ GPTOuput(data=raw_data_to_particle_data(datum))  for datum in touts ]
-        pg_screens = [ GPTOutput(data=raw_data_to_particle_data(datum))  for datum in screens ]
+        pg_touts = [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts ]
+        pg_screens = [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in screens ]
         new_touts = [transform_to_centroid_coordinates(tout) for tout in pg_touts]
         
         return new_touts + pg_screens     
 
     else:
-        return [ GPTOutput(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
+        return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
 
 def gdf_to_particle_groups(gdffile, verbose=False, load_fields=False, spin_tracking=False):
@@ -162,7 +162,7 @@ def initial_beam_to_particle_group(gdffile, verbose=0, extra_screen_keys=['q','n
             if(mdatum not in screen.keys() and len(missing_data[mdatum])==len(screen['x'])):
                 screen[mdatum] = missing_data[mdatum]
 
-    return GPTOutput(data=raw_data_to_particle_data(screen))
+    return ParticleGroup(data=raw_data_to_particle_data(screen))
 
 
 def particle_stats(particle_groups, key):
