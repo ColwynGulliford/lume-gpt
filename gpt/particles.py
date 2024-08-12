@@ -206,11 +206,11 @@ class GPTOutput(ParticleGroup):
                 return self._extra_data[key]
                 
             elif key.startswith('mean_'):
-                return np.sum(self.weight * self._extra_data[key])
+                return np.sum(self.weight * self._extra_data[base_key])
                 
             elif key.startswith('sigma_'):
                 x0 = np.sum(self.weight * self._extra_data[key])
-                return np.sqrt( np.sum(self.weight * (self._extra_data[key]-x0)**2) )         
+                return np.sqrt( np.sum(self.weight * (self._extra_data[base_key]-x0)**2) )         
 
         else:
             return ParticleGroup.__getitem__(self, key)
