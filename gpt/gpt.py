@@ -239,10 +239,10 @@ class GPT:
 
         self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
         
-        touts, screens, fields, spins = parsers.read_gdf_file(file, 
-                                                              self.verbose, 
-                                                              load_fields=self.load_fields,
-                                                              spin_tracking=self.spin_tracking)  # Raw GPT data
+        touts, screens = parsers.read_gdf_file(file, 
+                                               self.verbose, 
+                                               load_fields=self.load_fields,
+                                               spin_tracking=self.spin_tracking)  # Raw GPT data
 
         #print(self.load_fields, fields)
 
@@ -250,8 +250,8 @@ class GPT:
         self.output['n_tout'] = len(touts)
         self.output['n_screen'] = len(screens)
         
-        self.output['fields']=fields
-        self.output['spin']=spins
+        #self.output['fields']=fields
+        #self.output['spin']=spins
 
     @property
     def n_tout(self):
@@ -361,17 +361,6 @@ class GPT:
                 trajectory[var][ii] = pg[var][pg['id']==pid]
 
         return trajectory
-    
-    @property
-    def fields(self):
-        if('fields' in self.output):
-            return self.output['fields']
-
-    @property
-    def spin(self):
-        if('spin' in self.output):
-            return self.output['spin']
-   
 
     def run(self, gpt_verbose=False):
 

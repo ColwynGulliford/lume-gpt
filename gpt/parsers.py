@@ -234,17 +234,19 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False
     #self.vprint("Reading data...",1,False)
     t1 = time.time()
 
-    extra_tout_keys   = ['q', 'nmacro', 'ID', 'm']
+    extra_tout_keys = ['q', 'nmacro', 'ID', 'm']
+    extra_screen_keys = ['q', 'nmacro', 'ID', 'm']
     
     with open(gdffile, 'rb') as f:
         
-        if(load_fields):
+        if load_fields:
             extra_tout_keys = extra_tout_keys + ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
 
         if spin_tracking:
             extra_tout_keys = extra_tout_keys + ['spinx', 'spiny', 'spinz', 'sping']
+            extra_screen_keys = extra_screen_keys + ['spinx', 'spiny', 'spinz', 'sping']
 
-        touts, screens = easygdf.load(f, extra_screen_keys=['q','nmacro', 'ID', 'm'], extra_tout_keys=extra_tout_keys)
+        touts, screens = easygdf.load(f, extra_screen_keys=extra_screen_keys, extra_tout_keys=extra_tout_keys)
 
     t2 = time.time()
     if(verbose):
@@ -252,10 +254,10 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 
-    tdata, fields, spins = make_tout_dict(touts, load_fields=load_fields, spin_tracking=spin_tracking)
-    pdata = make_screen_dict(screens)
+    tdata = make_tout_dict(touts, load_fields=load_fields, spin_tracking=spin_tracking)
+    pdata = make_screen_dict(screens, spin_tracking=spin_tracking)
 
-    return (tdata, pdata, fields, spins)
+    return (tdata, pdata)
 
 
 
@@ -263,8 +265,6 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False
 def make_tout_dict(touts, load_fields=False, spin_tracking=False):
 
     tdata=[]
-    fields = []
-    spins=[]
     count = 0
 
     spin_index = 11 + int(load_fields) * 6
@@ -302,25 +302,24 @@ def make_tout_dict(touts, load_fields=False, spin_tracking=False):
             tout["number"]=count
             
             if load_fields:
-                field = {'Ex':data[11,:], 'Ey':data[12,:], 'Ez':data[13,:],
-                         'Bx':data[14,:], 'By':data[15,:], 'Bz':data[16,:]}
-            else:
-                field=None
-            
-            fields.append(field)
+                tout['Ex'] = data[11,:]
+                tout['Ey'] = data[12,:]
+                tout['Ez'] = data[13,:]
+                tout['Bx'] = data[14,:]
+                tout['By'] = data[15,:]
+                tout['Bz'] = data[16,:]
 
             if spin_tracking:
-                spin = {'spinx':data[spin_index,:], 'spiny':data[spin_index+1,:], 'spinz':data[spin_index+2,:]}
-            else:
-                spin = None
-            spins.append(spin)
+                tout['sx'] = data[spin_index,:]
+                tout['sy'] = data[spin_index+1,:]
+                tout['sz'] = data[spin_index+2,:]
 
             count=count+1
             tdata.append(tout)
 
-    return tdata, fields, spins
+    return tdata
 
-def make_screen_dict(screens):
+def make_screen_dict(screens, spin_tracking=False):
 
     pdata=[]
          
@@ -351,6 +350,11 @@ def make_screen_dict(screens):
                     #screen["Bx"]=screen["GBx"]/screen["G"]
                     #screen["By"]=screen["GBy"]/screen["G"]
                     #screen["Bz"]=screen["GBz"]/screen["G"]
+
+            if spin_tracking:
+                screen['sx'] = data[11,:]
+                screen['sy'] = data[12,:]
+                screen['sz'] = data[13,:]
 
             screen["time"]=np.sum(screen["w"]*screen["t"])
             screen["n"]=n

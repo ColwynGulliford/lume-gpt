@@ -103,7 +103,12 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
 
     if( np.all(data['weight'] == 0.0) ):
         data['weight']= np.full(data['weight'].shape, 1/len(data['weight']))
-    
+
+    extra_data = ['sx', 'sy', 'sz', 'Ex', 'Ey', 'Ez']
+
+    for k, v in gpt_output_dict.items():
+        if k in extra_data:
+            data[k]=v
     
     return data
 
@@ -118,14 +123,14 @@ def raw_data_to_particle_groups(touts, screens, verbose=False, ref_ccs=False):
 
     if(ref_ccs):
 
-        pg_touts = [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts ]
-        pg_screens = [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in screens ]
+        pg_touts = [ GPTOuput(data=raw_data_to_particle_data(datum))  for datum in touts ]
+        pg_screens = [ GPTOutput(data=raw_data_to_particle_data(datum))  for datum in screens ]
         new_touts = [transform_to_centroid_coordinates(tout) for tout in pg_touts]
         
         return new_touts + pg_screens     
 
     else:
-        return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
+        return [ GPTOutput(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
 
 def gdf_to_particle_groups(gdffile, verbose=False, load_fields=False, spin_tracking=False):
@@ -134,17 +139,17 @@ def gdf_to_particle_groups(gdffile, verbose=False, load_fields=False, spin_track
     Read an output gdf file from GPT into a lists of tout and screen particle groups
     """
 
-    (tdata, pdata, fields, spin) = read_gdf_file(gdffile, 
-                                                 verbose=verbose, 
-                                                 load_fields=load_fields,
-                                                 spin_tracking=spin_tracking)
+    (tdata, pdata) = read_gdf_file(gdffile, 
+                                   verbose=verbose, 
+                                   load_fields=load_fields,
+                                   spin_tracking=spin_tracking)
 
     all_pgs = raw_data_to_particle_groups(tdata, pdata, verbose=verbose)
 
     touts = all_pgs[:len(tdata)]
     screens = all_pgs[len(tdata):]
 
-    return (touts, screens, fields, spin)
+    return (touts, screens)
 
 def initial_beam_to_particle_group(gdffile, verbose=0, extra_screen_keys=['q','nmacro','ID', 'm'], missing_data=None):
 
@@ -157,8 +162,7 @@ def initial_beam_to_particle_group(gdffile, verbose=0, extra_screen_keys=['q','n
             if(mdatum not in screen.keys() and len(missing_data[mdatum])==len(screen['x'])):
                 screen[mdatum] = missing_data[mdatum]
 
-
-    return ParticleGroup(data=raw_data_to_particle_data(screen))
+    return GPTOutput(data=raw_data_to_particle_data(screen))
 
 
 def particle_stats(particle_groups, key):
@@ -178,6 +182,43 @@ def particle_stats(particle_groups, key):
     
     """
     return np.array([p[key] for p in particle_groups])
+
+
+class GPTOutput(ParticleGroup):
+
+    def __init__(self, data=None):
+
+        ParticleGroup.__init__(self, data=data)
+
+        self._extra_data = {}
+
+        for k, v in data.items():
+            if k in ['Ex', 'Ey', 'Ez', 'sx', 'sy', 'sz']:
+                self._extra_data[k] = v
+
+
+    def __getitem__(self, key):
+
+        base_key = key.replace('mean_', '').replace('sigma_', '')
+        
+        if base_key in self._extra_data.keys():
+            if key == base_key:
+                return self._extra_data[key]
+                
+            elif key.startswith('mean_'):
+                return np.sum(self.weight * self._extra_data[key])
+                
+            elif key.startswith('sigma_'):
+                x0 = np.sum(self.weight * self._extra_data[key])
+                return np.sqrt( np.sum(self.weight * (self._extra_data[key]-x0)**2) )         
+
+        else:
+            return ParticleGroup.__getitem__(self, key)
+
+
+
+         
+    
 
     
     
