@@ -997,7 +997,12 @@ class Map3D_E(GDFFieldMap):
 
     @property
     def Ez0(self):
-        return self['Ez'][ (self['x']==0) & (self['y']==0)]
+        return self['Ez'][ (np.isclose(self['x'], 0)) & (np.isclose(self['y'], 0))]
+
+    @property
+    def z0(self):
+        return self['z'][ (np.isclose(self['x'], 0)) & (np.isclose(self['y'], 0))]
+    
 
     def plot_field_profile(self, ax=None, normalize=True):
 
@@ -1017,6 +1022,8 @@ class Map3D_E(GDFFieldMap):
             ax.set_ylabel('$E_z(x=y=0)$ (V/m)')
 
         return ax
+
+    
 
 
     

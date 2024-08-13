@@ -12,7 +12,7 @@ from gpt.element import is_bend
 from gpt.template import BASIC_TEMPLATE
 from gpt.tools import full_path
 from gpt.tools import is_floatable
-from gpt.maps import Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM
+from gpt.maps import Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM, Map3D_E
 from gpt.bstatic import Bzsolenoid
 import numpy as np
 
@@ -355,8 +355,9 @@ class Lattice():
                 
                 try:
                     self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
-                except:
+                except Exception as ex:
                     print(f'Could not parse fieldmap: {mline}')
+                    print(ex)
                     
             #fmap = [self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style) for mline in map_lines]
 
@@ -382,7 +383,7 @@ class Lattice():
 
         #print(mtype, gpt_file_dir)
         
-        if(mtype not in ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM']):
+        if(mtype not in ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM', 'Map3D_E']):
             print(f'Unknown field map type: {mtype}')
             
         tokens = [t.strip() for t in mline.split(',')]
@@ -397,19 +398,25 @@ class Lattice():
         
         fmap_name = os.path.basename(fmap_file).replace('.gdf','')
 
-        
+        #print(fmap_file)
+
         if(not os.path.isabs(fmap_file)):
             
             fmap_file = os.path.abspath(os.path.join(gpt_file_dir, fmap_file))
             
-        #print(fmap_file, mtype, fmap_token_index) 
+        #print(fmap_file, mtype, fmap_token_index, tokens[0]) 
+        #print(fmap_token_index==10 and tokens[0]=='"wcs"')
 
         if(fmap_token_index==10 and tokens[0]=='"wcs"'):    
         
+
             zstr = tokens[3]
+
+            #print(zstr, variables)
             if(is_floatable(zstr)):
                 zpos=float(zstr)
             elif(zstr in variables):
+                #print('winner')
                 zpos=variables[zstr]
                 
             else:
@@ -426,7 +433,7 @@ class Lattice():
             
             ele_name = f'ele_{len(self._elements) + 1}'
 
-            #print(ele_name)
+            #print(ele_name, variables)
             
             if(mtype=='Map1D_B'):
                 ele = Map1D_B(ele_name, fmap_file, style=style)
@@ -438,9 +445,11 @@ class Lattice():
                 ele = Map2D_E(ele_name, fmap_file, style=style)
             elif(mtype=='Map25D_TM'):
                 ele = Map25D_TM(ele_name, fmap_file, 0, style=style)
+            elif(mtype=='Map3D_E'):
+                ele = Map3D_E(ele_name, fmap_file)
             else:
                 print('Unknown element.')
-                
+          
             if(ele.z0[0]==0):
                 ele_origin = 'beg'
             else:
