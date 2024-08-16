@@ -542,6 +542,15 @@ class GPT:
             elif key.startswith('sigma_'):
                 return np.array( [np.sqrt(np.sum((particle_groups[ii].weight/particle_groups[ii].charge)*(vii[base_key] - np.sum(particle_groups[ii].weight*vii[base_key]))**2)) for ii, vii in enumerate(v)] )
 
+
+        elif key == 'spin_polarization':
+
+            mean_sx = self.stat('mean_sx', data_type=data_type, **kwargs)
+            mean_sy = self.stat('mean_sy', data_type=data_type, **kwargs)
+            mean_sz = self.stat('mean_sz', data_type=data_type, **kwargs)
+
+            return np.sqrt( mean_sx**2 + mean_sy**2 + mean_sz**2)
+
         else:
             return particle_stats(particle_groups, key)
     
