@@ -338,7 +338,7 @@ class GPT:
 
     @property
     def screen_spin(self):
-        return [{k: screen[k] for k in screen.keys() if k in ['sx', 'sy', 'sz']} for tout in self.output['screen_data']]
+        return [{k: screen[k] for k in screen.keys() if k in ['sx', 'sy', 'sz']} for screen in self.output['screen_data']]
 
     def screen_stat(self, key, **kwargs):
         """ Returns array of stats for key from screen particle groups """
