@@ -310,7 +310,7 @@ def run_gpt(path_to_gpt_bin,
     output_filename = filename.replace(".in", ".gdf")
     output_text_filename = output_filename.replace(".gdf", ".txt")
 
-    command = path_to_gpt_bin + "gpt -o " + output_filename + " " + filename
+    command = path_to_gpt_bin + "gpt -j1 -o " + output_filename + " " + filename
     call_os_no_output(command.split(), workdir)
     
     command = path_to_gpt_bin + "gdf2a -w16 -o " + output_text_filename + " " + output_filename
@@ -362,7 +362,7 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
         output_filename = filename.replace(".in", ".gdf")
         output_text_filename = output_filename.replace(".gdf", ".txt")
 
-        command = path_to_gpt_bin + "gpt -v -o " + output_filename + " " + filename
+        command = path_to_gpt_bin + "gpt -j1 -v -o " + output_filename + " " + filename
         p = subprocess.Popen(command.split(), 
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.STDOUT,
