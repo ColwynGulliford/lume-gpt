@@ -58,20 +58,20 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
 
 
 def phase_gpt_with_distgen(settings=None,
-                         gpt_input_file=None,
-                         distgen_input_file=None,
-                         n_cpu_distgen = 1,
-                         workdir=None, 
-                         use_tempdir=True,
-                         gpt_bin='$GPT_BIN',
-                         timeout=2500,
-                         #auto_phase=False,
-                         verbose=False,
-                         gpt_verbose=False,
-                         asci2gdf_bin='$ASCI2GDF_BIN',
-                         kill_msgs=DEFAULT_KILL_MSGS,
-                         load_fields=False,
-                         parse_layout=True):
+                           gpt_input_file=None,
+                           distgen_input_file=None,
+                           n_cpu_distgen = 1,
+                           workdir=None, 
+                           use_tempdir=True,
+                           gpt_bin='$GPT_BIN',
+                           timeout=2500,
+                           #auto_phase=False,
+                           verbose=False,
+                           gpt_verbose=False,
+                           asci2gdf_bin='$ASCI2GDF_BIN',
+                           kill_msgs=DEFAULT_KILL_MSGS,
+                           load_fields=False,
+                           parse_layout=True):
 
     # Call simpler evaluation if there is no generator:
     if not distgen_input_file:
@@ -90,12 +90,12 @@ def phase_gpt_with_distgen(settings=None,
 
     # Make gpt and generator objects
     G = GPT(gpt_bin=gpt_bin, 
-        input_file=gpt_input_file,
-        workdir=workdir, 
-        use_tempdir=use_tempdir,
-        kill_msgs=kill_msgs,
-        load_fields=load_fields,
-        parse_layout=parse_layout)
+            input_file=gpt_input_file,
+            workdir=workdir, 
+            use_tempdir=use_tempdir,
+            kill_msgs=kill_msgs,
+            load_fields=load_fields,
+            parse_layout=parse_layout)
 
     
     G.timeout=timeout
