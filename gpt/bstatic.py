@@ -520,8 +520,134 @@ class Sectormagnet(SectorBend):
     @property
     def s_fringe_end(self):
         return self.s_beg + self.z_fringe_end_ccs
-    
 
+
+class Rectmagnet(Element):
+
+    def __init__(self, name, a, b, Bfield,
+                 b1=0,
+                 b2=0,
+                 dl=0,
+                 gap=None,
+                 n_screen=0,
+                 plot_pole_faces=True,
+                 color='r',
+                 place=False):
+
+
+        assert n_screen>=0, 'Number of extra screens must be >= 0.'
+
+        Element.__init__(self, name, length=b, width=a, angles=[0,0,0], color=color)
+
+        #super().__init__(name, R, angle, width=width, height=0, phi_in=phi_in, phi_out=phi_out, M=np.identity(3), plot_pole_faces=True, color=color)
+
+        self._type = 'Rectmagnet'
+        self._B = Bfield
+        self._gap=gap
+
+        if gap is None:
+            self._b1 = b1
+        elif(gap>0 and gap < float('Inf')):
+            self._b1 = 2/gap
+        else:
+            self._b1 = 0
+
+        self._a = a
+        self._b = b
+        #self._length = b
+        #self._width = a
+
+        self._b2 = b2
+        self._dl = dl
+
+        self._color = color
+
+        self._n_screen = n_screen
+        self._theta_screen=None
+        self._s_screen=None
+
+        if(place):
+            self.place()
+
+    @property
+    def a(self):
+        return self._a
+
+    @property
+    def b(self):
+        return self._b
+
+    @property
+    def length(self):
+        return self._b
+
+    @property
+    def b1(self):
+        return self._b1
+
+    @property
+    def b2(self):
+        return self._b2
+
+    @property
+    def dl(self):
+        return self._dl
+
+    def gpt_lines(self):
+
+        lines = []
+  
+        lines = lines + ['\n#***********************************************']
+        lines = lines + [ f'#             Rectmagnet: {self.name}           ']
+        lines = lines + [  '#***********************************************']
+
+        lines = lines + [f'{self.name}_a = {self._a};']
+        lines = lines + [f'{self.name}_b = {self._b};']
+        lines = lines + [f'{self.name}_Bfield = {self._B};']
+        lines = lines + [f'{self.name}_fringe_dl = {self.dl};'] 
+        lines = lines + [f'{self.name}_fringe_b1 = {self.b1};']    
+        lines = lines + [f'{self.name}_fringe_b2 = {self.b2};'] 
+
+
+        bline = btype = 'rectmagnet'
+
+        ds = np.linalg.norm((self._p_beg - self._ccs_beg_origin)) + self.length/2
+
+        bend_line = f'\n{btype}("{self.ccs_beg}", 0, 0, {ds}, 1, 0, 0, 0, 1, 0, '
+        bend_line = bend_line + f'{self.name}_a, {self.name}_b, {self.name}_Bfield,'
+        bend_line = bend_line + f'{self.name}_fringe_dl, {self.name}_fringe_b1, {self.name}_fringe_b2);'
+
+        lines.append(bend_line)
+
+        return lines
+
+    #def ds(self, sin):
+    #    ds = np.abs(sin) - (self._dl + self.length/2)
+    #    return ds
+
+    def b_field(self, s=None, y=0):
+
+        if(s is None):
+            s = getattr(self,'s')
+
+        B = np.zeros(s.shape)
+
+        # which z points are inside the field
+        #inside = self.is_inside_field(s) 
+
+        s0 = self.s_beg
+
+        ds =  np.abs(s-s0-self.length/2)-self.length/2
+
+        p = self._b1 * ds
+        f = np.exp(p)
+       # B[ds>=0] = self._B/(1+f[ds>=0])
+        B = self._B/(1+f)
+
+        
+
+        return B
+    
 
 
 class QuadF(Quad):
