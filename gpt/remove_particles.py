@@ -30,7 +30,7 @@ class Aperture(Element):
             self._xmax = xmax
             self._ymax = ymax
 
-        super().__init__(name, length=0, width=xmax, height=ymax, angles=[0, 0, 0], color=color)
+        super().__init__(name, length=0, width=xmax, height=ymax, color=color)
 
     def gpt_lines(self):
 
@@ -94,7 +94,7 @@ class CircularAperture(Element):
         if(Rmax is None):
             Rmax = 2*R
 
-        super().__init__(name, length=0, width=Rmax, height=Rmax, angles=[0, 0, 0], color=color)
+        super().__init__(name, length=0, width=Rmax, height=Rmax, color=color)
 
         self._type='Circular Aperture'
         self._R = R

@@ -32,7 +32,19 @@ class Element:
 
     """ Defines a basic element object """
 
-    def __init__(self, name, length=0, width=0, height=0, angles=[0,0,0], color='k'):
+    def __init__(self, 
+                 name, 
+                 length=0, 
+                 width=0, 
+                 height=0, 
+                 x0=0, 
+                 y0=0, 
+                 z0=0,
+                 theta_x=0, 
+                 theta_y=0,
+                 theta_z=0,
+                 global_element=False,
+                 color='k'):
 
         self._type='element'
 
@@ -46,6 +58,12 @@ class Element:
         self._height = height
         self._ccs_beg='wcs'
         self._color=color
+
+        self._global_element = global_element
+
+        self._ecs = {'x0':x0, 'y0':y0, 'z0':z0, 'theta_x':theta_x, 'theta_y':theta_y, 'theta_z':theta_z}
+
+    
 
     def set_ref_trajectory(self, npts=100):
 
@@ -294,6 +312,24 @@ class Element:
     def t_beg(self):
         return self._t_end
 
+    @property
+    def ecs_str(self):
+
+        if(self._global_element):
+            gestr = 'G'
+        else:
+            gestr = 'L'
+
+        ds = np.linalg.norm((self._p_beg - self._ccs_beg_origin)) + self.length/2 + self._ecs["z0"]
+
+        ecs_str_header = f'"{gestr}xyzXYZ", '
+
+        ecs_offset_str = f'{self._ecs["x0"]}, {self._ecs["y0"]}, {ds}, '
+
+        ecs_angles_str = f'{self._ecs["theta_x"]}, {self._ecs["theta_y"]}, {self._ecs["theta_z"]}, '
+        
+        return ecs_str_header + ecs_offset_str + ecs_angles_str
+
     def gpt_lines(self):
         return []
 
@@ -323,7 +359,7 @@ class Screen(Element):
 
         assert n_screen>0, 'Number of screens must be > 0.'
 
-        super().__init__(name, length=0, width=width, height=0, angles=[0, 0, 0], color=color)
+        super().__init__(name, length=0, width=width, height=0, color=color)
         self._n_screen=n_screen
         self._s_range=s_range
         self._fix_s_position=fix_s_position
@@ -362,28 +398,37 @@ class Screen(Element):
 
 class Beg(Element):
 
-    def __init__(self, s=0, origin=[0,0,0], angles=[0,0,0]):
+    def __init__(self, 
+                 s=0, 
+                 x0=0,
+                 y0=0,
+                 z0=0,
+                 theta_x=0,
+                 theta_y=0,
+                 theta_z=0):
 
-        self._M_beg = rotation_matrix(angles[0], angles[1], angles[2])
+        #self._M_beg = rotation_matrix(theta_x, theta_y, theta_z)
 
-        super().__init__('beg', angles=[0,0,0])
+        super().__init__('beg', 
+                         x0=x0, y0=y0, z0=z0,
+                         theta_x=0, theta_y=0, theta_z=0)
 
         self._type = 'lattice starting element'
 
-        self._M_beg = rotation_matrix(angles[0], angles[1], angles[2])
+        self._M_beg = rotation_matrix(theta_x, theta_y, theta_z)
         self._M_end = self._M_beg
         self._s_beg = s
         self._s_end = s
 
-        self._p_beg = cvector(origin)
-        self._p_end = cvector(origin)
+        self._p_beg = cvector([x0, y0, z0])
+        self._p_end = cvector([x0, y0, z0])
 
         self.set_ref_trajectory()
 
         self._ccs_beg = 'wcs'
         self._ccs_end = 'wcs'
 
-        self._ccs_beg_origin = cvector(origin)
+        self._ccs_beg_origin = cvector([x0, y0, z0])
 
     @property
     def ccs_beg_origin(self):
@@ -403,11 +448,15 @@ class Quad(Element):
         width=0.2, 
         height=0, 
         n_screens=2,
-        angles=[0, 0, 0],
+        x0=0, y0=0, z0=0,
+        theta_x=0, theta_y=0, theta_z=0,
         color='b'):
 
         self._type = 'Quad'
-        super().__init__(name, length=length, width=width, height=height, angles=angles, color=color)
+        super().__init__(name, length=length, width=width, height=height, 
+                         x0=x0, y0=y0, z0=z0,
+                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z,
+                         color=color)
 
 
 class SectorBend(Element):
@@ -427,7 +476,8 @@ class SectorBend(Element):
 
         self._plot_pole_faces=plot_pole_faces
 
-        super().__init__(name, length=length, width=width, height=height, angles=[angle, 0, 0], color=color)
+        super().__init__(name, length=length, width=width, height=height, 
+                         theta_y=angle, color=color)
 
     def __str__(self):
 

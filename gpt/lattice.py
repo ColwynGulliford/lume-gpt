@@ -13,7 +13,7 @@ from gpt.template import BASIC_TEMPLATE
 from gpt.tools import full_path
 from gpt.tools import is_floatable
 from gpt.maps import Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM, Map3D_E
-from gpt.bstatic import Bzsolenoid
+from gpt.bstatic import Bzsolenoid, Rectmagnet
 import numpy as np
 
 from matplotlib import pyplot as plt
@@ -24,7 +24,7 @@ import tempfile
 
 class Lattice():
 
-    def __init__(self, name, s=0, origin=[0,0,0], angles=[0,0,0]):
+    def __init__(self, name, s=0, x0=0, y0=0, z0=0, theta_x=0, theta_y=0, theta_z=0):
 
         self._name=name
         self._elements=[]
@@ -32,8 +32,10 @@ class Lattice():
 
         self._bends=[]
 
-        self._elements.append(Beg(s, origin, angles))
-        self._bends.append(Beg(s, origin, angles))
+        self._elements.append(Beg(s, x0=x0, y0=y0, z0=z0, 
+                                  theta_x=theta_x, theta_y=theta_y, theta_z=theta_z))
+        self._bends.append(Beg(s, x0=x0, y0=y0, z0=z0, 
+                                  theta_x=theta_x, theta_y=theta_y, theta_z=theta_z))
         
         self.template_dir = None
 
@@ -364,7 +366,8 @@ class Lattice():
 
             bstatic_lines = [line for line in lines if line.split('(')[0] in ['bzsolenoid', 
                                                                               'quadrupole', 
-                                                                              'sectormagnet']]
+                                                                              'sectormagnet',
+                                                                              'rectmagnet']]
 
             for bline in bstatic_lines:
 
@@ -465,11 +468,16 @@ class Lattice():
         tokens[0] = tokens[0].split('(')[1]
         tokens[-1] = tokens[-1].split(')')[0]
 
-        bname = tokens[10].split('_')[0]
+        #bname = tokens[10].split('_')[0]
 
-        if(tokens[0]=='"wcs"'):    
-        
-            zstr = tokens[3]
+        # Get ECS:
+        if(tokens[1].endswith('xyzXYZ"')):   
+
+            x0, y0, z0 = tokens[2], tokens[3], tokens[4]
+
+           # print(x0, y0, z0)
+            
+            zstr = tokens[4]
             if(is_floatable(zstr)):
                 zpos=float(zstr)
             elif(zstr in variables):
@@ -480,12 +488,19 @@ class Lattice():
 
             #print(zpos)
 
-            assert( int(tokens[4])==1 and #xhat = (1, 0, 0)
-               int(tokens[5])==0 and 
-               int(tokens[6])==0 and 
-               int(tokens[7])==0 and #yhat = (0, 1, 0)
-               int(tokens[8])==1 and 
-               int(tokens[9])==0) 
+            #xhat = [int(tokens[4]), int(tokens[5]), int(tokens[6])]
+            #yhat = [int(tokens[7]), int(tokens[8]), int(tokens[9])]
+
+            #zhat = np.cross(xhat, yhat)
+
+            #assert( np.isclose(zhat[0], 0) and np.isclose(zhat[1], 0) and np.isclose(zhat[2], 1) )
+
+            #assert( int(tokens[4])==1 and #xhat = (1, 0, 0)
+            #   int(tokens[5])==0 and 
+            #   int(tokens[6])==0 and 
+            #   int(tokens[7])==0 and #yhat = (0, 1, 0)
+            #   int(tokens[8])==1 and 
+            #   int(tokens[9])==0) 
             
             ele_name = f'ele_{len(self._elements) + 1}'
 
@@ -498,6 +513,20 @@ class Lattice():
                              variables[bname+'_bs_field']/variables[bname+'_mu0'])
         
         
+            self.add(ele, ds=zpos, ref_element='beg', element_origin='center')
+
+        elif(btype=='rectmagnet'):
+
+            #print(tokens[10:])
+
+            ele = Rectmagnet(ele_name, 
+                             variables[tokens[8]], 
+                             variables[tokens[9]],
+                             variables[tokens[10]],
+                             b1 = variables[tokens[12]],
+                             b2 = variables[tokens[13]],
+                             dl = variables[tokens[11]])
+
             self.add(ele, ds=zpos, ref_element='beg', element_origin='center')
         
             

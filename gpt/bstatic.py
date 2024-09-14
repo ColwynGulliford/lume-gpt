@@ -529,15 +529,22 @@ class Rectmagnet(Element):
                  b2=0,
                  dl=0,
                  gap=None,
+                 x0=0, y0=0, z0=0,
+                 theta_x=0, theta_y=0, theta_z=0,
                  n_screen=0,
                  plot_pole_faces=True,
                  color='r',
+                 global_element=True,
                  place=False):
 
 
         assert n_screen>=0, 'Number of extra screens must be >= 0.'
 
-        Element.__init__(self, name, length=b, width=a, angles=[0,0,0], color=color)
+        Element.__init__(self, name, length=b, width=a, 
+                         x0=x0, y0=y0, z0=z0,
+                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z,
+                         global_element=global_element,
+                         color=color)
 
         #super().__init__(name, R, angle, width=width, height=0, phi_in=phi_in, phi_out=phi_out, M=np.identity(3), plot_pole_faces=True, color=color)
 
@@ -608,12 +615,9 @@ class Rectmagnet(Element):
         lines = lines + [f'{self.name}_fringe_b1 = {self.b1};']    
         lines = lines + [f'{self.name}_fringe_b2 = {self.b2};'] 
 
-
         bline = btype = 'rectmagnet'
 
-        ds = np.linalg.norm((self._p_beg - self._ccs_beg_origin)) + self.length/2
-
-        bend_line = f'\n{btype}("{self.ccs_beg}", 0, 0, {ds}, 1, 0, 0, 0, 1, 0, '
+        bend_line = f'\n{btype}("{self.ccs_beg}", ' + self.ecs_str
         bend_line = bend_line + f'{self.name}_a, {self.name}_b, {self.name}_Bfield,'
         bend_line = bend_line + f'{self.name}_fringe_dl, {self.name}_fringe_b1, {self.name}_fringe_b2);'
 
@@ -864,9 +868,14 @@ class QuadF(Quad):
 
 class Quadrupole(Quad):
 
-    def __init__(self, name, G, length, width=0.2, height=0, angles=[0, 0, 0], gap=None, b1=0, npts=1000, color='b'):
+    def __init__(self, name, G, length, width=0.2, height=0, 
+                 x0=0, y0=0, z0=0, 
+                 theta_x=0, theta_y=0, theta_z=0,
+                 gap=None, b1=0, npts=1000, color='b'):
 
-        super().__init__(name, length, width=width, height=height, angles=angles, color=color)
+        super().__init__(name, length, width=width, height=height, 
+                         x0=x0, y0=y0, z0=z0,
+                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z, color=color)
 
         self._G = G
 
@@ -1093,7 +1102,8 @@ class Quadrupole(Quad):
     
 class Bzsolenoid(Element):
     
-    def __init__(self, name, L, R, nI, Lbound=None, width=None):
+    def __init__(self, name, L, R, nI, Lbound=None, width=None,
+                 x0=0, y0=0, z0=0, theta_x=0, theta_y=0, theta_z=0):
         
         if(Lbound is None):
             Lbound = L
@@ -1103,7 +1113,10 @@ class Bzsolenoid(Element):
         elif width is None:
             width = 2*R
         
-        super().__init__(name, length=Lbound, width=width, height=0, angles=[0,0,0], color='k')
+        super().__init__(name, length=Lbound, width=width, height=0, 
+                         x0=x0, y0=y0, z0=z0,
+                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z,
+                         color='k')
         
         self._L = L
         self._R = R
