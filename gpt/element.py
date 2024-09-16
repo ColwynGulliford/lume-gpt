@@ -88,7 +88,7 @@ class Element:
         if(ref_element is None):
             ref_element=Beg()
 
-        #print(ref_element.ccs_end_origin)
+        #print('werd', self.name)
 
         if(ds>=0):
 
@@ -199,6 +199,14 @@ class Element:
     @property
     def length(self):
         return self._length
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
 
     @property
     def s_beg(self):

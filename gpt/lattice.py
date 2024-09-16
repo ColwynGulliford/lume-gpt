@@ -267,18 +267,23 @@ class Lattice():
 
         # Write all the bend elements first
         for element in elements:
+            
             if(is_bend(element)):
+                #print('got a bend')
                 element_lines.append(f'\n# {element.name}\n')
                 for line in element.gpt_lines():
                     element_lines.append(line+'\n')
 
         for element in elements:
             if(not is_bend(element)):
+                print('not a bend')
                 element_lines.append(f'\n# {element.name}\n')
                 
                 if(hasattr(element, 'source_data_file') and use_element_name_for_gdf_files):
+                    print('found source data')
                     new_ele_lines = element.gpt_lines(gdf_file=f'{element.name}.gdf')
                 else:
+                    print('no source data')
                     new_ele_lines = element.gpt_lines()
                 
                 for line in new_ele_lines:
@@ -474,8 +479,6 @@ class Lattice():
         if(tokens[1].endswith('xyzXYZ"')):   
 
             x0, y0, z0 = tokens[2], tokens[3], tokens[4]
-
-           # print(x0, y0, z0)
             
             zstr = tokens[4]
             if(is_floatable(zstr)):
@@ -504,7 +507,10 @@ class Lattice():
             
             ele_name = f'ele_{len(self._elements) + 1}'
 
-                
+            #print(x0, y0, z0, btype)
+
+        ele_name = f'ele_{len(self._elements) + 1}'
+        
         if(btype=='bzsolenoid'):
 
             ele = Bzsolenoid(ele_name, 
@@ -517,8 +523,7 @@ class Lattice():
 
         elif(btype=='rectmagnet'):
 
-            #print(tokens[10:])
-
+            
             ele = Rectmagnet(ele_name, 
                              variables[tokens[8]], 
                              variables[tokens[9]],
