@@ -530,7 +530,7 @@ class Rectmagnet(Element):
                  dl=0,
                  gap=None,
                  x0=0, y0=0, z0=0,
-                 theta_x=0, theta_y=0, theta_z=0,
+                 yaw=0, pitch=0, roll=0,
                  n_screen=0,
                  plot_pole_faces=True,
                  color='r',
@@ -542,7 +542,7 @@ class Rectmagnet(Element):
 
         Element.__init__(self, name, length=b, width=a, 
                          x0=x0, y0=y0, z0=z0,
-                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z,
+                         yaw=yaw, pitch=pitch, roll=roll,
                          global_element=global_element,
                          color=color)
 
@@ -607,6 +607,9 @@ class Rectmagnet(Element):
         lines = lines + ['\n#***********************************************']
         lines = lines + [ f'#             Rectmagnet: {self.name}           ']
         lines = lines + [  '#***********************************************']
+
+        # Get ECS lines:
+        lines = lines +  super().gpt_lines()
 
         lines = lines + [f'{self.name}_a = {self._a};']
         lines = lines + [f'{self.name}_b = {self._b};']

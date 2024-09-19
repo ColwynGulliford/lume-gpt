@@ -24,7 +24,7 @@ import tempfile
 
 class Lattice():
 
-    def __init__(self, name, s=0, x0=0, y0=0, z0=0, theta_x=0, theta_y=0, theta_z=0):
+    def __init__(self, name, s=0, x0=0, y0=0, z0=0, yaw=0, pitch=0, roll=0):
 
         self._name=name
         self._elements=[]
@@ -32,10 +32,8 @@ class Lattice():
 
         self._bends=[]
 
-        self._elements.append(Beg(s, x0=x0, y0=y0, z0=z0, 
-                                  theta_x=theta_x, theta_y=theta_y, theta_z=theta_z))
-        self._bends.append(Beg(s, x0=x0, y0=y0, z0=z0, 
-                                  theta_x=theta_x, theta_y=theta_y, theta_z=theta_z))
+        self._elements.append(Beg(s, x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll))
+        self._bends.append(Beg(s, x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll))
         
         self.template_dir = None
 
@@ -382,6 +380,12 @@ class Lattice():
                 #    print(f'Could not parse bstatic element: {bline}')
                     
                 
+    def parse_ecs(self, tokens, variables):
+
+        # Search for new ECS def:
+        print(tokens)
+
+        
         
 
 

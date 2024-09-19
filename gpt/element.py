@@ -40,9 +40,9 @@ class Element:
                  x0=0, 
                  y0=0, 
                  z0=0,
-                 theta_x=0, 
-                 theta_y=0,
-                 theta_z=0,
+                 yaw=0, 
+                 pitch=0,
+                 roll=0,
                  global_element=False,
                  color='k'):
 
@@ -61,7 +61,7 @@ class Element:
 
         self._global_element = global_element
 
-        self._ecs = {'x0':x0, 'y0':y0, 'z0':z0, 'theta_x':theta_x, 'theta_y':theta_y, 'theta_z':theta_z}
+        self._ecs = {'x0':x0, 'y0':y0, 'z0':z0, 'yaw':yaw, 'pitch':pitch, 'roll':roll}
 
     
 
@@ -332,14 +332,22 @@ class Element:
 
         ecs_str_header = f'"{gestr}xyzXYZ", '
 
-        ecs_offset_str = f'{self._ecs["x0"]}, {self._ecs["y0"]}, {ds}, '
+        ecs_offset_str = f'{self.name}_x, {self.name}_y, {self.name}_z, '
 
-        ecs_angles_str = f'{self._ecs["theta_x"]}, {self._ecs["theta_y"]}, {self._ecs["theta_z"]}, '
+        ecs_angles_str = f'{self.name}_yaw, {self.name}_pitch, {self.name}_roll, '
         
         return ecs_str_header + ecs_offset_str + ecs_angles_str
 
     def gpt_lines(self):
-        return []
+
+        ds = np.linalg.norm((self._p_beg - self._ccs_beg_origin)) + self.length/2 + self._ecs["z0"]
+
+        return [f'{self.name}_x = {self._ecs["x0"]};', 
+                f'{self.name}_y = {self._ecs["y0"]};',
+                f'{self.name}_z = {ds};\n'
+                f'{self.name}_yaw = {self._ecs["yaw"]};', 
+                f'{self.name}_pitch = {self._ecs["pitch"]};',
+                f'{self.name}_roll = {self._ecs["roll"]};\n']
 
     def write_element_to_gpt_file(self, gptfile):
 
@@ -411,19 +419,19 @@ class Beg(Element):
                  x0=0,
                  y0=0,
                  z0=0,
-                 theta_x=0,
-                 theta_y=0,
-                 theta_z=0):
+                 yaw=0,
+                 pitch=0,
+                 roll=0):
 
         #self._M_beg = rotation_matrix(theta_x, theta_y, theta_z)
 
         super().__init__('beg', 
                          x0=x0, y0=y0, z0=z0,
-                         theta_x=0, theta_y=0, theta_z=0)
+                         yaw=yaw, pitch=pitch, roll=roll)
 
         self._type = 'lattice starting element'
 
-        self._M_beg = rotation_matrix(theta_x, theta_y, theta_z)
+        self._M_beg = rotation_matrix(yaw, pitch, roll)
         self._M_end = self._M_beg
         self._s_beg = s
         self._s_end = s
@@ -445,6 +453,9 @@ class Beg(Element):
     @property 
     def ccs_end_origin(self):
         return self._p_end
+
+    def gpt_lines(self):
+        return []
     
 
 

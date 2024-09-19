@@ -85,7 +85,14 @@ class GDFFieldMap(Element):
 
     """ General class for holding GDF field map data """
 
-    def __init__(self, source_data_file, gdf2a_bin='$GDF2A_BIN', use_temp_file=True):
+    def __init__(self, source_data_file, 
+                 gdf2a_bin='$GDF2A_BIN', 
+                 use_temp_file=True,
+                 x0=0, y0=0, z0=0,
+                 yaw=0, pitch=0, roll=0,
+                 color='k'):
+
+        super().__init__(self, 'GDFEle', x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll)
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
 
@@ -271,7 +278,7 @@ class GDFFieldMap(Element):
         map_line = f'{self.type}("{self.ccs_beg}", '
         extra_lines={}
 
-        for ii, coordinate in enumerate(['x', 'y','z']):
+        for ii, coordinate in enumerate(['x', 'y', 'z']):
             #if(coordinate in user_vars):
             if(coordinate=='z'):
                 val = r[ii][0]-self['z'][0]
@@ -332,9 +339,15 @@ class Map1D(GDFFieldMap):
 
     """ Class for storing 1D GDF field maps, derives from GDFfieldMap """
 
-    def __init__(self, source_data, required_columns, gdf2a_bin='$GDF2A_BIN', color=None):
+    def __init__(self, source_data, required_columns, 
+                 gdf2a_bin='$GDF2A_BIN', 
+                 x0=0, y0=0, z0=0,
+                 yaw=0, pitch=0, roll=0,
+                 color=None):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin)
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, 
+                         x0=x0, y0=y0, z0=z0,
+                         yaw=yaw, pitch=pitch, roll=roll)
 
         self._type = 'Map1D'
 
@@ -384,9 +397,20 @@ class Map1D_E(Map1D):
     Defines a 1D [z, Ez] cylindrically symmetric electric field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.3, scale=1, color='#1f77b4', style=None):
+    def __init__(self, name, source_data, 
+                 gdf2a_bin='$GDF2A_BIN', 
+                 width=0.3, 
+                 scale=1, 
+                 color='#1f77b4', 
+                 style=None,
+                 yaw=0, pitch=0, roll=0
+                ):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Ez'])
+        super().__init__(source_data, 
+                         gdf2a_bin=gdf2a_bin, 
+                         required_columns=['z', 'Ez'],
+                         x0=x0, y0=y0, z0=z0,
+                         yaw=yaw, pitch=pitch, roll=roll)
        
         self._name = name
         self._type = 'Map1D_E'
@@ -463,9 +487,20 @@ class Map1D_B(Map1D):
     Defines a 1D [z, Bz] cylindrically symmetric magnetic field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', width=0.4, scale=1, color='#2ca02c', style='tao'):
+    def __init__(self, name, source_data, 
+                 gdf2a_bin='$GDF2A_BIN', 
+                 width=0.4, 
+                 scale=1, 
+                 color='#2ca02c', 
+                 style='tao',
+                 x0=0, y0=0, z0=0,
+                 yaw=0, pitch=0, roll=0):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Bz'])
+        super().__init__(source_data, 
+                         gdf2a_bin=gdf2a_bin, 
+                         required_columns=['z', 'Bz'],
+                         x0=x0, y0=y0, z0=z0,
+                         yaw=yaw, pitch=pitch, roll=roll)
         
         self._name = name
         self._type = 'Map1D_B'
@@ -521,9 +556,15 @@ class Map1D_TM(Map1D):
         oncrest_phase=0,
         gdf2a_bin='$GDF2A_BIN', 
         color='darkorange',
+        x0=0, y0=0, z0=0,
+        
         style=None):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['z', 'Ez'])
+        super().__init__(source_data, 
+                         gdf2a_bin=gdf2a_bin, 
+                         required_columns=['z', 'Ez'],
+                         x0=x0, y0=y0, z0=z0,
+                         yaw=yaw, pitch=pitch, roll=roll)
 
         self._name = name
         self._type='Map1D_TM'
@@ -948,7 +989,7 @@ class Map3D_E(GDFFieldMap):
         source_data, 
         scale=1,
         gdf2a_bin='$GDF2A_BIN', 
-        column_names={'x':'x', 'y':'y', 'z':'z', 'Ex':'Ey', 'Ez':'Ez'}, 
+        column_names={'x':'x', 'y':'y', 'z':'z', 'Ex':'Ex', 'Ey':'Ey', 'Ez':'Ez'}, 
         required_columns=['x', 'y', 'z', 'Ex', 'Ey', 'Ez'],
     #             e1=[1, 0, 0], 
     #             e2=[0, 1, 0],
@@ -1023,6 +1064,88 @@ class Map3D_E(GDFFieldMap):
 
         return ax
 
+
+class Map3D_B(GDFFieldMap):
+
+    def __init__(self, 
+        name, 
+        source_data, 
+        scale=1,
+        gdf2a_bin='$GDF2A_BIN', 
+        column_names={'x':'x', 'y':'y', 'z':'z', 'Bx':'Bx', 'By':'By', 'Bz':'Bz'}, 
+        required_columns=['x', 'y', 'z', 'Bx', 'By', 'Bz'],
+    #             e1=[1, 0, 0], 
+    #             e2=[0, 1, 0],
+        color='tab:blue',
+        style=None):
+
+        self.column_names = column_names
+
+        GDFFieldMap.__init__(self, source_data, gdf2a_bin=gdf2a_bin, use_temp_file=True)
+
+        self._name = name
+        self._scale = scale
+        self._type = 'Map3D_B'
+        self._length = max(self['z']) - min(self['z'])
+        self._width =  max(self['x']) - min(self['x'])
+        self._height = max(self['y']) - min(self['y']) 
+        self._style = style
+        self._color = color
+
+        #self.column_names = column_names
+        self.required_columns = required_columns
+
+    @property
+    def x(self):
+        return np.unique(self['x'])
+
+    @property
+    def y(self):
+        return np.unique(self['y'])
+
+    @property
+    def z(self):
+        return np.unique(self['z'])
+
+    @property
+    def Bx(self):
+        return np.unique(self['Ex'])
+
+    @property
+    def By(self):
+        return np.unique(self['Ey'])
+
+    @property
+    def Bz(self):
+        return np.unique(self['Ez'])
+
+    @property
+    def Bz0(self):
+        return self['Bz'][ (np.isclose(self['x'], 0)) & (np.isclose(self['y'], 0))]
+
+    @property
+    def z0(self):
+        return self['z'][ (np.isclose(self['x'], 0)) & (np.isclose(self['y'], 0))]
+    
+
+    def plot_field_profile(self, ax=None, normalize=True):
+
+        if ax is None:
+            ax=plt.gca()
+
+        if normalize:
+            f = 1/max(np.abs(self.Bz0))
+        else:
+            f=1
+
+        ax.plot(self.z, f*self.Bz0)
+        ax.set_xlabel('z (m)')
+        if normalize:
+            ax.set_ylabel('Field Profile (arb)')
+        else:
+            ax.set_ylabel('$E_z(x=y=0)$ (V/m)')
+
+        return ax
     
 
 
