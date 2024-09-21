@@ -92,7 +92,9 @@ class GDFFieldMap(Element):
                  yaw=0, pitch=0, roll=0,
                  color='k'):
 
-        super().__init__(self, 'GDFEle', x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll)
+        super().__init__('GDFFieldMap',
+                         x0=x0, y0=y0, z0=z0, 
+                         yaw=yaw, pitch=pitch, roll=roll)
         
         assert os.path.exists(tools.full_path(gdf2a_bin)), f'GDF2A binary does not exist: {gdf2a_bin}'  
 
@@ -275,7 +277,7 @@ class GDFFieldMap(Element):
         ccs_beg_e3 = cvector([0,0,1])
         r = ds*ccs_beg_e3
 
-        map_line = f'{self.type}("{self.ccs_beg}", '
+        map_line = f'{self.type}("{self.ccs_beg}", "GxyzXYZ", '
         extra_lines={}
 
         for ii, coordinate in enumerate(['x', 'y', 'z']):
@@ -290,19 +292,27 @@ class GDFFieldMap(Element):
             #else:
             #    map_line = map_line + f'{str(r[ii][0])}, '
 
-        for ii, m in enumerate(['e11', 'e12', 'e13']):
-            if(m in user_vars):
-                extra_lines[m] = f'{element}_{m} = {e1[ii]};'
-                map_line = map_line + f'{element}_{m}, '
-            else:
-                map_line = map_line + f'{str(e1[ii])}, '
+        extra_lines['yaw'] = f'{element}_yaw = {self._ecs["yaw"]};'
+        extra_lines['pitch'] = f'{element}_pitch = {self._ecs["pitch"]};'
+        extra_lines['roll'] = f'{element}_roll = {self._ecs["roll"]};'
 
-        for ii, m in enumerate(['e21', 'e22', 'e23']):
-            if(m in user_vars):
-                extra_lines[m] = f'{element}_{m} = {e2[ii]};'
-                map_line = map_line + f'{element}_{m}, '
-            else:
-                map_line = map_line + f'{str(e2[ii])}, '
+        for v in ['yaw', 'pitch', 'roll']:
+
+            map_line = map_line + f'{element}_{v}, '
+
+        #for ii, m in enumerate(['e11', 'e12', 'e13']):
+        #    if(m in user_vars):
+        #        extra_lines[m] = f'{element}_{m} = {e1[ii]};'
+        #        map_line = map_line + f'{element}_{m}, '
+        #    else:
+        #        map_line = map_line + f'{str(e1[ii])}, '
+
+        #for ii, m in enumerate(['e21', 'e22', 'e23']):
+        #    if(m in user_vars):
+        #        extra_lines[m] = f'{element}_{m} = {e2[ii]};'
+        #        map_line = map_line + f'{element}_{m}, '
+        #    else:
+        #        map_line = map_line + f'{str(e2[ii])}, '
 
         if(gdf_file is None):
             gdf_file = self.source_data_file
@@ -1074,14 +1084,16 @@ class Map3D_B(GDFFieldMap):
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'x':'x', 'y':'y', 'z':'z', 'Bx':'Bx', 'By':'By', 'Bz':'Bz'}, 
         required_columns=['x', 'y', 'z', 'Bx', 'By', 'Bz'],
-    #             e1=[1, 0, 0], 
-    #             e2=[0, 1, 0],
+        yaw=0, pitch=0, roll=0,
         color='tab:blue',
         style=None):
 
         self.column_names = column_names
 
-        GDFFieldMap.__init__(self, source_data, gdf2a_bin=gdf2a_bin, use_temp_file=True)
+        GDFFieldMap.__init__(self, source_data, 
+                             gdf2a_bin=gdf2a_bin, 
+                             yaw=yaw, pitch=pitch, roll=roll,
+                             use_temp_file=True)
 
         self._name = name
         self._scale = scale
@@ -1119,6 +1131,10 @@ class Map3D_B(GDFFieldMap):
     def Bz(self):
         return np.unique(self['Ez'])
 
+    @property
+    def By0(self):
+        return self['By'][ (np.isclose(self['x'], 0)) & (np.isclose(self['y'], 0))]
+    
     @property
     def Bz0(self):
         return self['Bz'][ (np.isclose(self['x'], 0)) & (np.isclose(self['y'], 0))]

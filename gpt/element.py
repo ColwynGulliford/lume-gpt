@@ -48,6 +48,8 @@ class Element:
 
         self._type='element'
 
+        #print(name, length, width, height, x0, y0, z0, yaw, pitch, roll)
+
         assert length>=0, 'gpt.Element->length must be >=0.'
         assert width>=0, 'gpt.Element->width must be >=0.'
         assert height>=0, 'gpt.Element->height must be >= 0.'
@@ -424,10 +426,7 @@ class Beg(Element):
                  roll=0):
 
         #self._M_beg = rotation_matrix(theta_x, theta_y, theta_z)
-
-        super().__init__('beg', 
-                         x0=x0, y0=y0, z0=z0,
-                         yaw=yaw, pitch=pitch, roll=roll)
+        super().__init__('beg', x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll)
 
         self._type = 'lattice starting element'
 
