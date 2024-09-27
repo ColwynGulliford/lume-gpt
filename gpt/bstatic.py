@@ -609,7 +609,7 @@ class Rectmagnet(Element):
         lines = lines + [  '#***********************************************']
 
         # Get ECS lines:
-        lines = lines +  super().gpt_lines()
+        lines = lines +  Element.gpt_lines(self)
 
         lines = lines + [f'{self.name}_a = {self._a};']
         lines = lines + [f'{self.name}_b = {self._b};']
