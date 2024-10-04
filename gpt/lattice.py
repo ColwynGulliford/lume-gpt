@@ -12,8 +12,9 @@ from gpt.element import is_bend
 from gpt.template import BASIC_TEMPLATE
 from gpt.tools import full_path
 from gpt.tools import is_floatable
-from gpt.maps import Map1D_B, Map1D_TM, Map2D_E, Map2D_B, Map25D_TM, Map3D_E
+from gpt.maps import Map1D_B, Map1D_TM, Map1D_E, Map2D_E, Map2D_B, Map25D_TM, Map3D_E
 from gpt.bstatic import Bzsolenoid, Rectmagnet
+from gpt.estatic import Erect
 import numpy as np
 
 from matplotlib import pyplot as plt
@@ -21,6 +22,12 @@ import os
 import copy
 
 import tempfile
+
+SUPPORTED_MAP_ELEMENTS = ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM', 'Map3D_E']
+SUPPORTED_BSTATIC_ELEMENTS = ['bzsolenoid', 'quadrupole', 'sectormagnet', 'rectmagnet']
+SUPPORTED_ESTATIC_ELEMENTS = ['erect']
+
+SUPPORTED_ELEMENTS = SUPPORTED_MAP_ELEMENTS + SUPPORTED_BSTATIC_ELEMENTS + SUPPORTED_ESTATIC_ELEMENTS
 
 class Lattice():
 
@@ -274,14 +281,14 @@ class Lattice():
 
         for element in elements:
             if(not is_bend(element)):
-                print('not a bend')
+                #print('not a bend')
                 element_lines.append(f'\n# {element.name}\n')
                 
                 if(hasattr(element, 'source_data_file') and use_element_name_for_gdf_files):
-                    print('found source data')
+                    #print('found source data')
                     new_ele_lines = element.gpt_lines(gdf_file=f'{element.name}.gdf')
                 else:
-                    print('no source data')
+                    #print('no source data')
                     new_ele_lines = element.gpt_lines()
                 
                 for line in new_ele_lines:
@@ -345,6 +352,7 @@ class Lattice():
         return {ele._name:ele.to_dict() for ele in self._elements}
 
     def parse(self, gpt_file, style=None):
+        #print('parsing')
 
         abs_gpt_file = full_path(gpt_file)
         
@@ -353,48 +361,258 @@ class Lattice():
             lines = [line.strip().split('#')[0].strip() for line in fid.readlines() if(not line.strip().startswith('#') and line.strip()!='')]
             
             variables = { line.split("=")[0].strip():float(line.split("=")[1][:-1].strip()) for line in lines if( len(line.split("="))==2 and is_floatable(line.split("=")[1][:-1])) }
-            
-            map_lines = [line for line in lines if line.startswith('Map')]
-        
-            for mline in map_lines: 
-                
+
+            for line in lines:
+
                 try:
-                    self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style)
-                except Exception as ex:
-                    print(f'Could not parse fieldmap: {mline}')
-                    print(ex)
-                    
-            #fmap = [self.parse_field_map(mline, variables, os.path.dirname(abs_gpt_file), style=style) for mline in map_lines]
-
-
-            bstatic_lines = [line for line in lines if line.split('(')[0] in ['bzsolenoid', 
-                                                                              'quadrupole', 
-                                                                              'sectormagnet',
-                                                                              'rectmagnet']]
-
-            for bline in bstatic_lines:
-
-                #try:
-                self.parse_bstatic_element(bline, variables, style=style)
-                #except:
-                #    print(f'Could not parse bstatic element: {bline}')
-                    
                 
-    def parse_ecs(self, tokens, variables):
+                    ele_info = self.parse_element_info(line, variables)
+    
+                    if ele_info: 
+                        
+                        if ele_info['type'] in SUPPORTED_ESTATIC_ELEMENTS:
+                            self.parse_estatic_element(ele_info, style=style)
+    
+                        elif ele_info['type'] in SUPPORTED_BSTATIC_ELEMENTS:
+                            self.parse_bstatic_element(ele_info, style=style)
+    
+                        elif ele_info['type'] in SUPPORTED_MAP_ELEMENTS:
+                            self.parse_field_map(ele_info, os.path.dirname(abs_gpt_file), style=style)
 
-        # Search for new ECS def:
-        print(tokens)
+                except Exception as ex:
 
+                    print(f'Could not parse line: {line}')
+                    print(ex)
+       
+
+    def get_element_line_tokens(self, element_line):
+
+        tokens = [t.strip() for t in element_line.split(',')]
+        tokens[0] = tokens[0].split('(')[1].strip()
+        tokens[-1] = tokens[-1].split(')')[0].strip()
+
+        return tokens
+                
+    def parse_element_info(self, element_line, variables):
         
+        element_type = element_line.split('(')[0]
+
+        if element_type not in SUPPORTED_ELEMENTS: # Not a known element line, skip
+            return None
+
+        tokens = self.get_element_line_tokens(element_line)
         
+        assert tokens[0] == '"wcs"', "Currently only lattices placed entirely in WCS are parsable"
+
+        if tokens[1] in  ['"GxyzXYZ"', '"LxyzXYZ"', '"xyzXYZ"']:
+
+            #print("Found parsable ECS updated form")
+
+            # Get/check element name:
+            name = tokens[2].replace('_x','')
+            
+            for token in tokens[3:8]:
+                assert token.startswith(f'{name}_')
+
+            # Get position offsets
+            x0 = float(variables[tokens[2]]) 
+            y0 = float(variables[tokens[3]])
+            z0 = float(variables[tokens[4]])
+
+            #print('Position offset', x0, y0, z0)
+
+            # Get angle offsets
+            yaw = float(variables[tokens[5]]) 
+            pitch = float(variables[tokens[6]])
+            roll = float(variables[tokens[7]])
+
+            #print('Angle offset', yaw, pitch, roll)
+
+            element_type = element_line.split('(')[0]
+
+            p1 = {token: variables[token] for token in tokens if token in variables}
+            p2 = {k:v for k, v in variables.items() if k.startswith(name)}
+            p3 = {'gdf_file':k for k in tokens if k.startswith('"') and k.endswith('.gdf"')}
+            
+            
+            return {'name': name, 'type': element_type,
+                    'x0': x0, 'y0': y0, 'z0': z0,
+                    'yaw': yaw, 'pitch': pitch, 'roll': roll,
+                    'params': {**p1, **p2, **p3}}
+
+        elif tokens[1] == '"z"': # Legacy placement 1
+            
+            x0, y0, z0 = 0, 0, float(variables[tokens[2]])
+            yaw, pitch, roll = 0, 0, 0
+
+            p1 = {token: variables[token] for token in tokens if token in variables}
+            p3 = {'gdf_file':k for k in tokens if k.startswith('"') and k.endswith('.gdf"')}
+
+            return {'name': len(self._elements)+1, 'type': element_type,
+                    'x0': x0, 'y0': y0, 'z0': z0,
+                    'yaw': yaw, 'pitch': pitch, 'roll': roll,
+                    'params': {**p1, **p3}}
+
+        elif all( [is_floatable(token) for token in tokens[1:4]] ) and all( [is_floatable(token) for token in tokens[4:10]] ):
+            
+            x0, y0, z0 = float(tokens[1]), float(tokens[2]), float(tokens[3])      
+            yaw, pitch, roll = 0, 0, 0
+
+            p1 = {token: variables[token] for token in tokens if token in variables}
+            p3 = {'gdf_file':k for k in tokens if k.startswith('"') and k.endswith('.gdf"')}
+
+            return {'name': len(self._elements)+1, 'type': element_type,
+                    'x0': x0, 'y0': y0, 'z0': z0,
+                    'yaw': yaw, 'pitch': pitch, 'roll': roll,
+                    'params': {**p1, **p3}}
+
+        elif all( [token in variables for token in tokens[1:4]] ) and all( [is_floatable(token) for token in tokens[4:10]] ):
+
+            x0, y0, z0 = float(variables[tokens[1]]), float(variables[tokens[2]]), float(variables[tokens[3]])     
+            yaw, pitch, roll = 0, 0, 0
+
+            p1 = {token: variables[token] for token in tokens if token in variables}
+            p3 = {'gdf_file':k for k in tokens if k.startswith('"') and k.endswith('.gdf"')}
+
+            return {'name': len(self._elements)+1, 'type': element_type,
+                    'x0': x0, 'y0': y0, 'z0': z0,
+                    'yaw': yaw, 'pitch': pitch, 'roll': roll,
+                    'params': {**p1, **p3}}
+                
+
+        else:
+            print(tokens[1], tokens[2])
+            print('beef')
+                       
+            
+
+    def parse_estatic_element(self, ele_info, style=None):
+
+        name = ele_info['name']
+        params = ele_info['params']
+
+        if ele_info['type'] == 'erect':
+
+            ele  = Erect(name, params[f'{name}_a'], 
+                         params[f'{name}_b'], 
+                         params[f'{name}_L'], 
+                         params[f'{name}_E'],
+                         x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                         yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+
+            self.add(ele, ds=ele_info['z0'], ref_element='beg', element_origin='center')
 
 
-    def parse_field_map(self, mline, variables, gpt_file_dir, style=None):
-        
-        mtype = mline.split('(')[0]
+    def parse_bstatic_element(self, ele_info, style=None):
 
-        #print(mtype, gpt_file_dir)
+        name = ele_info['name']
+        params = ele_info['params']
         
+        if ele_info['type'] == 'bzsolenoid':
+
+            ele = Bzsolenoid(name, 
+                             params[f'{name}_L'], 
+                             params[f'{name}_R'], 
+                             params[name+'_bs_field']/params[name+'_mu0'])
+        
+            self.add(ele, ds=ele_info['z0'], ref_element='beg', element_origin='center')
+
+        elif ele_info['type']=='rectmagnet':
+
+            ele = Rectmagnet(name, 
+                             params[f'{name}_a'], 
+                             params[f'{name}_b'], 
+                             params[f'{name}_Bfield'], 
+                             b1 = params[f'{name}_fringe_b1'],
+                             b2 = params[f'{name}_fringe_b2'],
+                             dl = params[f'{name}_fringe_dl'])
+
+            self.add(ele, ds=ele_info['z0'], ref_element='beg', element_origin='center')
+
+    def parse_field_map(self, ele_info, gpt_file_dir, style=None):
+        
+        name = ele_info['name']
+        params = ele_info['params']
+        
+        if ele_info['type'] not in SUPPORTED_MAP_ELEMENTS:
+            print(f'Could not parse unknown field map type: {params["type"]} for element: {name}.')
+            return
+
+        gdf_file = os.path.expandvars( params['gdf_file'].replace('"', '') )
+
+        if not os.path.isabs(gdf_file):
+            
+            gdf_file = os.path.abspath(os.path.join(gpt_file_dir, gdf_file))
+
+        fmap_name = os.path.basename(gdf_file).replace('.gdf','')
+
+        if f'{name}_scale' in params:      
+            scale = params[f'{name}_scale']
+        else:
+            scale = 1 
+
+        if ele_info['type']=='Map1D_B':
+            
+            ele = Map1D_B(name, gdf_file, style=style, scale=scale, 
+                          x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                          yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+            
+        elif ele_info['type']=='Map2D_B':
+           
+            ele = Map2D_B(name, gdf_file, style=style, scale=scale,
+                          x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                          yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+
+        elif ele_info['type']=='Map1D_E':
+            
+            ele = Map1D_E(name, gdf_file, style=style, scale=scale, 
+                          x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                          yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+
+        elif ele_info['type']=='Map2D_E':
+
+            ele = Map2D_E(name, gdf_file, style=style, scale=scale,
+                          x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                          yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+
+        elif ele_info['type']=='Map25D_TM':
+
+            if f'{name}_frequency' in ele_info:
+                frequency = ele_info[f'{name}_frequency']
+            else:
+                frequency = 0
+
+            ele = Map25D_TM(name, gdf_file, frequency, style=style, scale=scale,
+                            x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                            yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+            
+            
+        #elif(mtype=='Map1D_TM'):
+        #    ele = Map1D_TM(ele_name, fmap_file, 0, style=style)
+        #elif(mtype=='Map2D_E'):
+        #    ele = Map2D_E(ele_name, fmap_file, style=style)
+        #elif(mtype=='Map25D_TM'):
+        #    ele = Map25D_TM(ele_name, fmap_file, 0, style=style)
+        #elif(mtype=='Map3D_E'):
+        #    ele = Map3D_E(ele_name, fmap_file)
+        else:
+            print('Unknown element.')
+
+        #print(ele._ecs)
+        if(ele.z0[0]==0):
+            ele_origin = 'beg'
+            ds = ele._ecs['z0']
+        else:
+            ele_origin = 'center'
+            ds = ele._ecs['z0'] + ele.length/2
+
+        self.add(ele, ds=ele._ecs['z0'], ref_element='beg', element_origin=ele_origin)
+
+        #fmap_token = [token for token in tokens if('.gdf' in token)][0]
+        #fmap_token_index = tokens.index(fmap_token)
+        #fmap_file = os.path.expandvars(fmap_token[1:-1])
+        
+        """
         if(mtype not in ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM', 'Map3D_E']):
             print(f'Unknown field map type: {mtype}')
             
@@ -412,7 +630,7 @@ class Lattice():
 
         #print(fmap_file)
 
-        if(not os.path.isabs(fmap_file)):
+        if not os.path.isabs(fmap_file):
             
             fmap_file = os.path.abspath(os.path.join(gpt_file_dir, fmap_file))
             
@@ -468,76 +686,8 @@ class Lattice():
                 ele_origin = 'center'
                 
             self.add(ele, ds=zpos, ref_element='beg', element_origin=ele_origin)
-
-    def parse_bstatic_element(self, bline, variables, style=None):
-
-        btype = bline.split('(')[0]
-        
-        tokens = [t.strip() for t in bline.split(',')]
-        tokens[0] = tokens[0].split('(')[1]
-        tokens[-1] = tokens[-1].split(')')[0]
-
-        #bname = tokens[10].split('_')[0]
-
-        # Get ECS:
-        if(tokens[1].endswith('xyzXYZ"')):   
-
-            x0, y0, z0 = tokens[2], tokens[3], tokens[4]
-            
-            zstr = tokens[4]
-            if(is_floatable(zstr)):
-                zpos=float(zstr)
-            elif(zstr in variables):
-                zpos=variables[zstr]
-                
-            else:
-                print('Could not parse z-position for bline')
-
-            #print(zpos)
-
-            #xhat = [int(tokens[4]), int(tokens[5]), int(tokens[6])]
-            #yhat = [int(tokens[7]), int(tokens[8]), int(tokens[9])]
-
-            #zhat = np.cross(xhat, yhat)
-
-            #assert( np.isclose(zhat[0], 0) and np.isclose(zhat[1], 0) and np.isclose(zhat[2], 1) )
-
-            #assert( int(tokens[4])==1 and #xhat = (1, 0, 0)
-            #   int(tokens[5])==0 and 
-            #   int(tokens[6])==0 and 
-            #   int(tokens[7])==0 and #yhat = (0, 1, 0)
-            #   int(tokens[8])==1 and 
-            #   int(tokens[9])==0) 
-            
-            ele_name = f'ele_{len(self._elements) + 1}'
-
-            #print(x0, y0, z0, btype)
-
-        ele_name = f'ele_{len(self._elements) + 1}'
-        
-        if(btype=='bzsolenoid'):
-
-            ele = Bzsolenoid(ele_name, 
-                             variables[tokens[11]], 
-                             variables[tokens[10]], 
-                             variables[bname+'_bs_field']/variables[bname+'_mu0'])
-        
-        
-            self.add(ele, ds=zpos, ref_element='beg', element_origin='center')
-
-        elif(btype=='rectmagnet'):
-
-            
-            ele = Rectmagnet(ele_name, 
-                             variables[tokens[8]], 
-                             variables[tokens[9]],
-                             variables[tokens[10]],
-                             b1 = variables[tokens[12]],
-                             b2 = variables[tokens[13]],
-                             dl = variables[tokens[11]])
-
-            self.add(ele, ds=zpos, ref_element='beg', element_origin='center')
-        
+        """
+    
             
     def create_template_dir(self, 
                             template_dir=None, 

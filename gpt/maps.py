@@ -130,6 +130,7 @@ class GDFFieldMap(Element):
                 else:
                     column_names = line.split()
                     break
+                    
         n_header = i+1
         self.column_names = column_names
         ndata = np.loadtxt(temp_ascii_file, skiprows=n_header)
@@ -413,6 +414,7 @@ class Map1D_E(Map1D):
                  scale=1, 
                  color='#1f77b4', 
                  style=None,
+                 x0=0, y0=0, z0=0,
                  yaw=0, pitch=0, roll=0
                 ):
 
@@ -457,7 +459,6 @@ class Map1D_E(Map1D):
         return fields
 
     def track_on_axis_rk45(self, t, p):
-
         pass
 
 
@@ -524,7 +525,6 @@ class Map1D_B(Map1D):
 
         self._color = color
 
-
         self._scale=scale
 
         self.place()
@@ -567,7 +567,7 @@ class Map1D_TM(Map1D):
         gdf2a_bin='$GDF2A_BIN', 
         color='darkorange',
         x0=0, y0=0, z0=0,
-        
+        yaw=0, pitch=0, roll=0,
         style=None):
 
         super().__init__(source_data, 
@@ -659,9 +659,13 @@ class Map2D(GDFFieldMap):
 
     """ Base class for all 2D cylindrically symmetric fields pointed along z """
 
-    def __init__(self, source_data_file, required_columns, gdf2a_bin='$GDF2A_BIN'):
+    def __init__(self, source_data_file, required_columns, gdf2a_bin='$GDF2A_BIN',
+                 x0=0, y0=0, z0=0,
+                 yaw=0, pitch=0, roll=0):
 
-        super().__init__(source_data_file, gdf2a_bin=gdf2a_bin)
+        super().__init__(source_data_file, gdf2a_bin=gdf2a_bin,
+                         x0=x0, y0=y0, z0=z0,
+                         yaw=yaw, pitch=pitch, roll=roll)
 
         self.required_columns=required_columns
 
@@ -742,9 +746,11 @@ class Map2D_E(Map2D):
     Defines a 2D (r,z), (Er, Ez) cylindrically electric symmetric field map object
     """
     
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', scale=1, r=[0,0,0], style=None, color='#1f77b4'):
+    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', scale=1, style=None, color='#1f77b4',
+                 x0=0, y0=0, z0=0, yaw=0, pitch=0, roll=0):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez'],
+                         x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll)
 
         self._name = name
         self._type = 'Map2D_E'
@@ -782,9 +788,19 @@ class Map2D_B(Map2D):
     Defines a 2D (r,z), (Br, Bz) cylindrically magnetic symmetric field map object
     """
 
-    def __init__(self, name, source_data, gdf2a_bin='$GDF2A_BIN', field_pos='center', scale=1, style='tao', color='#2ca02c'):
+    def __init__(self, name, source_data, 
+                 gdf2a_bin='$GDF2A_BIN', 
+                 field_pos='center', 
+                 scale=1, 
+                 style='tao', 
+                 color='#2ca02c',
+                 x0=0, y0=0, z0=0,
+                 yaw=0, pitch=0, roll=0):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Br', 'Bz'])
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin,
+                         required_columns=['r', 'z', 'Br', 'Bz'],
+                         x0=x0, y0=y0, z0=z0,
+                         yaw=yaw, pitch=pitch, roll=roll)
 
         self._type='Map2D_B'
         self._name = name
@@ -838,13 +854,15 @@ class Map25D_TM(Map2D):
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, 
         required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'],
-        e1=[1, 0, 0], 
-        e2=[0, 1, 0],
+        x0=0, y0=0, z0=0,
+        yaw=0, pitch=0, roll=0,
         k=0,
         color='darkorange',
         style=None):
 
-        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=required_columns)
+        super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=required_columns,
+                         x0=x0, y0=y0, z0=z0,
+                         yaw=yaw, pitch=pitch, roll=roll)
 
         self._name=name
         self._type='Map25D_TM'
@@ -871,8 +889,8 @@ class Map25D_TM(Map2D):
         self.Fz_str='Ez'
         self.Fz_unit='V/m'
 
-        self._e1=e1
-        self._e2=e2
+        #self._e1=e1
+        #self._e2=e2
 
         self.place()
 
@@ -927,7 +945,7 @@ class Map25D_TM(Map2D):
 
         name = self.name
 
-        base_lines = super().gpt_lines(e1=self._e1, e2=self._e2, gdf_file=gdf_file)
+        base_lines = super().gpt_lines(gdf_file=gdf_file)
         extra_lines = base_lines[:-1]
         map_line = base_lines[-1].replace(');','')
 
@@ -1284,6 +1302,14 @@ def place(ele, ref_element=None, ds=0, ref_origin='end', element_origin='origin'
 
     ele._ds = np.linalg.norm(ele._p_beg - ele._ccs_beg_origin)
     ele.set_ref_trajectory()
+
+    ds = in_ecs(ele._p_beg, ele._ccs_beg_origin, ele.M_beg)[2]
+ 
+    ccs_beg_e3 = cvector([0,0,1])
+    r = ds*ccs_beg_e3
+
+    #print('flam', r[2][0]-ele['z'][0] )
+    #ele._ecs["z0"] = r[2][0]-ele['z'][0] 
 
 
 def plot_clyindrical_map_floor(element, axis=None, alpha=1.0, ax=None, xlim=None, ylim=None, style=None):

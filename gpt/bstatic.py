@@ -618,7 +618,7 @@ class Rectmagnet(Element):
         lines = lines + [f'{self.name}_fringe_b1 = {self.b1};']    
         lines = lines + [f'{self.name}_fringe_b2 = {self.b2};'] 
 
-        bline = btype = 'rectmagnet'
+        btype = 'rectmagnet'
 
         bend_line = f'\n{btype}("{self.ccs_beg}", ' + self.ecs_str
         bend_line = bend_line + f'{self.name}_a, {self.name}_b, {self.name}_Bfield,'
@@ -1106,7 +1106,7 @@ class Quadrupole(Quad):
 class Bzsolenoid(Element):
     
     def __init__(self, name, L, R, nI, Lbound=None, width=None,
-                 x0=0, y0=0, z0=0, theta_x=0, theta_y=0, theta_z=0):
+                 x0=0, y0=0, z0=0, yaw=0, pitch=0, roll=0):
         
         if(Lbound is None):
             Lbound = L
@@ -1117,8 +1117,7 @@ class Bzsolenoid(Element):
             width = 2*R
         
         super().__init__(name, length=Lbound, width=width, height=0, 
-                         x0=x0, y0=y0, z0=z0,
-                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z,
+                         x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll,
                          color='k')
         
         self._L = L
@@ -1301,13 +1300,17 @@ class Bzsolenoid(Element):
     
     def gpt_lines(self, ccs=None):
 
-        lines = []
+        
 
         name = self.name
-  
+        btype = self.type
+
+        lines = []
         lines.append('\n#***********************************************')
         lines.append(f'#               Bzsolenoid: {self.name}         ')
         lines.append('#***********************************************')
+
+        lines = lines + Element.gpt_lines(self)
         
         lines.append(f'{name}_R = {self._R};')
         lines.append(f'{name}_L = {self.L};')
@@ -1321,7 +1324,9 @@ class Bzsolenoid(Element):
         
         lines.append(f'{name}_z = {ds};') 
 
-        lines.append(f'\nbzsolenoid("{self.ccs_beg}", {name}_x, {name}_y, {name}_z, 1, 0, 0, 0, 1, 0, {name}_R, {name}_L, {name}_nI);')
+        bline = f'\n{btype}("{self.ccs_beg}", ' + self.ecs_str
+
+        lines.append(f'\nbzsolenoid("{self.ccs_beg}", {self.ecs_str} {name}_R, {name}_L, {name}_nI);')
         
         return lines
                          
