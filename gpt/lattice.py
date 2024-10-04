@@ -402,7 +402,7 @@ class Lattice():
 
         tokens = self.get_element_line_tokens(element_line)
         
-        assert tokens[0] == '"wcs"', "Currently only lattices placed entirely in WCS are parsable"
+        #assert tokens[0] == '"wcs"', "Currently only lattices placed entirely in WCS are parsable"
 
         if tokens[1] in  ['"GxyzXYZ"', '"LxyzXYZ"', '"xyzXYZ"']:
 
@@ -481,8 +481,7 @@ class Lattice():
                 
 
         else:
-            print(tokens[1], tokens[2])
-            print('beef')
+            return None
                        
             
 

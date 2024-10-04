@@ -494,8 +494,7 @@ class SectorBend(Element):
 
         self._plot_pole_faces=plot_pole_faces
 
-        super().__init__(name, length=length, width=width, height=height, 
-                         theta_y=angle, color=color)
+        super().__init__(name, length=length, width=width, height=height, yaw=angle, color=color)
 
     def __str__(self):
 
