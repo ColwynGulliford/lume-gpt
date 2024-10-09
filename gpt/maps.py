@@ -1019,14 +1019,17 @@ class Map3D_E(GDFFieldMap):
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'x':'x', 'y':'y', 'z':'z', 'Ex':'Ex', 'Ey':'Ey', 'Ez':'Ez'}, 
         required_columns=['x', 'y', 'z', 'Ex', 'Ey', 'Ez'],
-    #             e1=[1, 0, 0], 
-    #             e2=[0, 1, 0],
+        x0=0, y0=0, z0=0,
+        yaw=0, pitch=0, roll=0,        
         color='tab:blue',
         style=None):
 
         self.column_names = column_names
 
-        GDFFieldMap.__init__(self, source_data, gdf2a_bin=gdf2a_bin, use_temp_file=True)
+        GDFFieldMap.__init__(self, source_data, gdf2a_bin=gdf2a_bin, 
+                             x0=x0, y0=y0, z0=z0,
+                             yaw=yaw, pitch=pitch, roll=roll,
+                             use_temp_file=True)
 
         self._name = name
         self._scale = scale
@@ -1102,6 +1105,7 @@ class Map3D_B(GDFFieldMap):
         gdf2a_bin='$GDF2A_BIN', 
         column_names={'x':'x', 'y':'y', 'z':'z', 'Bx':'Bx', 'By':'By', 'Bz':'Bz'}, 
         required_columns=['x', 'y', 'z', 'Bx', 'By', 'Bz'],
+        x0=0, y0=0, z0=0,
         yaw=0, pitch=0, roll=0,
         color='tab:blue',
         style=None):
@@ -1110,6 +1114,7 @@ class Map3D_B(GDFFieldMap):
 
         GDFFieldMap.__init__(self, source_data, 
                              gdf2a_bin=gdf2a_bin, 
+                             x0=x0, y0=y0, z0=z0,
                              yaw=yaw, pitch=pitch, roll=roll,
                              use_temp_file=True)
 

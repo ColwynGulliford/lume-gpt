@@ -23,7 +23,7 @@ import copy
 
 import tempfile
 
-SUPPORTED_MAP_ELEMENTS = ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM', 'Map3D_E']
+SUPPORTED_MAP_ELEMENTS = ['Map1D_E', 'Map1D_B', 'Map1D_TM', 'Map2D_E', 'Map2D_B', 'Map25D_TM', 'Map3D_E', 'Map3D_B']
 SUPPORTED_BSTATIC_ELEMENTS = ['bzsolenoid', 'quadrupole', 'sectormagnet', 'rectmagnet']
 SUPPORTED_ESTATIC_ELEMENTS = ['erect']
 
@@ -410,23 +410,31 @@ class Lattice():
 
             # Get/check element name:
             name = tokens[2].replace('_x','')
-            
-            for token in tokens[3:8]:
-                assert token.startswith(f'{name}_')
+
+            #print(name)
+
+            offsets = {}
+
+            offset_list = ['x', 'y', 'z', 'yaw', 'pitch', 'roll']
 
             # Get position offsets
-            x0 = float(variables[tokens[2]]) 
-            y0 = float(variables[tokens[3]])
-            z0 = float(variables[tokens[4]])
+            #print(tokens)
+            for ii, token in enumerate(tokens[2:8]):
+                #print(ii, token)
+                if token in variables:
+                    #print(token)
+                    assert token.startswith(f'{name}_'), f'Inconsistent name: {name} with {token}'
+                    assert token.split('_')[-1] in offset_list, f'Unknown variable name' 
+                    
+                    if token[-1] in ['x', 'y', 'z']:
+                        offsets[token[-1]+'0'] = variables[token]
+                    else:
+                        offsets[token.split('_')[-1]] = variables[token]
+                        
+                elif is_floatable(token):
+                    print(ii, token, offset_list[ii-2], name)
+                    offsets[offset_list[ii]] = float(token)
 
-            #print('Position offset', x0, y0, z0)
-
-            # Get angle offsets
-            yaw = float(variables[tokens[5]]) 
-            pitch = float(variables[tokens[6]])
-            roll = float(variables[tokens[7]])
-
-            #print('Angle offset', yaw, pitch, roll)
 
             element_type = element_line.split('(')[0]
 
@@ -436,8 +444,7 @@ class Lattice():
             
             
             return {'name': name, 'type': element_type,
-                    'x0': x0, 'y0': y0, 'z0': z0,
-                    'yaw': yaw, 'pitch': pitch, 'roll': roll,
+                    **offsets,
                     'params': {**p1, **p2, **p3}}
 
         elif tokens[1] == '"z"': # Legacy placement 1
@@ -584,6 +591,18 @@ class Lattice():
             ele = Map25D_TM(name, gdf_file, frequency, style=style, scale=scale,
                             x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
                             yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+
+        elif ele_info['type']=='Map3D_E':
+
+            ele = Map3D_E(name, gdf_file, style=style, scale=scale,
+                          x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                          yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
+
+        elif ele_info['type']=='Map3D_B':
+
+            ele = Map3D_E(name, gdf_file, style=style, scale=scale,
+                          x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
+                          yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
             
             
         #elif(mtype=='Map1D_TM'):
