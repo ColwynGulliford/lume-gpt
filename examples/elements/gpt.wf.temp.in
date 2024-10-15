@@ -1,0 +1,102 @@
+
+setfile("beam", "gpt_particles.gdf");
+time=0.0;
+
+auto_phase=0.0;
+space_charge=0.0;
+cathode=0.0;
+space_charge_type=1.0;
+RadiusMax=0.04;
+GBacc=5.5;
+xacc=6.5;
+accuracy(GBacc, xacc);
+dtmin=1e-16;
+dtmax=1e-10;
+ 
+Alpha=1.0;
+Fn=0.5;
+verror=0.005;
+Nstd=5.0;
+tree_code_theta=1.0;
+tree_code_R=1e-06;
+if (space_charge == 1) {
+
+    if (space_charge_type == 1) {
+        if(cathode == 1) {
+            spacecharge3Dmesh("Cathode", "MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        } else {
+            spacecharge3Dmesh("MeshNfac", Alpha, "MeshAdapt", Fn, "SolverAcc", verror, "MeshBoxSize", Nstd);
+        }
+    }
+    if (space_charge_type == 2) {
+        setrmacrodist("beam","u",tree_code_R,0) ;
+        spacecharge3Dtree(tree_code_theta) ;   }
+        
+    #if (space_charge_type == 3) {
+    #    spacechargeP2Pgpu("3D", "SinglePrecision");
+    #    }
+}
+Ntout=50.0;
+tmax=10e-9;
+ZSTART=-0.005;
+ZSTOP=3;
+zminmax("wcs", "I", ZSTART, ZSTOP);
+
+if(Ntout>0) {
+    tout(time, tmax, tmax/Ntout);
+}
+
+
+# beg
+
+# WF1
+
+
+WF1_x = 0;
+
+WF1_y = 0;
+
+WF1_yaw = 0;
+
+WF1_pitch = 0;
+
+WF1_roll = 0;
+
+WF1_a = 0.2;
+
+WF1_b = 0.2;
+
+WF1_L = 1.2;
+
+WF1_z = 0.61;
+
+WF1_E0 = 6531943.596134883;
+
+WF1_B0 = 0.02185;
+
+WF1_dipole_dl = 0;
+
+WF1_dipole_b1 = 0;
+
+WF1_dipole_b2 = 0;
+
+
+
+erect("wcs", "GxyzXYZ", WF1_x, WF1_y, WF1_z, WF1_yaw, WF1_pitch + 1.5707963267948966, WF1_roll, WF1_L, WF1_b, WF1_a, WF1_E0 );
+
+rectmagnet("wcs", "GxyzXYZ", WF1_x, WF1_y, WF1_z, WF1_yaw, WF1_pitch, WF1_roll, WF1_a, WF1_L, WF1_B0, WF1_dipole_dl, WF1_dipole_b1, WF1_dipole_b2 );
+
+
+# Q1
+
+#***********************************************
+#               Enge Quad: Q1         
+#***********************************************
+Q1_gradient = 0;
+Q1_length = 0.26;
+Q1_fringe_b1 = 78.74015748031496;
+
+quadrupole("wcs", 0, 0, 1.355, 1, 0, 0, 0, 1, 0, Q1_length, Q1_gradient, Q1_fringe_b1);
+
+# scr1
+screen("wcs", 0, 0, 0.0, 1, 0, 0, 0, 1, 0, 1.5);

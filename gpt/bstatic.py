@@ -873,12 +873,12 @@ class Quadrupole(Quad):
 
     def __init__(self, name, G, length, width=0.2, height=0, 
                  x0=0, y0=0, z0=0, 
-                 theta_x=0, theta_y=0, theta_z=0,
+                 yaw=0, pitch=0, roll=0,
                  gap=None, b1=0, npts=1000, color='b'):
 
         super().__init__(name, length, width=width, height=height, 
                          x0=x0, y0=y0, z0=z0,
-                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z, color=color)
+                         yaw=yaw, pitch=pitch, roll=roll, color=color)
 
         self._G = G
 
@@ -1311,18 +1311,22 @@ class Bzsolenoid(Element):
         lines.append('#***********************************************')
 
         lines = lines + Element.gpt_lines(self)
+
+        Lstr = f'{name}_L'
+        Rstr = f'{name}_R'
         
         lines.append(f'{name}_R = {self._R};')
         lines.append(f'{name}_L = {self.L};')
         lines.append(f'{name}_bs_field = {self.bs_field};')
+        lines.append(f'{name}_geometry_factor = sqrt(({Lstr}/2.0)^2 + {Rstr}^2)/({Lstr}/2.0);')
         lines.append(f'{name}_mu0 = {mu0};')
-        lines.append(f'{name}_nI = {name}_bs_field/{name}_mu0;')      
-        lines.append(f'{name}_x = 0;') 
-        lines.append(f'{name}_y = 0;')
+        lines.append(f'{name}_nI = {name}_bs_field/{name}_mu0 * {name}_geometry_factor;')      
+        #lines.append(f'{name}_x = 0;') 
+        #lines.append(f'{name}_y = 0;')
         
-        ds = np.linalg.norm( 0.5*(self.p_end + self.p_beg) - self._ccs_beg_origin) 
+        #ds = np.linalg.norm( 0.5*(self.p_end + self.p_beg) - self._ccs_beg_origin) 
         
-        lines.append(f'{name}_z = {ds};') 
+        #lines.append(f'{name}_z = {ds};') 
 
         bline = f'\n{btype}("{self.ccs_beg}", ' + self.ecs_str
 

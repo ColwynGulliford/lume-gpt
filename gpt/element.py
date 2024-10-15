@@ -467,13 +467,13 @@ class Quad(Element):
         height=0, 
         n_screens=2,
         x0=0, y0=0, z0=0,
-        theta_x=0, theta_y=0, theta_z=0,
+        yaw=0, pitch=0, roll=0,
         color='b'):
 
         self._type = 'Quad'
         super().__init__(name, length=length, width=width, height=height, 
                          x0=x0, y0=y0, z0=z0,
-                         theta_x=theta_x, theta_y=theta_y, theta_z=theta_z,
+                         yaw=yaw, pitch=pitch, roll=roll,
                          color=color)
 
 
