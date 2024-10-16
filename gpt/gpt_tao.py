@@ -6,7 +6,7 @@ from pmd_beamphysics.fields.analysis import accelerating_voltage_and_phase
 #from . import GPT
 from .element import Screen
 from .bstatic import Bzsolenoid, Quadrupole, Sectormagnet
-from .maps import Map2D_B, Map2D_E, Map25D_TM
+from .maps import Map2D_B, Map2D_E, Map25D_TM, Map3D_B, Map3D_E
 from .lattice import Lattice
 
 from scipy.constants import physical_constants
@@ -166,6 +166,12 @@ def pack_fieldmap(ele_id, tao):
                                             relative_phase = phi0_user*360,
                                             oncrest_phase = phi0_oncrest*360,
                                             frequency=freq)
+
+    elif ele_key in ['EM_FIELD']:
+
+        print('check for B static')
+
+        print(grid_params)
             
 
     else:
