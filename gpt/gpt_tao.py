@@ -70,6 +70,8 @@ def ele_info(tao, ele_id):
 def pack_fieldmap(ele_id, tao):
     
     edat = ele_info(tao, ele_id)
+
+    
     ekey = edat['key']
     ele_key = ekey.upper() 
     
@@ -122,7 +124,7 @@ def pack_fieldmap(ele_id, tao):
         phi0_tot = 0
         phi0_oncrest = 0
        
-        info['gpt_element'] = Map2D_B(gpt_name, str(grid_params['file']), scale=scale)
+        info['gpt_element'] = Map2D_B(gpt_name, str(grid_params['file']), scale=scale, roll=edat['TILT'])
         
     elif ele_key in ('E_GUN', 'LCAVITY'):
         
@@ -158,20 +160,29 @@ def pack_fieldmap(ele_id, tao):
         info['phi0_oncrest'] = phi0_oncrest % 1
         
         if(ele_key=='E_GUN'):
-            info['gpt_element'] = Map2D_E(gpt_name, str(grid_params['file']), scale=scale)
+            info['gpt_element'] = Map2D_E(gpt_name, str(grid_params['file']), scale=scale, roll=edat['TILT'])
             
         elif(ele_key=='LCAVITY'):
             info['gpt_element'] = Map25D_TM(gpt_name, str(grid_params['file']), 
                                             scale = scale, 
                                             relative_phase = phi0_user*360,
                                             oncrest_phase = phi0_oncrest*360,
-                                            frequency=freq)
+                                            frequency=freq,
+                                            roll=edat['TILT'])
 
     elif ele_key in ['EM_FIELD']:
 
-        print('check for B static')
-
-        print(grid_params)
+        if master_parameter is None:
+            scale = grid_params['field_scale']
+        else:
+            scale = edat[master_parameter]
+            
+        
+        if str(grid_params['field_type'])=='Magnetic':
+            #print('FOUND BSTATIC')
+            #for k, v in edat.items():
+            #    print(k)
+            info['gpt_element'] = Map3D_B(gpt_name, str(grid_params['file']), scale=scale, roll=edat['TILT'])
             
 
     else:
@@ -221,7 +232,7 @@ def is_grid_field(ele_id, tao):
     
     
 def tao_create_gpt_lattice_def(tao,
-                               solrf_eles=['E_Gun', 'Solenoid', 'Lcavity'], 
+                               solrf_eles=['E_Gun', 'Solenoid', 'Lcavity', 'EM_Field'], 
                                marker_eles = ['Marker'], #'MARKER::*',
                                quadrupole_eles = ['Quadrupole'], # Quads not implented
                                bend_eles = ['Sbend'] # Bends not implemented
@@ -251,6 +262,8 @@ def tao_create_gpt_lattice_def(tao,
     for ii, ele_ix in enumerate(ele_ixs):
         
         ele_inf = ele_info(tao, ele_ix)
+
+        #print(ele_inf['key'])
         
         if(ele_inf['key'] in solrf_eles and is_grid_field(ele_ix, tao)):    
 
