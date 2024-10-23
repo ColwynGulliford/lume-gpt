@@ -274,14 +274,14 @@ class Lattice():
         for element in elements:
             
             if(is_bend(element)):
-                #print('got a bend')
+
                 element_lines.append(f'\n# {element.name}\n')
                 for line in element.gpt_lines():
                     element_lines.append(line+'\n')
 
         for element in elements:
             if(not is_bend(element)):
-                #print('not a bend')
+             
                 element_lines.append(f'\n# {element.name}\n')
                 
                 if(hasattr(element, 'source_data_file') and use_element_name_for_gdf_files):
@@ -314,8 +314,6 @@ class Lattice():
 
             count=0
             for element in self._elements:
-
-                #print(element)
 
                 if(element._type in ['Map25D_TM', 'Map1D_TM']):
 
