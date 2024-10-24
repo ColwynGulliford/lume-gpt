@@ -12,6 +12,7 @@ from gpt.element import is_bend
 from gpt.template import BASIC_TEMPLATE
 from gpt.tools import full_path
 from gpt.tools import is_floatable
+from gpt.element import Screen
 from gpt.maps import Map1D_B, Map1D_TM, Map1D_E, Map2D_E, Map2D_B, Map25D_TM, Map3D_E
 from gpt.bstatic import Bzsolenoid, Rectmagnet
 from gpt.estatic import Erect

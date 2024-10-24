@@ -299,7 +299,7 @@ def tao_create_gpt_lattice_def(tao,
             last_bend_s = s_end
             last_bend_name = gpt_name
             
-        elif(ele_inf['key'] == 'Marker'):
+        elif(ele_inf['key'] == 'Marker' or ele_inf['key'] == 'Instrument' or ele_inf['key'] == 'Monitor'):
             gpt_name = ele_inf['name'].replace('.', '_')
             lat.add(Screen(gpt_name), ds=ele_inf['s'] - last_bend_s, ref_element=last_bend_name)
             
