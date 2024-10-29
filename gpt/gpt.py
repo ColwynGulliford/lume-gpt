@@ -18,6 +18,7 @@ from gpt.gpt_tao import gpt_from_tao
 
 from gpt.lattice import Lattice
 
+
 from copy import deepcopy
 import h5py
 import numpy as np
