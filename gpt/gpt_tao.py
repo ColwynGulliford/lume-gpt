@@ -79,7 +79,7 @@ def pack_fieldmap(ele_id, tao):
     
     info = {}
     
-    grid_params = tao.ele_grid_field(ele_id, 1, 'base', as_dict=False)
+    grid_params = tao.ele_grid_field(ele_id, 1, 'base')
     
     # Load the fieldmesh and save
     field_mesh = FieldMesh(str(grid_params['file']))  
@@ -88,7 +88,7 @@ def pack_fieldmap(ele_id, tao):
     freq = edat.get('RF_FREQUENCY', 0)
     assert np.allclose(freq, field_mesh.frequency), f'{freq} != {field_mesh.frequency}'  
     
-    master_parameter = grid_params['master_parameter'].value
+    master_parameter = grid_params['master_parameter']
     if master_parameter == '<None>':
         master_parameter = None
     
@@ -143,7 +143,7 @@ def pack_fieldmap(ele_id, tao):
         phi0_ref = freq*ref_time_start
         
         #phi0_fieldmap = field_mesh.attrs['RFphase'] / (2*np.pi) # Bmad doesn't use at this point
-        phi0_fieldmap = grid_params['phi0_fieldmap'].value 
+        phi0_fieldmap = grid_params['phi0_fieldmap']
         
         # Phase based on absolute time tracking
         phi0_user = sum([edat['PHI0'], edat['PHI0_ERR'] ])
@@ -225,7 +225,7 @@ def pack_bmad_softedge_solenoid(ele_id, tao):
 def is_grid_field(ele_id, tao):
     
     try:
-        tao.ele_grid_field(ele_id, 1, 'base', as_dict=False)
+        tao.ele_grid_field(ele_id, 1, 'base')
         return True
     except:
         return False
