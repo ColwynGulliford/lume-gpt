@@ -1398,8 +1398,8 @@ class Bzsolenoid(Element):
         ps = np.concatenate( (p1, p3, p4, p2, p1), axis=1)
         
         ax.plot(ps[2], ps[0], self.color)
-        ax.plot([p1[2], p3[2]], [p1[0], p4[0]], self.color)
-        ax.plot([p1[2], p3[2]], [p4[0], p3[0]], self.color)
+        #ax.plot([p1[2], p3[2]], [p1[0], p4[0]], self.color)
+        #ax.plot([p1[2], p3[2]], [p4[0], p3[0]], self.color)
 
         z_cutoff = self.z_cutoff(field_tol)
 
