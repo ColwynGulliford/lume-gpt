@@ -235,7 +235,7 @@ def tao_create_gpt_lattice_def(tao,
                                solrf_eles=['E_Gun', 'Solenoid', 'Lcavity', 'EM_Field'], 
                                marker_eles = ['Marker'], #'MARKER::*',
                                quadrupole_eles = ['Quadrupole'], # Quads not implented
-                               bend_eles = ['Sbend'] # Bends not implemented
+                               bend_eles = ['SBend'] # Bends not implemented
                               ):
     
     # Get unique name dict
@@ -263,7 +263,7 @@ def tao_create_gpt_lattice_def(tao,
         
         ele_inf = ele_info(tao, ele_ix)
 
-        #print(ele_inf['key'])
+        #print(ii, ele_ix, ele_inf['key'], ele_inf['key'] in bend_eles, f"'{ele_inf['key']}'")
         
         if(ele_inf['key'] in solrf_eles and is_grid_field(ele_ix, tao)):    
 
@@ -292,7 +292,7 @@ def tao_create_gpt_lattice_def(tao,
 
             
         elif(ele_inf['key'] in bend_eles):
-            
+
             gpt_name, R, theta, p, e1, e2, s_beg, s_end = pack_bend(ele_ix, tao)
             lat.add(Sectormagnet(gpt_name, R, theta, p, phi_in=e1, phi_out=e2), ds=s_beg - last_bend_s, ref_element=last_bend_name)
 
@@ -300,11 +300,11 @@ def tao_create_gpt_lattice_def(tao,
             last_bend_name = gpt_name
             
         elif(ele_inf['key'] == 'Marker' or ele_inf['key'] == 'Instrument' or ele_inf['key'] == 'Monitor'):
+        
             gpt_name = ele_inf['name'].replace('.', '_')
             lat.add(Screen(gpt_name), ds=ele_inf['s'] - last_bend_s, ref_element=last_bend_name)
             
         elif(ele_inf['key'] == 'Quadrupole'):
-            
             
             gpt_name = ele_inf['name'].replace('.', '_')
             gen_attrs = tao.ele_gen_attribs(ele_ix)
