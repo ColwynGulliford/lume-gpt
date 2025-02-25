@@ -1010,7 +1010,14 @@ class Map25D_TM(Map2D):
 
 
 
+
 class Map3D_E(GDFFieldMap):
+
+    """
+    3D Electric Field Map
+
+    
+    """
 
     def __init__(self, 
         name, 
@@ -1144,15 +1151,15 @@ class Map3D_B(GDFFieldMap):
 
     @property
     def Bx(self):
-        return np.unique(self['Ex'])
+        return np.unique(self['Bx'])
 
     @property
     def By(self):
-        return np.unique(self['Ey'])
+        return np.unique(self['By'])
 
     @property
     def Bz(self):
-        return np.unique(self['Ez'])
+        return np.unique(self['Bz'])
 
     @property
     def By0(self):
