@@ -1195,9 +1195,73 @@ class Map3D_B(GDFFieldMap):
     
 
 
-    
+class WienFilter3D(Element):
 
-        
+    def __init__(self, 
+                 name, 
+                 bfield_source_data, 
+                 efield_source_data,
+                 bfield_scale=None,
+                 efield_scale=None,
+                 momentum=None,
+                 bfield_column_names={'x':'x', 'y':'y', 'z':'z', 'Bx':'Bx', 'By':'By', 'Bz':'Bz'}, 
+                 bfield_required_columns=['x', 'y', 'z', 'Bx', 'By', 'Bz'],
+                 efield_column_names={'x':'x', 'y':'y', 'z':'z', 'Ex':'Ex', 'Ey':'Ey', 'Ez':'Ez'}, 
+                 efield_required_columns=['x', 'y', 'z', 'Bx', 'By', 'Bz'],
+                 x0=0, y0=0, z0=0,
+                 xB0=0, yB0=0, zB0=0,
+                 xE0=0, yE0=0, zE0=0,
+                 yaw=0, pitch=0, roll=0,
+                 yawB=0, pitchB=0, rollB=0,
+                 yawE=0, pitchE=0, rollE=0,
+                 bfield_color='tab:blue',
+                 efield_color='tab:red',
+                 gdf2a_bin='$GDF2A_BIN', 
+                 style=None):
+
+        if bfield_scale is None and efield_scale is None:
+            bfield_scale=1
+            efield_scale=1
+        elif bfield_scale is not None and efield_scale is not None:
+            pass # user is scaling both fields purposely
+        elif bfield_scale is None:
+            b0 = e2b(p2e(momentum))
+            bfield_scale = efield_scale/b0/c
+
+        elif efield_scale is None:
+            b0 = e2b(p2e(momentum))
+            efield_scale = b0*c*efield_scale 
+            
+
+        self._Bfield = Map3D_B(name, 
+                               bfield_source_data, 
+                               scale=bfield_scale,
+                               gdf2a_bin=gdf2a_bin, 
+                               column_names=bfield_column_names, 
+                               required_columns=bfield_required_columns,
+                               x0=x0+xB0, 
+                               y0=y0+yB0, 
+                               z0=z0+zB0,
+                               yaw=yaw + yawB, 
+                               pitch=pitch + pitchB, 
+                               roll=roll + rollB,
+                               color=bfield_color,
+                               style=style)
+
+        self._Efield = Map3D_E(name, 
+                               efield_source_data, 
+                               scale=efield_scale,
+                               gdf2a_bin=gdf2a_bin, 
+                               column_names=efield_column_names, 
+                               required_columns=efield_required_columns,
+                               x0=x0+xE0, 
+                               y0=y0+yE0, 
+                               z0=z0+zE0,
+                               yaw=yaw + yawE, 
+                               pitch=pitch + pitchE, 
+                               roll=roll + rollE,
+                               color=efield_color,
+                               style=style)
     
 
 
