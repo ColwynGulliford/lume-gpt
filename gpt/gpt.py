@@ -468,7 +468,6 @@ class GPT:
                                                  verbose=gpt_verbose,
                                                  workdir=full_path(self.path))
 
-        print(exception)
                 
         if(exception is not None):
             self.error=True
@@ -707,11 +706,14 @@ class GPT:
             outstr = outstr+"\n\nResults"
             outstr = outstr+f"\n   Finished: {self.finished}"
             outstr = outstr+f"\n   Error occured: {self.error}"
-            if(self.error):
-                outstr=outstr+f'\n   Cause: {self.output["why_error"]}'
-                errline = self.get_syntax_error_line(self.output["why_error"])
-                if(errline):
-                    outstr = outstr+f'\n   Suspected input file line: "{errline}"'
+            if(self.error ):
+                if bool(self.output):
+                    outstr=outstr+f'\n   Cause: {self.output["why_error"]}'
+                    errline = self.get_syntax_error_line(self.output["why_error"])
+                    if(errline):
+                        outstr = outstr+f'\n   Suspected input file line: "{errline}"'
+                else:
+                    outstr=outstr+'\n Cause: GPT failed to start.  Empty output generated'
 
             if('run_time' in self.output):
                 rtime = self.output['run_time']
