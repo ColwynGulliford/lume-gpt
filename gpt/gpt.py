@@ -63,6 +63,7 @@ class GPT:
                  spin_tracking=False,
                  parse_layout=True,
                  copy_support_files=False,
+                 raise_on_gpt_error=True,
                  n_cpu=1):
 
         # Save init
@@ -99,7 +100,10 @@ class GPT:
         
         self.parse_layout=parse_layout
         self.copy_support_files=copy_support_files
+        self.raise_on_gpt_error=raise_on_gpt_error
         self.n_cpu = n_cpu
+
+        
 
         
 
@@ -386,8 +390,12 @@ class GPT:
 
         if not self.configured:
             self.configure()
+            
         #pass
-        self.run_gpt(verbose=self.verbose, timeout=self.timeout, gpt_verbose=gpt_verbose)
+        self.run_gpt(verbose=self.verbose, 
+                     timeout=self.timeout, 
+                     gpt_verbose=gpt_verbose,
+                     raise_on_gpt_error=self.raise_on_gpt_error)
 
         
     def get_run_script(self, write_to_path=True):
@@ -424,7 +432,12 @@ class GPT:
             outfile = tokens[0]+'.out.gdf'
         return os.path.join(path, outfile)
 
-    def run_gpt(self, verbose=False, parse_output=True, timeout=None, gpt_verbose=False):
+    def run_gpt(self, 
+                verbose=False, 
+                parse_output=True, 
+                timeout=None, 
+                gpt_verbose=False,
+                raise_on_gpt_error=True):
         
         """ RUN GPT and read in results """
         self.vprint('GPT.run_gpt:')
@@ -459,6 +472,9 @@ class GPT:
             self.error=True
             run_info["error"]=True
             run_info['why_error']=exception.strip()
+            
+            if raise_on_gpt_error:
+                raise ValueError(exception.strip())
     
         self.log = log
                     
