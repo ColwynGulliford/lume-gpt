@@ -424,7 +424,12 @@ class GPT:
             outfile = tokens[0]+'.out.gdf'
         return os.path.join(path, outfile)
 
-    def run_gpt(self, verbose=False, parse_output=True, timeout=None, gpt_verbose=False):
+    def run_gpt(self, 
+                verbose=False, 
+                parse_output=True, 
+                timeout=None, 
+                gpt_verbose=False,
+                raise_on_gpt_error=True):
         
         """ RUN GPT and read in results """
         self.vprint('GPT.run_gpt:')
@@ -459,6 +464,9 @@ class GPT:
             self.error=True
             run_info["error"]=True
             run_info['why_error']=exception.strip()
+            
+            if raise_on_gpt_error:
+                raise ValueError(exception.strip)
     
         self.log = log
                     
