@@ -467,6 +467,8 @@ class GPT:
                                                  timeout=timeout, 
                                                  verbose=gpt_verbose,
                                                  workdir=full_path(self.path))
+
+        print(exception)
                 
         if(exception is not None):
             self.error=True
