@@ -29,7 +29,7 @@ def default_gpt_merit(G):
         m= {'error':False}
 
     if(G.initial_particles):
-        start_n_particle = G.initial_particles['n_particle']
+        start_n_particle = int(G.initial_particles['n_particle'])
 
     elif(G.get_dist_file()):
 
@@ -66,12 +66,12 @@ def default_gpt_merit(G):
                     keys.append(f'{stat}_{var}')
 
             for key in keys:
-                m[f'end_{key}']=screen[key]
+                m[f'end_{key}']=float(screen[key])
 
             # Extras
-            m['end_z_screen']=screen['mean_z']
-            m['end_n_particle_loss'] = start_n_particle - m['end_n_particle']
-            m['end_total_charge'] = screen['charge']
+            m['end_z_screen']=float(screen['mean_z'])
+            m['end_n_particle_loss'] = int(start_n_particle - m['end_n_particle'])
+            m['end_total_charge'] = float(screen['charge'])
 
             # Basic Custom paramters:
             m['end_max[sigma_x, sigma_y]'] = max([m['end_sigma_x'], m['end_sigma_y']])
