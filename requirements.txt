@@ -4,4 +4,5 @@ matplotlib
 h5py
 pyyaml
 distgen
+easygdf
 
