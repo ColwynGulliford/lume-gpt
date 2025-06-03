@@ -1,4 +1,4 @@
-from . import easygdf
+import easygdf
 import time
 import numpy as np
 import re
