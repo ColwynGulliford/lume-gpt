@@ -223,6 +223,8 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False
     tdata = [tout for tout in gdf_data['touts'] if len(tout['ID']>0)]
     pdata = [screen for screen in gdf_data['screens'] if len(screen['ID']>0)]
 
+    # Sort screens based on mean
+
     return (tdata, pdata)
 
 
