@@ -223,7 +223,17 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False
     tdata = [tout for tout in gdf_data['touts'] if len(tout['ID']>0)]
     pdata = [screen for screen in gdf_data['screens'] if len(screen['ID']>0)]
 
-    # Sort screens based on mean
+    # Sort screens based on mean time
+    for ii, scr in enumerate(pdata):
+        w = abs(scr['q']*scr['nmacro'])/np.sum(abs(scr['q']*scr['nmacro']))
+        pdata[ii]['time'] = np.sum(w * scr['t'])
+
+    pdata = [pdata[ii] for ii in np.argsort([screen['time'] for screen in pdata])]
+
+    # For touts, add a t-array
+    for ii, tout in enumerate(tdata):
+        tdata[ii]['t'] =  np.full(len(tout['ID']), tout['time'])
+        
 
     return (tdata, pdata)
 

@@ -90,10 +90,10 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     data['py'] = gpt_output_dict['G']*gpt_output_dict['By']*mc
     data['pz'] = gpt_output_dict['G']*gpt_output_dict['Bz']*mc
 
-    if 't' in gpt_output_dict:
-        data['t'] = gpt_output_dict['t']
-    elif 'time' in gpt_output_dict:
-        data['t'] = np.full(n_particle, gpt_output_dict['time'])
+    #if 't' in gpt_output_dict:
+    data['t'] = gpt_output_dict['t']
+    #elif 'time' in gpt_output_dict:
+    #    data['t'] = np.full(n_particle, gpt_output_dict['time'])
         
     data['status'] = np.full(n_particle, 1)
     data['id'] = gpt_output_dict['ID']
