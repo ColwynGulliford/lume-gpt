@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpt"
+description = "Your package description here"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+authors = [
+    { name = "Colwyn Gulliford", email = "colwyn.gulliford@xeleraresearch.com" }
+]
+dynamic = ["version"]
+
+#dependencies = [
+#    "numpy",
+#    "scipy"
+#]
+
+dependencies = [
+  # All core dependencies must be sourced from conda (conda-forge).
+  # See ``environment.yml`` for further information.
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"

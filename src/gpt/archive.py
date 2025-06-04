@@ -6,8 +6,15 @@ from pmd_beamphysics import ParticleGroup
 import numpy as np
 
 from .tools import isotime
-from . import _version
-__version__ = _version.get_versions()['version']
+#from . import _version
+#__version__ = _version.get_versions()['version']
+
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version  # For Python < 3.8
+
+__version__ = version("gpt")
 
 
 def fstr(s):
