@@ -1,4 +1,4 @@
-# conda env create -f environment-dev.yml
+# conda env create -f environment.yml
 name: lume-gpt-dev
 channels:
   - conda-forge
@@ -10,5 +10,6 @@ dependencies:
   - h5py
   - distgen
   - openpmd-beamphysics
+  - easygdf
 # Developer
   - pip

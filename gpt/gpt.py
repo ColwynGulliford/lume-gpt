@@ -249,10 +249,12 @@ class GPT:
                                                load_fields=self.load_fields,
                                                spin_tracking=self.spin_tracking)  # Raw GPT data
 
-        spins = ['sx', 'sy', 'sz']
-        fields = ['Ex', 'Ey', 'Ez', 'Bx', 'By', 'Bz']
+        spins = ['spinx', 'spiny', 'spinz']
+        fields = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
 
-        # Defines all data not stored in ParticleGroup
+        #spin_conv = 
+
+        # Defines all data not stored in ParticleGroup        
         self.output['tout_data'] = [{k:tout[k] for k in spins + fields if k in tout} for tout in touts]
         self.output['screen_data'] = [{k:screen[k] for k in spins if k in screen} for screen in screens]
                 
@@ -335,15 +337,15 @@ class GPT:
 
     @property
     def tout_fields(self):
-        return [{k: tout[k] for k in tout.keys() if k in ['Ex', 'Ey', 'Ez', 'Bx', 'By', 'Bz']} for tout in self.output['tout_data']]
+        return [{k: tout[k] for k in tout.keys() if k in ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']} for tout in self.output['tout_data']]
 
     @property
     def tout_spin(self):
-        return [{k: tout[k] for k in tout.keys() if k in ['sx', 'sy', 'sz']} for tout in self.output['tout_data']]
+        return [{k: tout[k] for k in tout.keys() if k in ['spinx', 'spiny', 'spinz']} for tout in self.output['tout_data']]
 
     @property
     def screen_spin(self):
-        return [{k: screen[k] for k in screen.keys() if k in ['sx', 'sy', 'sz']} for screen in self.output['screen_data']]
+        return [{k: screen[k] for k in screen.keys() if k in ['spinx', 'spiny', 'spinz']} for screen in self.output['screen_data']]
 
     def screen_stat(self, key, **kwargs):
         """ Returns array of stats for key from screen particle groups """
@@ -545,8 +547,8 @@ class GPT:
 
         base_key = key.replace('mean_', '').replace('sigma_', '')
 
-        field_keys = ['Ex', 'Ey', 'Ez', 'Bx', 'By', 'Bz']
-        spin_keys = ['sx', 'sy', 'sz']
+        field_keys = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
+        spin_keys = ['spinx', 'spiny', 'spinz']
             
         if base_key in field_keys + spin_keys:
             
@@ -563,9 +565,9 @@ class GPT:
 
         elif key == 'spin_polarization':
 
-            mean_sx = self.stat('mean_sx', data_type=data_type, **kwargs)
-            mean_sy = self.stat('mean_sy', data_type=data_type, **kwargs)
-            mean_sz = self.stat('mean_sz', data_type=data_type, **kwargs)
+            mean_sx = self.stat('mean_spinx', data_type=data_type, **kwargs)
+            mean_sy = self.stat('mean_spiny', data_type=data_type, **kwargs)
+            mean_sz = self.stat('mean_spinz', data_type=data_type, **kwargs)
 
             return np.sqrt( mean_sx**2 + mean_sy**2 + mean_sz**2)
 

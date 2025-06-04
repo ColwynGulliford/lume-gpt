@@ -68,6 +68,7 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
      
     masses = np.unique(gpt_output_dict['m'])
     charges = np.unique(gpt_output_dict['q'])
+    
     assert len(masses) == 1, 'All masses must be the same.'
     assert len(charges) == 1, 'All charges must be the same'
     mass = masses[0]
@@ -83,17 +84,14 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     data['z'] = gpt_output_dict['z']
     factor = c_light**2 /e_charge # kg -> eV
 
-    #data['px'] = gpt_output_dict['GBx']*gpt_output_dict['m']*factor
-    #data['py'] = gpt_output_dict['GBy']*gpt_output_dict['m']*factor
-    #data['pz'] = gpt_output_dict['GBz']*gpt_output_dict['m']*factor
-
     mc = mass_of(species)  # Returns rest energy in eV, which corresponds to same numeric value of mc [eV/c] 
 
-    data['px'] = gpt_output_dict['GBx']*mc
-    data['py'] = gpt_output_dict['GBy']*mc
-    data['pz'] = gpt_output_dict['GBz']*mc
+    data['px'] = gpt_output_dict['G']*gpt_output_dict['Bx']*mc
+    data['py'] = gpt_output_dict['G']*gpt_output_dict['By']*mc
+    data['pz'] = gpt_output_dict['G']*gpt_output_dict['Bz']*mc
 
     data['t'] = gpt_output_dict['t']
+        
     data['status'] = np.full(n_particle, 1)
     data['id'] = gpt_output_dict['ID']
 
@@ -104,11 +102,11 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
     if( np.all(data['weight'] == 0.0) ):
         data['weight']= np.full(data['weight'].shape, 1/len(data['weight']))
 
-    extra_data = ['sx', 'sy', 'sz', 'Ex', 'Ey', 'Ez']
+    #extra_data = ['sx', 'sy', 'sz', 'Ex', 'Ey', 'Ez']
 
-    for k, v in gpt_output_dict.items():
-        if k in extra_data:
-            data[k]=v
+    #for k, v in gpt_output_dict.items():
+    #    if k in extra_data:
+    #        data[k]=v
     
     return data
 
@@ -184,36 +182,7 @@ def particle_stats(particle_groups, key):
     return np.array([p[key] for p in particle_groups])
 
 
-class GPTOutput(ParticleGroup):
 
-    def __init__(self, data=None):
-
-        ParticleGroup.__init__(self, data=data)
-
-        self._extra_data = {}
-
-        for k, v in data.items():
-            if k in ['Ex', 'Ey', 'Ez', 'sx', 'sy', 'sz']:
-                self._extra_data[k] = v
-
-
-    def __getitem__(self, key):
-
-        base_key = key.replace('mean_', '').replace('sigma_', '')
-        
-        if base_key in self._extra_data.keys():
-            if key == base_key:
-                return self._extra_data[key]
-                
-            elif key.startswith('mean_'):
-                return np.sum(self.weight * self._extra_data[base_key])
-                
-            elif key.startswith('sigma_'):
-                x0 = np.sum(self.weight * self._extra_data[key])
-                return np.sqrt( np.sum(self.weight * (self._extra_data[base_key]-x0)**2) )         
-
-        else:
-            return ParticleGroup.__getitem__(self, key)
 
 
 

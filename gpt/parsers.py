@@ -1,4 +1,4 @@
-from . import easygdf
+import easygdf
 import time
 import numpy as np
 import re
@@ -192,61 +192,26 @@ def write_gpt_input_file(finput, inputFile, ccs_beg='wcs'):
 
 def read_particle_gdf_file(gdffile, 
                            verbose=0.0, 
-                           extra_screen_keys=['q','nmacro'], 
+                           #extra_screen_keys=['q','nmacro'], 
                            load_files=False): #,'ID', 'm']):
 
     with open(gdffile, 'rb') as f:
-        data = easygdf.load_initial_distribution(f, extra_screen_keys=extra_screen_keys)
-
-    screen = {}
-    n = len(data[0,:])
-    if(n>0):
-
-        q = data[7,:]          # elemental charge/macroparticle
-        nmacro = data[8,:]     # number of elemental charges/macroparticle
-                   
-        weights = np.abs(data[7,:]*data[8,:])/np.sum(np.abs(data[7,:]*data[8,:]))
-
-        screen = {"x":data[0,:],"GBx":data[1,:],
-                  "y":data[2,:],"GBy":data[3,:],
-                  "z":data[4,:],"GBz":data[5,:],
-                  "t":data[6,:],
-                  "q":data[7,:],
-                  "nmacro":data[8,:],
-                  "w":weights,
-                  "G":np.sqrt(data[1,:]*data[1,:]+data[3,:]*data[3,:]+data[5,:]*data[5,:]+1)}
-                
-                    #screen["Bx"]=screen["GBx"]/screen["G"]
-                    #screen["By"]=screen["GBy"]/screen["G"]
-                    #screen["Bz"]=screen["GBz"]/screen["G"]
-
-        screen["time"]=np.sum(screen["w"]*screen["t"])
-        screen["n"]=n          
-
-    return screen
+        screen = easygdf.load_initial_distribution(f) #, extra_screen_keys=extra_screen_keys)
+    
+    if len(screen['nmacro'])>0:
+        return screen
+    else:
+        return {}
 
 def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False):
       
     # Read in file:
-
-  
     #self.vprint("Current file: '"+data_file+"'",1,True)
     #self.vprint("Reading data...",1,False)
     t1 = time.time()
-
-    extra_tout_keys = ['q', 'nmacro', 'ID', 'm']
-    extra_screen_keys = ['q', 'nmacro', 'ID', 'm']
     
     with open(gdffile, 'rb') as f:
-        
-        if load_fields:
-            extra_tout_keys = extra_tout_keys + ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
-
-        if spin_tracking:
-            extra_tout_keys = extra_tout_keys + ['spinx', 'spiny', 'spinz', 'sping']
-            extra_screen_keys = extra_screen_keys + ['spinx', 'spiny', 'spinz', 'sping']
-
-        touts, screens = easygdf.load(f, extra_screen_keys=extra_screen_keys, extra_tout_keys=extra_tout_keys)
+        gdf_data = easygdf.load_screens_touts(f)
 
     t2 = time.time()
     if(verbose):
@@ -254,14 +219,27 @@ def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 
-    tdata = make_tout_dict(touts, load_fields=load_fields, spin_tracking=spin_tracking)
-    pdata = make_screen_dict(screens, spin_tracking=spin_tracking)
+    # Prune off empty touts/screens
+    tdata = [tout for tout in gdf_data['touts'] if len(tout['ID']>0)]
+    pdata = [screen for screen in gdf_data['screens'] if len(screen['ID']>0)]
+
+    # Sort screens based on mean time
+    for ii, scr in enumerate(pdata):
+        w = abs(scr['q']*scr['nmacro'])/np.sum(abs(scr['q']*scr['nmacro']))
+        pdata[ii]['time'] = np.sum(w * scr['t'])
+
+    pdata = [pdata[ii] for ii in np.argsort([screen['time'] for screen in pdata])]
+
+    # For touts, add a t-array
+    for ii, tout in enumerate(tdata):
+        tdata[ii]['t'] =  np.full(len(tout['ID']), tout['time'])
+        
 
     return (tdata, pdata)
 
 
 
-
+"""
 def make_tout_dict(touts, load_fields=False, spin_tracking=False):
 
     tdata=[]
@@ -318,7 +296,9 @@ def make_tout_dict(touts, load_fields=False, spin_tracking=False):
             tdata.append(tout)
 
     return tdata
+"""
 
+"""
 def make_screen_dict(screens, spin_tracking=False):
 
     pdata=[]
@@ -369,6 +349,7 @@ def make_screen_dict(screens, spin_tracking=False):
     ts=np.array([screen['time'] for screen in pdata])
     sorted_indices = np.argsort(ts)
     return [pdata[sii] for sii in sorted_indices]
+"""
 
 def parse_gpt_string(line):
     return re.findall(r'\"(.+?)\"',line) 
