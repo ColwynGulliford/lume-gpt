@@ -70,7 +70,6 @@ def ele_info(tao, ele_id):
 def pack_fieldmap(ele_id, tao):
     
     edat = ele_info(tao, ele_id)
-
     
     ekey = edat['key']
     ele_key = ekey.upper() 
@@ -173,7 +172,7 @@ def pack_fieldmap(ele_id, tao):
     elif ele_key in ['EM_FIELD']:
 
         if master_parameter is None:
-            scale = grid_params['field_scale']
+            scale = edat['FIELD_AUTOSCALE']
         else:
             scale = edat[master_parameter]
             
