@@ -179,7 +179,10 @@ def particle_stats(particle_groups, key):
         
     
     """
-    return np.array([p[key] for p in particle_groups])
+    if key.startswith('twiss_'):
+        return np.array([p.twiss('xy')[key.replace('twiss_', '')] for p in particle_groups])
+    else:
+        return np.array([p[key] for p in particle_groups])
 
 
 

@@ -549,7 +549,7 @@ class GPT:
 
         field_keys = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
         spin_keys = ['spinx', 'spiny', 'spinz']
-            
+        
         if base_key in field_keys + spin_keys:
             
             v = self.output[f'{data_type}_data']
