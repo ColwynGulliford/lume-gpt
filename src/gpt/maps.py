@@ -752,6 +752,7 @@ class Map2D_E(Map2D):
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez'],
                          x0=x0, y0=y0, z0=z0, yaw=yaw, pitch=pitch, roll=roll)
 
+
         self._name = name
         self._type = 'Map2D_E'
         self._length = self.z0[-1]-self.z0[0]
@@ -763,9 +764,12 @@ class Map2D_E(Map2D):
             color=color
 
         self._color = color
-        self._scale=scale
-
+        self._scale = scale 
+        
         self.place() 
+        self._p_beg - (self.z0[0] - self._ecs['z0']) * self.e3_beg
+        self._p_end - (self.z0[0] - self._ecs['z0']) * self.e3_end
+
 
     def place(self, ref_element=None, ds=0, ref_origin='end', element_origin='beg'):
         place(self, ref_element=ref_element, ds=ds, ref_origin=ref_origin, element_origin=element_origin)
