@@ -182,6 +182,11 @@ def pack_fieldmap(ele_id, tao):
             #for k, v in edat.items():
             #    print(k)
             info['gpt_element'] = Map3D_B(gpt_name, str(grid_params['file']), scale=scale, roll=edat['TILT'])
+
+        elif str(grid_params['field_type'])=='Electric':
+
+            info['gpt_element'] = Map3D_E(gpt_name, str(grid_params['file']), scale=scale, roll=edat['TILT'])
+            
             
 
     else:
