@@ -146,11 +146,13 @@ tmax=10*zend/c;
 zminmax("wcs", "I", zstart, zend);
 
 
-screen("wcs","I", zstartc2+Lc+0.2);
-
 if(auto_phase==1) {
 
 	screen("wcs","I", zstartc2+Lc+0.2);
+    
+} else {
+
+    screen("wcs","I", zstartc2+Lc+0.2);
 }
 
 
