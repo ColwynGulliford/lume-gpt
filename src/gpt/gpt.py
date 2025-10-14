@@ -545,12 +545,16 @@ class GPT:
         else:
             raise ValueError(f'Unsupported GPT data type: {data_type}')
 
-        base_key = key.replace('mean_', '').replace('sigma_', '')
+        base_key = key.replace('mean_', '').replace('sigma_', '').replace('twiss_', '')
 
+        twiss_keys = ['twiss_beta_x', 'twiss_beta_y', 'twiss_alpha_x', 'twiss_alpha_y']
         field_keys = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
         spin_keys = ['spinx', 'spiny', 'spinz']
+
+        if key in twiss_keys:
+            return np.array([pg.twiss('xy')[base_key] for pg in particle_groups])
         
-        if base_key in field_keys + spin_keys:
+        elif base_key in field_keys + spin_keys:
             
             v = self.output[f'{data_type}_data']
 
