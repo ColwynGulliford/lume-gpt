@@ -51,7 +51,7 @@ class GPT:
     def __init__(self,
                  input_file=None,
                  initial_particles = None,
-                 gpt_bin='$GPT_BIN',      
+                 gpt_bin=os.path.expandvars('$GPT_BIN'),      
                  use_tempdir=True,
                  workdir=None,
                  timeout=None,
@@ -591,7 +591,7 @@ class GPT:
         """ Write the initial particle data to file for use with GPT """
         if not fname:
             fname = os.path.join(self.path, 'gpt.particles.gdf')
-        self.initial_particles.write_gpt(fname, asci2gdf_bin='$ASCI2GDF_BIN', verbose=False)
+        self.initial_particles.write_gpt(fname, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN'), verbose=False)
         self.vprint(f'   Initial {len(self.initial_particles["x"])} particles written to "{fname}"')
         return fname 
 
@@ -839,7 +839,7 @@ def phase_gpt(G):
 
     phasing_particle_file = os.path.join(G.path, 'gpt_particles.phasing.gdf')
 
-    phasing_beam.write_gpt(phasing_particle_file, asci2gdf_bin='$ASCI2GDF_BIN', verbose=G.verbose)
+    phasing_beam.write_gpt(phasing_particle_file, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN'), verbose=G.verbose)
 
     #write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
@@ -864,12 +864,12 @@ def run_gpt(settings=None,
             gpt_input_file=None,
             use_tempdir=True, 
             workdir=None, 
-            gpt_bin='$GPT_BIN', 
+            gpt_bin=os.path.expandvars('$GPT_BIN'), 
             timeout=2500, 
             auto_phase=False,
             verbose=False,
             gpt_verbose=False,
-            asci2gdf_bin='$ASCI2GDF_BIN',
+            asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN'),
             kill_msgs=DEFAULT_KILL_MSGS):
     """
     Run GPT. 
