@@ -203,7 +203,7 @@ def read_particle_gdf_file(gdffile,
     else:
         return {}
 
-def read_gdf_file(gdffile, verbose=False, load_fields=False, spin_tracking=False):
+def read_gdf_file(gdffile, verbose=False): #, load_fields=False, spin_tracking=False):
       
     # Read in file:
     #self.vprint("Current file: '"+data_file+"'",1,True)

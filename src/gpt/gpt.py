@@ -244,15 +244,14 @@ class GPT:
 
         self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
         
-        touts, screens = parsers.read_gdf_file(file, 
-                                               self.verbose, 
-                                               load_fields=self.load_fields,
-                                               spin_tracking=self.spin_tracking)  # Raw GPT data
+        touts, screens = parsers.read_gdf_file(file, self.verbose)  # Raw GPT data
 
         spins = ['spinx', 'spiny', 'spinz']
-        fields = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
-
-        #spin_conv = 
+        
+        if self.load_fields:
+            fields = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
+        else:
+            fields = []
 
         # Defines all data not stored in ParticleGroup        
         self.output['tout_data'] = [{k:tout[k] for k in spins + fields if k in tout} for tout in touts]
@@ -261,9 +260,6 @@ class GPT:
         self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose, ref_ccs=self.ref_ccs) 
         self.output['n_tout'] = len(touts)
         self.output['n_screen'] = len(screens)
-        
-        #self.output['fields']=fields
-        #self.output['spin']=spins
 
     @property
     def n_tout(self):
