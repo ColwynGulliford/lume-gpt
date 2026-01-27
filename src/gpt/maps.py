@@ -65,7 +65,11 @@ def e2b(E):
 def g2b(gamma):
     return np.sqrt(1-1/gamma**2)
 
-def get_gdf_header(gdf_file, gdf2a_bin=os.path.expandvars('$GDF2A_BIN')):
+ 
+def fix_exe(exe_str):
+    return os.path.normpath(os.path.expandvars(exe_str))
+
+def get_gdf_header(gdf_file, gdf2a_bin=fix_exe('$GDF2A_BIN')):
 
     """Reads the header (column names) of gdf_file and returns them"""
 
@@ -96,12 +100,13 @@ def run_subprocess_cmd(cmd_str):
     else:
         subprocess.run(cmd_list, check=True)
 
+
 class GDFFieldMap(Element):
 
     """ General class for holding GDF field map data """
 
     def __init__(self, source_data_file, 
-                 gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+                 gdf2a_bin=fix_exe('$GDF2A_BIN'), 
                  use_temp_file=True,
                  x0=0, y0=0, z0=0,
                  yaw=0, pitch=0, roll=0,
@@ -367,7 +372,7 @@ class Map1D(GDFFieldMap):
     """ Class for storing 1D GDF field maps, derives from GDFfieldMap """
 
     def __init__(self, source_data, required_columns, 
-                 gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+                 gdf2a_bin=fix_exe('$GDF2A_BIN'), 
                  x0=0, y0=0, z0=0,
                  yaw=0, pitch=0, roll=0,
                  color=None):
@@ -425,7 +430,7 @@ class Map1D_E(Map1D):
     """
 
     def __init__(self, name, source_data, 
-                 gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+                 gdf2a_bin=fix_exe('$GDF2A_BIN'), 
                  width=0.3, 
                  scale=1, 
                  color='#1f77b4', 
@@ -515,7 +520,7 @@ class Map1D_B(Map1D):
     """
 
     def __init__(self, name, source_data, 
-                 gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+                 gdf2a_bin=fix_exe('$GDF2A_BIN'), 
                  width=0.4, 
                  scale=1, 
                  color='#2ca02c', 
@@ -580,7 +585,7 @@ class Map1D_TM(Map1D):
         scale=1,
         relative_phase=0,
         oncrest_phase=0,
-        gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+        gdf2a_bin=fix_exe('$GDF2A_BIN'), 
         color='darkorange',
         x0=0, y0=0, z0=0,
         yaw=0, pitch=0, roll=0,
@@ -675,7 +680,7 @@ class Map2D(GDFFieldMap):
 
     """ Base class for all 2D cylindrically symmetric fields pointed along z """
 
-    def __init__(self, source_data_file, required_columns, gdf2a_bin=os.path.expandvars('$GDF2A_BIN'),
+    def __init__(self, source_data_file, required_columns, gdf2a_bin=fix_exe('$GDF2A_BIN'),
                  x0=0, y0=0, z0=0,
                  yaw=0, pitch=0, roll=0):
 
@@ -762,7 +767,7 @@ class Map2D_E(Map2D):
     Defines a 2D (r,z), (Er, Ez) cylindrically electric symmetric field map object
     """
     
-    def __init__(self, name, source_data, gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), scale=1, style=None, color='#1f77b4',
+    def __init__(self, name, source_data, gdf2a_bin=fix_exe('$GDF2A_BIN'), scale=1, style=None, color='#1f77b4',
                  x0=0, y0=0, z0=0, yaw=0, pitch=0, roll=0):
 
         super().__init__(source_data, gdf2a_bin=gdf2a_bin, required_columns=['r', 'z', 'Er', 'Ez'],
@@ -809,7 +814,7 @@ class Map2D_B(Map2D):
     """
 
     def __init__(self, name, source_data, 
-                 gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+                 gdf2a_bin=fix_exe('$GDF2A_BIN'), 
                  field_pos='center', 
                  scale=1, 
                  style='tao', 
@@ -871,7 +876,7 @@ class Map25D_TM(Map2D):
         scale=1,
         relative_phase=0,
         oncrest_phase=0,
-        gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+        gdf2a_bin=fix_exe('$GDF2A_BIN'), 
         column_names={'z':'z', 'r':'r', 'Ez':'Ez', 'Er':'Er', 'Bphi':'Bphi'}, 
         required_columns=['r', 'z', 'Er', 'Ez', 'Bphi'],
         x0=0, y0=0, z0=0,
@@ -1043,7 +1048,7 @@ class Map3D_E(GDFFieldMap):
         name, 
         source_data, 
         scale=1,
-        gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+        gdf2a_bin=fix_exe('$GDF2A_BIN'), 
         column_names={'x':'x', 'y':'y', 'z':'z', 'Ex':'Ex', 'Ey':'Ey', 'Ez':'Ez'}, 
         required_columns=['x', 'y', 'z', 'Ex', 'Ey', 'Ez'],
         x0=0, y0=0, z0=0,
@@ -1129,7 +1134,7 @@ class Map3D_B(GDFFieldMap):
         name, 
         source_data, 
         scale=1,
-        gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+        gdf2a_bin=fix_exe('$GDF2A_BIN'), 
         column_names={'x':'x', 'y':'y', 'z':'z', 'Bx':'Bx', 'By':'By', 'Bz':'Bz'}, 
         required_columns=['x', 'y', 'z', 'Bx', 'By', 'Bz'],
         x0=0, y0=0, z0=0,
@@ -1236,7 +1241,7 @@ class WienFilter3D(Element):
                  yawE=0, pitchE=0, rollE=0,
                  bfield_color='tab:blue',
                  efield_color='tab:red',
-                 gdf2a_bin=os.path.expandvars('$GDF2A_BIN'), 
+                 gdf2a_bin=fix_exe('$GDF2A_BIN'), 
                  style=None):
 
         if bfield_scale is None and efield_scale is None:
@@ -1289,7 +1294,7 @@ class WienFilter3D(Element):
 
 
 
-def write_1d_map(element, filename=None, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN')):
+def write_1d_map(element, filename=None, asci2gdf_bin=fix_exe('$ASCI2GDF_BIN')):
 
     if(element.type in ['Map2D_E', 'Map2D_B', 'Map25D_TM']):
 
