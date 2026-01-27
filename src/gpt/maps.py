@@ -4,6 +4,8 @@ import math
 import tempfile
 import subprocess
 
+import platform
+
 #from gpt import GPT
 from gpt import tools
 from gpt.tools import cvector
@@ -93,12 +95,16 @@ def run_subprocess_cmd(cmd_str):
     cmd_list = shlex.split(cmd_str.strip())
     exe_path = cmd_list[0]
 
+    
+    is_posix = platform.system() != "Windows" 
+    cmd_list = shlex.split(cmd_string, posix=is_posix)
+    
     if not os.path.isfile(exe_path):
         print(f"Error: {exe_path} is not a valid file!")
     elif not os.access(exe_path, os.X_OK):
         print(f"Error: {exe_path} is not executable! Try: chmod +x {exe_path}")
     else:
-        subprocess.run(cmd_list, check=True)
+        subprocess.run(cmd_list, check=True, is_posix=is_posix)
 
 
 class GDFFieldMap(Element):
