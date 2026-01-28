@@ -80,8 +80,10 @@ def get_gdf_header(gdf_file, gdf2a_bin=fix_exe('$GDF2A_BIN')):
 
     temp_ascii_file = f'{gdf_file}.temp.txt'
     cmd = f'{gdf2a_bin} -o {temp_ascii_file} {gdf_file}'
+    cmd_list = [gdf2a_bin, "-o", temp_ascii_file, gdf_file]
+    subprocess.run(cmd_list, check=True)
     #subprocess.run(cmd, shell=True)
-    run_subprocess_cmd(cmd)
+
 
     with open(temp_ascii_file, 'r') as fp:
         columns = fp.readline().split()
@@ -90,13 +92,13 @@ def get_gdf_header(gdf_file, gdf2a_bin=fix_exe('$GDF2A_BIN')):
     os.remove(temp_ascii_file)
     return columns
 
-def run_subprocess_cmd(cmd_str):
+def run_gpt_subprocess_cmd(gpt_bin, args, ):
     
     cmd_list = shlex.split(cmd_str.strip())
     exe_path = cmd_list[0]
     
     is_posix = platform.system() != "Windows" 
-    cmd_list = shlex.split(cmd_str, posix=is_posix)
+    #cmd_list = shlex.split(cmd_str, posix=is_posix)
     
     if not os.path.isfile(exe_path):
         print(f"Error: {exe_path} is not a valid file!")
@@ -145,8 +147,8 @@ class GDFFieldMap(Element):
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
 
         cmd = f'{gdf2a_bin} -o {temp_ascii_file} "{self.source_data_file}"' 
-
-        run_subprocess_cmd(cmd)
+        cmd_list = [gdf2a_bin, "-o", temp_ascii_file, self.source_data_file]
+        subprocess.run(cmd_list, check=True)
 
         with open(temp_ascii_file, 'r') as fp:
             for i, line in enumerate(fp):
@@ -278,7 +280,7 @@ class GDFFieldMap(Element):
             fout.truncate() # Truncate the file to this point. 
 
         #subprocess.run(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}', shell=True)
-        run_subprocess_cmd(f'{asci2gdf_bin} -o {new_gdf_file} {temp_ascii_file}')
+        subprocess.run([asci2gdf_bin, "-o", new_gdf_file, temp_ascii_file])
         os.remove(temp_ascii_file)
 
     def gpt_label_to_fieldmap_label(self, name):
@@ -1335,7 +1337,9 @@ def write_1d_map(element, filename=None, asci2gdf_bin=fix_exe('$ASCI2GDF_BIN')):
             fout.truncate() # Truncate the file to this point.
 
         #subprocess.run(f'{asci2gdf_bin} -o {filename} {tempfile}', shell=True)
-        run_subprocess_cmd(f'{asci2gdf_bin} -o {filename} {tempfile}')
+
+
+        subprocess.run([asci2gdf_bin, "-o", filename, tempfile])
         os.remove(tempfile)
 
 
