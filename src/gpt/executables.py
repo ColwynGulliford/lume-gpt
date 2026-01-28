@@ -54,10 +54,21 @@ def expand_gpt_env_vars(func):
 
 GPT_BINS = {k: os.path.normpath(os.path.expandvars(k)) for k in ['$GPT_BIN', '$GDF2A_BIN', '$ASCI2GDF_BIN']}
 
+
+def check_file_suffix(filename, raise_on):
+
+    if filename.endswith(raise_on):
+        raise ValueError(f'File name has the wrong suffix ({raise_on}): {filename}')
+
 @expand_gpt_env_vars
-def asci2gdf(gdf_file, ascii_file, asci2gdf_bin='$ASCI2GDF_BIN'):
-    cmd_list = [asci2gdf_bin, "-o", gdf_file, ascii_file]
+def asci2gdf(gdf_file, ascii_file, asci2gdf_bin='$ASCI2GDF_BIN', strict_file_suffixes=False):
     
+    cmd_list = [asci2gdf_bin, "-o", gdf_file, ascii_file]
+
+    if strict_file_suffixes:
+        check_file_suffix(gdf_file, raise_on='.txt')
+        check_file_suffix(ascii_file, raise_on='.gdf')
+
     try:
         result = subprocess.run(
             cmd_list, 
@@ -73,8 +84,12 @@ def asci2gdf(gdf_file, ascii_file, asci2gdf_bin='$ASCI2GDF_BIN'):
         raise e
 
 @expand_gpt_env_vars
-def gdf2a(gdf_file, ascii_file, gdf2a_bin='$GDF2A_BIN'):
+def gdf2a(gdf_file, ascii_file, gdf2a_bin='$GDF2A_BIN', strict_file_suffixes=False):
 
+    if strict_file_suffixes:
+        check_file_suffix(gdf_file, raise_on='.txt')
+        check_file_suffix(ascii_file, raise_on='.gdf')
+    
     cmd_list = [gdf2a_bin, "-o", ascii_file, gdf_file]
     
     try:
