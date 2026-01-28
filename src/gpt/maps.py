@@ -147,7 +147,10 @@ class GDFFieldMap(Element):
             temp_ascii_file = f'{self.source_data_file}.temp.txt'
 
         cmd = f'{gdf2a_bin} -o {temp_ascii_file} "{self.source_data_file}"' 
-        cmd_list = [gdf2a_bin, "-o", temp_ascii_file, self.source_data_file]
+
+        from pathlib import Path
+        
+        cmd_list = [Path(gdf2a_bin), "-o", temp_ascii_file, self.source_data_file]
         subprocess.run(cmd_list, check=True)
 
         with open(temp_ascii_file, 'r') as fp:
