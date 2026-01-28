@@ -61,7 +61,7 @@ def check_file_suffix(filename, raise_on):
         raise ValueError(f'File name has the wrong suffix ({raise_on}): {filename}')
 
 @expand_gpt_env_vars
-def asci2gdf(gdf_file, ascii_file, asci2gdf_bin='$ASCI2GDF_BIN', strict_file_suffixes=False):
+def asci2gdf(ascii_file, gdf_file, asci2gdf_bin='$ASCI2GDF_BIN', strict_file_suffixes=False):
     
     cmd_list = [asci2gdf_bin, "-o", gdf_file, ascii_file]
 
@@ -77,9 +77,9 @@ def asci2gdf(gdf_file, ascii_file, asci2gdf_bin='$ASCI2GDF_BIN', strict_file_suf
             text=True
         )
     except subprocess.CalledProcessError as e:
-        print("--- GDF2A STDOUT ---")
+        print("--- ASCI2GDF STDOUT ---")
         print(e.stdout)
-        print("--- GDF2A STDERR ---")
+        print("--- ASCI2GDF STDERR ---")
         print(e.stderr)  # <--- THIS is where the real answer is
         raise e
 
