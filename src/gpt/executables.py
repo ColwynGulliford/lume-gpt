@@ -86,7 +86,7 @@ def asci2gdf(ascii_file, gdf_file, asci2gdf_bin='$ASCI2GDF_BIN', strict_file_suf
 @expand_gpt_env_vars
 def gdf2a(gdf_file, ascii_file, 
           gdf2a_bin='$GDF2A_BIN', 
-          precision='-w16', 
+          precision='-w32', 
           strict_file_suffixes=False,
           capture_output=True
          ):

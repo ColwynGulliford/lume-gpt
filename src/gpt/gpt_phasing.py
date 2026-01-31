@@ -321,11 +321,62 @@ def run_gpt(gpt_bin,
 
     gpt(filename, output_filename, verbose=False, workdir=workdir, gpt_bin=gpt_bin)
     _, pdata = read_gdf_file(output_filename)
+
+    #print(pdata[-1])
+    #gdf2a(output_filename, output_text_filename, gdf2a_bin=gdf2a_bin, precision='-w16') 
+    
+    #gamma = get_gamma_from_file(gpt_bin, output_text_filename, debug_flag, workdir)
     gamma = pdata[-1]['G'].mean()
+
+    #print(gamma, gamma2)
 
     trashclean(output_filename, True)
     trashclean(output_text_filename, True)
 
+    return gamma
+
+# ---------------------------------------------------------------------------- #
+# Get gamma from a GPT output file. Assumes last screen is output first in text file
+# ---------------------------------------------------------------------------- #
+def get_gamma_from_file(gpt_bin, filename, debug_flag, workdir):
+
+    #print(filename)
+    
+    with open(filename, 'r') as hand:
+        lines = hand.readlines()
+
+    #print(lines)
+    
+    position_lines = find_lines_containing(lines, "position")
+
+    gamma = 1.0
+
+    #print(position_lines)
+    
+    if len(position_lines) > 0:
+        last_screen = position_lines[0] # Here is the assumption
+
+        var_names = lines[position_lines[0] + 1].split()
+        var_values = lines[position_lines[0] + 2].split()
+
+        #print(var_names)
+
+        for ii in range(len(var_names)):
+            name = var_names[ii]
+            if (name == 'G' and len(var_values) > ii):
+                gamma = float(var_values[ii])
+    else:
+
+        output_filename = filename.replace(".in", ".gdf")
+        output_text_filename = output_filename.replace(".gdf", ".txt")
+
+        try: 
+            gpt(filename, output_filename, verbose=False, workdir=workdir, gpt_bin=gpt_bin)
+        except Exception as ex:
+            print(ex)
+        raise ValueError('GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
+        
+    #print('found', gamma)
     return gamma
 
 # ---------------------------------------------------------------------------- #
