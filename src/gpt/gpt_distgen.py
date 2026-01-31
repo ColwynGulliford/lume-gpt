@@ -167,7 +167,7 @@ def phase_gpt_with_distgen(settings=None,
     G.write_input_file()   # Write the unphased input file
        
     phased_file_name, phased_settings = gpt_phasing(G.input_file, 
-                                                    path_to_gpt_bin=G.gpt_bin[:-3], 
+                                                    gpt_bin=gpt_bin, 
                                                     path_to_phasing_dist=phasing_particle_file, 
                                                     verbose=verbose)
 
@@ -316,7 +316,7 @@ def run_gpt_with_distgen(settings=None,
         G.write_input_file()   # Write the unphased input file
        
         phased_file_name, phased_settings = gpt_phasing(G.input_file, 
-                                                        path_to_gpt_bin=G.gpt_bin[:-3], 
+                                                        gpt_bin=gpt_bin, 
                                                         path_to_phasing_dist=phasing_particle_file, 
                                                         verbose=verbose)
 
