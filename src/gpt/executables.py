@@ -84,19 +84,24 @@ def asci2gdf(ascii_file, gdf_file, asci2gdf_bin='$ASCI2GDF_BIN', strict_file_suf
         raise e
 
 @expand_gpt_env_vars
-def gdf2a(gdf_file, ascii_file, gdf2a_bin='$GDF2A_BIN', strict_file_suffixes=False):
+def gdf2a(gdf_file, ascii_file, 
+          gdf2a_bin='$GDF2A_BIN', 
+          precision='-w16', 
+          strict_file_suffixes=False,
+          capture_output=True
+         ):
 
     if strict_file_suffixes:
         check_file_suffix(gdf_file, raise_on='.txt')
         check_file_suffix(ascii_file, raise_on='.gdf')
     
-    cmd_list = [gdf2a_bin, "-o", ascii_file, gdf_file]
+    cmd_list = [gdf2a_bin, precision, "-o", ascii_file, gdf_file]
     
     try:
         result = subprocess.run(
             cmd_list, 
             check=True, 
-            capture_output=True, 
+            capture_output=capture_output, 
             text=True
         )
     except subprocess.CalledProcessError as e:
@@ -107,9 +112,34 @@ def gdf2a(gdf_file, ascii_file, gdf2a_bin='$GDF2A_BIN', strict_file_suffixes=Fal
         raise e
 
 @expand_gpt_env_vars
-def gpt(output_gdf_file, input_gpt_file, verbose=True, jobs=1, flags=[], gpt_bin='$GPT_BIN'):
+def gpt(input_gpt_file, output_gdf_file, 
+        verbose=True, 
+        jobs=1, 
+        flags=[], 
+        gpt_bin='$GPT_BIN',
+        capture_output=True,
+        workdir=None
+       ):
 
-    print(gpt_bin)
+    if verbose:
+        flags = ['-v'] + flags
+        
+    cmd_list = [gpt_bin, f'-j{jobs}'] + flags + ['-o', output_gdf_file, input_gpt_file]
+
+    try:
+        result = subprocess.run(
+            cmd_list, 
+            check=True, 
+            capture_output=capture_output, 
+            text=True,
+            cwd=workdir
+        )
+    except subprocess.CalledProcessError as e:
+        print("--- GDF2A STDOUT ---")
+        print(e.stdout)
+        print("--- GDF2A STDERR ---")
+        print(e.stderr)  # <--- THIS is where the real answer is
+        raise e
 
     
 

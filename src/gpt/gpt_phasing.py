@@ -5,12 +5,14 @@
 
 import re
 import os
-import subprocess
+#import subprocess
 import numpy
 import scipy.optimize as sp
 from optparse import OptionParser
 
 from pathlib import Path
+
+from gpt.executables import gpt, gdf2a
 
 
 def main():
@@ -39,7 +41,7 @@ def main():
     path_to_input_file = options.infilename
     path_to_gpt_bin = options.filename
 
-    gpt_phasing(path_to_input_file,path_to_gpt_bin="", verbose=True, debug_flag=False)
+    gpt_phasing(path_to_input_file, path_to_gpt_bin="", verbose=True, debug_flag=False)
 
  
 def gpt_phasing(path_to_input_file, 
@@ -76,7 +78,8 @@ def gpt_phasing(path_to_input_file,
     for x in range(len(split_input_file_path)-1):
         path_to_input_file = path_to_input_file + split_input_file_path[x] + '/'
 
-    gpt_input_text = readinfile(path_to_input_file + gpt_input_filename)
+    with open(path_to_input_file + gpt_input_filename, 'r') as hand:
+        gpt_input_text = hand.readlines()
 
     # Add replace usual input distribution with single particle at centroid
     if(path_to_phasing_dist):
@@ -257,7 +260,8 @@ def gpt_phasing(path_to_input_file,
     phase_input_text = set_variable_by_name(phase_input_text, 'viewscreens_on', initial_viewscreens_on, False)
 
     # Write phased input file
-    writeinfile(phase_input_text, path_to_input_file + finished_phase_input_filename)
+    with open(path_to_input_file + finished_phase_input_filename,'wt') as fid:
+        fid.writelines(phase_input_text)
 
     # Delete temporary input file
     trashclean(path_to_input_file + phase_input_filename, True)
@@ -304,32 +308,21 @@ def run_gpt(path_to_gpt_bin,
             workdir):
 
     #print(path_to_gpt_bin, filename, debug_flag, workdir)
-
-    writeinfile(phase_input_text, filename)
-
+    with open(filename, 'wt') as fid:
+        fid.writelines(phase_input_text)
+    
     output_filename = filename.replace(".in", ".gdf")
     output_text_filename = output_filename.replace(".gdf", ".txt")
 
-    command = path_to_gpt_bin + "gpt -j1 -o " + output_filename + " " + filename
-    call_os_no_output(command.split(), workdir)
+    gpt(filename, output_filename, verbose=False, workdir=workdir)
+    gdf2a(output_filename, output_text_filename)
     
-    command = path_to_gpt_bin + "gdf2a -w16 -o " + output_text_filename + " " + output_filename
-    call_os_no_output(command.split(), workdir)
-
     gamma = get_gamma_from_file(path_to_gpt_bin, output_text_filename, debug_flag, workdir)
 
     trashclean(output_filename, True)
     trashclean(output_text_filename, True)
 
     return gamma
-
-# ---------------------------------------------------------------------------- #
-# Run a command, suppressing all output
-# ---------------------------------------------------------------------------- #
-def call_os_no_output(command, workdir):
-
-    with open(os.devnull, "w") as fnull:
-        result = subprocess.call(command, stdout = fnull, stderr = fnull, cwd=workdir)
 
 # ---------------------------------------------------------------------------- #
 # Get gamma from a GPT output file. Assumes last screen is output first in text file
@@ -362,14 +355,10 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
         output_filename = filename.replace(".in", ".gdf")
         output_text_filename = output_filename.replace(".gdf", ".txt")
 
-        command = path_to_gpt_bin + "gpt -j1 -v -o " + output_filename + " " + filename
-        p = subprocess.Popen(command.split(), 
-                             stdout=subprocess.PIPE, 
-                             stderr=subprocess.STDOUT,
-                             cwd=workdir)
-        stdout, stderr = p.communicate()
-  
-        print(stdout.decode("utf-8") )
+        try: 
+            gpt(filename, output_filename, verbose=False, workdir=workdir)
+        except Exception as ex:
+            print(ex)
         raise ValueError('GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
         
     #print('found', gamma)
@@ -523,7 +512,7 @@ def find_lines_containing(lines, string):
         split_on_comments = line.split('#')
         line = split_on_comments[0]
         match = re.search(string_lower, line)
-        if (match):
+        if match:
             indices.append(ii)
     
     return indices
@@ -535,24 +524,6 @@ def trashclean(trashname, control):
     if control:
         os.system("rm -f "+trashname)
 
-# ---------------------------------------------------------------------------- #
-# Writes a file from an array of strings
-# ---------------------------------------------------------------------------- #
-def writeinfile(inlines,filename):
-    work_hand=open(filename,'wt')
-    work_hand.writelines(inlines)
-    work_hand.close()
-
-
-# ---------------------------------------------------------------------------- #
-# Reads a file and returns the lines of that file as an array of strings
-# ---------------------------------------------------------------------------- #
-def readinfile(filename):
-
-    with open(filename, 'r') as hand:
-        inlines = hand.readlines()
-
-    return inlines
 
 # ---------------------------------------------------------------------------- #
 # This allows the main function to be at the beginning of the file
