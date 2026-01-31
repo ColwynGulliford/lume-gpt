@@ -106,4 +106,11 @@ def gdf2a(gdf_file, ascii_file, gdf2a_bin='$GDF2A_BIN', strict_file_suffixes=Fal
         print(e.stderr)  # <--- THIS is where the real answer is
         raise e
 
+@expand_gpt_env_vars
+def gpt(output_gdf_file, input_gpt_file, verbose=True, jobs=1, flags=[], gpt_bin='$GPT_BIN'):
+
+    print(gpt_bin)
+
+    
+
     
