@@ -322,7 +322,6 @@ def run_gpt(gpt_bin,
     gpt(filename, output_filename, verbose=False, workdir=workdir, gpt_bin=gpt_bin)
     _, pdata = read_gdf_file(output_filename)
 
-
     gamma = pdata[-1]['G'].mean()
 
     #print(gamma, numpy.round(gamma2, 10), pdata[-1]['z'].mean())
