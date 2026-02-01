@@ -5,13 +5,15 @@
 
 import re
 import os
-import subprocess
+#import subprocess
 import numpy
 import scipy.optimize as sp
 from optparse import OptionParser
 
 from pathlib import Path
 
+from gpt.executables import gpt, gdf2a
+from gpt.parsers import read_gdf_file
 
 def main():
 
@@ -30,20 +32,21 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    path_to_gpt_bin = options.filename
+    gpt_bin = options.filename
 
     verbose = options.verbose
     debug_flag = options.debug_flag
 
     # Interpret input arguments
     path_to_input_file = options.infilename
-    path_to_gpt_bin = options.filename
+    gpt_bin = options.filename
 
-    gpt_phasing(path_to_input_file,path_to_gpt_bin="", verbose=True, debug_flag=False)
+    gpt_phasing(path_to_input_file, verbose=True, debug_flag=False)
 
  
 def gpt_phasing(path_to_input_file, 
-                path_to_gpt_bin="", 
+                gpt_bin='$GPT_BIN', 
+                gdf2a_bin='$GDF2A_BIN',
                 path_to_phasing_dist=None, 
                 verbose=False, 
                 debug_flag=False):
@@ -52,7 +55,7 @@ def gpt_phasing(path_to_input_file,
 
     settings = {}
 
-    #print(path_to_input_file, path_to_gpt_bin, path_to_phasing_dist)
+    #print(path_to_input_file, gpt_bin, path_to_phasing_dist)
 
     if verbose:
         print("\nPhasing: " + path_to_input_file )
@@ -76,7 +79,8 @@ def gpt_phasing(path_to_input_file,
     for x in range(len(split_input_file_path)-1):
         path_to_input_file = path_to_input_file + split_input_file_path[x] + '/'
 
-    gpt_input_text = readinfile(path_to_input_file + gpt_input_filename)
+    with open(path_to_input_file + gpt_input_filename, 'r') as hand:
+        gpt_input_text = hand.readlines()
 
     # Add replace usual input distribution with single particle at centroid
     if(path_to_phasing_dist):
@@ -171,7 +175,7 @@ def gpt_phasing(path_to_input_file,
 
     for cav_ii in range(len(amplitude_indices)):
 
-        #print(cav_ii)
+        #print(cav_ii, workdir)
 
         if desired_amplitude[cav_ii] > 0:
 
@@ -186,7 +190,8 @@ def gpt_phasing(path_to_input_file,
 
 
                 gamma = run_gpt_phase(phase, 
-                                      path_to_gpt_bin, 
+                                      gpt_bin, 
+                                      gdf2a_bin,
                                       phase_input_text, 
                                       path_to_input_file + phase_input_filename, 
                                       oncrest_indices[cav_ii], 
@@ -210,13 +215,13 @@ def gpt_phasing(path_to_input_file,
             if verbose:
                 print("Cavity " + str(cav_ii) + ": Bracketed between " + str(left_bound) + " and " + str(right_bound))
         
-            if (numpy.std(gamma_test) == 0):
-                if (gamma_test[0] == 1.0):
+            if numpy.std(gamma_test) == 0:
+                if gamma_test[0] == 1.0:
                     raise ValueError("GPT PHASING ERROR: No particles reached a screen for any attempted phase.")
                 else:
                     raise ValueError("GPT PHASING ERROR: Gamma did not depend on cavity " + str(cav_ii) + " phase, gamma = " + str(gamma_test[0]))
 
-            brent_output = sp.brent(func=neg_run_gpt_phase, args=(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag, workdir), brack=bracket, tol=1.0e-5, full_output=1, maxiter=1000)
+            brent_output = sp.brent(func=neg_run_gpt_phase, args=(gpt_bin, gdf2a_bin, phase_input_text, path_to_input_file + phase_input_filename, oncrest_indices[cav_ii], debug_flag, workdir), brack=bracket, tol=1.0e-5, full_output=1, maxiter=1000)
 
             best_phase = brent_output[0]
             best_gamma = -brent_output[1]
@@ -224,9 +229,9 @@ def gpt_phasing(path_to_input_file,
             phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
             phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
 
-            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
+            final_gamma = run_gpt(gpt_bin, gdf2a_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
 
-            if (len(gamma_indices) > 0):
+            if len(gamma_indices) > 0:
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
 
             if verbose:
@@ -239,8 +244,8 @@ def gpt_phasing(path_to_input_file,
             phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
             phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
 
-            final_gamma = run_gpt(path_to_gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
-            if (len(gamma_indices) > 0):
+            final_gamma = run_gpt(gpt_bin, gdf2a_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
+            if len(gamma_indices) > 0:
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
 
             if verbose:
@@ -257,7 +262,8 @@ def gpt_phasing(path_to_input_file,
     phase_input_text = set_variable_by_name(phase_input_text, 'viewscreens_on', initial_viewscreens_on, False)
 
     # Write phased input file
-    writeinfile(phase_input_text, path_to_input_file + finished_phase_input_filename)
+    with open(path_to_input_file + finished_phase_input_filename,'wt') as fid:
+        fid.writelines(phase_input_text)
 
     # Delete temporary input file
     trashclean(path_to_input_file + phase_input_filename, True)
@@ -268,14 +274,15 @@ def gpt_phasing(path_to_input_file,
 # Run GPT with a given phase for a cavity, returns value of (NEGATIVE) gamma
 # ---------------------------------------------------------------------------- #
 def neg_run_gpt_phase(phase, 
-                      path_to_gpt_bin, 
+                      gpt_bin,
+                      gdf2a_bin,
                       phase_input_text, 
                       filename, 
                       oncrest_index, 
                       debug_flag,
                       workdir):
 
-    gamma = run_gpt_phase(phase, path_to_gpt_bin, phase_input_text, filename, oncrest_index, debug_flag, workdir)
+    gamma = run_gpt_phase(phase, gpt_bin, gdf2a_bin, phase_input_text, filename, oncrest_index, debug_flag, workdir)
     
     return -gamma
 
@@ -283,7 +290,8 @@ def neg_run_gpt_phase(phase,
 # Run GPT with a given phase for a cavity, returns value of gamma
 # ---------------------------------------------------------------------------- #
 def run_gpt_phase(phase, 
-                  path_to_gpt_bin, 
+                  gpt_bin, 
+                  gdf2a_bin,
                   phase_input_text, 
                   filename, 
                   oncrest_index, 
@@ -292,31 +300,35 @@ def run_gpt_phase(phase,
 
     phase_input_text = set_variable_on_line(phase_input_text, oncrest_index, phase)
     
-    return run_gpt(path_to_gpt_bin, phase_input_text, filename, debug_flag, workdir)
+    return run_gpt(gpt_bin, gdf2a_bin, phase_input_text, filename, debug_flag, workdir)
 
 # ---------------------------------------------------------------------------- #
 # Just run GPT, given an input file to write
 # ---------------------------------------------------------------------------- #
-def run_gpt(path_to_gpt_bin, 
+def run_gpt(gpt_bin, 
+            gdf2a_bin,
             phase_input_text, 
             filename, 
             debug_flag,
             workdir):
 
     #print(path_to_gpt_bin, filename, debug_flag, workdir)
-
-    writeinfile(phase_input_text, filename)
-
+    with open(filename, 'wt') as fid:
+        fid.writelines(phase_input_text)
+    
     output_filename = filename.replace(".in", ".gdf")
     output_text_filename = output_filename.replace(".gdf", ".txt")
 
-    command = path_to_gpt_bin + "gpt -j1 -o " + output_filename + " " + filename
-    call_os_no_output(command.split(), workdir)
-    
-    command = path_to_gpt_bin + "gdf2a -w16 -o " + output_text_filename + " " + output_filename
-    call_os_no_output(command.split(), workdir)
+    gpt(filename, output_filename, verbose=False, workdir=workdir, gpt_bin=gpt_bin)
+    _, pdata = read_gdf_file(output_filename)
 
-    gamma = get_gamma_from_file(path_to_gpt_bin, output_text_filename, debug_flag, workdir)
+    #print(pdata[-1])
+    #gdf2a(output_filename, output_text_filename, gdf2a_bin=gdf2a_bin, precision='-w16') 
+    
+    #gamma = get_gamma_from_file(gpt_bin, output_text_filename, debug_flag, workdir)
+    gamma = pdata[-1]['G'].mean()
+
+    #print(gamma, numpy.round(gamma2, 10), pdata[-1]['z'].mean())
 
     trashclean(output_filename, True)
     trashclean(output_text_filename, True)
@@ -324,34 +336,30 @@ def run_gpt(path_to_gpt_bin,
     return gamma
 
 # ---------------------------------------------------------------------------- #
-# Run a command, suppressing all output
-# ---------------------------------------------------------------------------- #
-def call_os_no_output(command, workdir):
-
-    with open(os.devnull, "w") as fnull:
-        result = subprocess.call(command, stdout = fnull, stderr = fnull, cwd=workdir)
-
-# ---------------------------------------------------------------------------- #
 # Get gamma from a GPT output file. Assumes last screen is output first in text file
 # ---------------------------------------------------------------------------- #
-def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
+def get_gamma_from_file(gpt_bin, filename, debug_flag, workdir):
 
     #print(filename)
     
     with open(filename, 'r') as hand:
         lines = hand.readlines()
 
+    #print(lines)
+    
     position_lines = find_lines_containing(lines, "position")
 
     gamma = 1.0
 
     #print(position_lines)
     
-    if (len(position_lines) > 0):
+    if len(position_lines) > 0:
         last_screen = position_lines[0] # Here is the assumption
 
         var_names = lines[position_lines[0] + 1].split()
         var_values = lines[position_lines[0] + 2].split()
+
+        #print(var_names)
 
         for ii in range(len(var_names)):
             name = var_names[ii]
@@ -362,14 +370,10 @@ def get_gamma_from_file(path_to_gpt_bin, filename, debug_flag, workdir):
         output_filename = filename.replace(".in", ".gdf")
         output_text_filename = output_filename.replace(".gdf", ".txt")
 
-        command = path_to_gpt_bin + "gpt -j1 -v -o " + output_filename + " " + filename
-        p = subprocess.Popen(command.split(), 
-                             stdout=subprocess.PIPE, 
-                             stderr=subprocess.STDOUT,
-                             cwd=workdir)
-        stdout, stderr = p.communicate()
-  
-        print(stdout.decode("utf-8") )
+        try: 
+            gpt(filename, output_filename, verbose=False, workdir=workdir, gpt_bin=gpt_bin)
+        except Exception as ex:
+            print(ex)
         raise ValueError('GPT PHASING ERROR: No screen output found. GPT crashed? See last print out above.')
         
     #print('found', gamma)
@@ -397,7 +401,7 @@ def set_variable_by_name(gpt_input_text, name, value, crash_on_error):
 # ---------------------------------------------------------------------------- #
 def find_line_with_variable_name(gpt_input_text, name):
 
-    if (len(name.strip()) == 0):
+    if len(name.strip()) == 0:
         raise ValueError("GPT PHASING ERROR: attempting to find variable with name = empty string.")
 
     gpt_input_text_new = gpt_input_text
@@ -424,7 +428,7 @@ def get_variable_by_name(gpt_input_text, name):
 
     index = find_line_with_variable_name(gpt_input_text, name)
 
-    if (index < 0):
+    if index < 0:
         return 0
 
     gpt_input_text_new = gpt_input_text
@@ -523,7 +527,7 @@ def find_lines_containing(lines, string):
         split_on_comments = line.split('#')
         line = split_on_comments[0]
         match = re.search(string_lower, line)
-        if (match):
+        if match:
             indices.append(ii)
     
     return indices
@@ -535,24 +539,6 @@ def trashclean(trashname, control):
     if control:
         os.system("rm -f "+trashname)
 
-# ---------------------------------------------------------------------------- #
-# Writes a file from an array of strings
-# ---------------------------------------------------------------------------- #
-def writeinfile(inlines,filename):
-    work_hand=open(filename,'wt')
-    work_hand.writelines(inlines)
-    work_hand.close()
-
-
-# ---------------------------------------------------------------------------- #
-# Reads a file and returns the lines of that file as an array of strings
-# ---------------------------------------------------------------------------- #
-def readinfile(filename):
-
-    with open(filename, 'r') as hand:
-        inlines = hand.readlines()
-
-    return inlines
 
 # ---------------------------------------------------------------------------- #
 # This allows the main function to be at the beginning of the file
