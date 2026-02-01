@@ -322,10 +322,7 @@ def run_gpt(gpt_bin,
     gpt(filename, output_filename, verbose=False, workdir=workdir, gpt_bin=gpt_bin)
     _, pdata = read_gdf_file(output_filename)
 
-    #print(pdata[-1])
-    #gdf2a(output_filename, output_text_filename, gdf2a_bin=gdf2a_bin, precision='-w16') 
-    
-    #gamma = get_gamma_from_file(gpt_bin, output_text_filename, debug_flag, workdir)
+
     gamma = pdata[-1]['G'].mean()
 
     #print(gamma, numpy.round(gamma2, 10), pdata[-1]['z'].mean())
