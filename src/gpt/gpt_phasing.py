@@ -175,7 +175,7 @@ def gpt_phasing(path_to_input_file,
 
     for cav_ii in range(len(amplitude_indices)):
 
-        #print(cav_ii)
+        #print(cav_ii, workdir)
 
         if desired_amplitude[cav_ii] > 0:
 
@@ -215,8 +215,8 @@ def gpt_phasing(path_to_input_file,
             if verbose:
                 print("Cavity " + str(cav_ii) + ": Bracketed between " + str(left_bound) + " and " + str(right_bound))
         
-            if (numpy.std(gamma_test) == 0):
-                if (gamma_test[0] == 1.0):
+            if numpy.std(gamma_test) == 0:
+                if gamma_test[0] == 1.0:
                     raise ValueError("GPT PHASING ERROR: No particles reached a screen for any attempted phase.")
                 else:
                     raise ValueError("GPT PHASING ERROR: Gamma did not depend on cavity " + str(cav_ii) + " phase, gamma = " + str(gamma_test[0]))
@@ -231,7 +231,7 @@ def gpt_phasing(path_to_input_file,
 
             final_gamma = run_gpt(gpt_bin, gdf2a_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
 
-            if (len(gamma_indices) > 0):
+            if len(gamma_indices) > 0:
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
 
             if verbose:
@@ -244,8 +244,8 @@ def gpt_phasing(path_to_input_file,
             phase_input_text = set_variable_on_line(phase_input_text, oncrest_indices[cav_ii], best_phase)
             phase_input_text = set_variable_on_line(phase_input_text, relative_indices[cav_ii], desired_relative_phase[cav_ii])
 
-            final_gamma = run_gpt(gpt_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
-            if (len(gamma_indices) > 0):
+            final_gamma = run_gpt(gpt_bin, gdf2a_bin, phase_input_text, path_to_input_file + phase_input_filename, debug_flag, workdir)
+            if len(gamma_indices) > 0:
                 phase_input_text = set_variable_on_line(phase_input_text, gamma_indices[cav_ii], final_gamma)
 
             if verbose:
@@ -328,7 +328,7 @@ def run_gpt(gpt_bin,
     #gamma = get_gamma_from_file(gpt_bin, output_text_filename, debug_flag, workdir)
     gamma = pdata[-1]['G'].mean()
 
-    #print(gamma, gamma2)
+    #print(gamma, numpy.round(gamma2, 10), pdata[-1]['z'].mean())
 
     trashclean(output_filename, True)
     trashclean(output_text_filename, True)
@@ -401,7 +401,7 @@ def set_variable_by_name(gpt_input_text, name, value, crash_on_error):
 # ---------------------------------------------------------------------------- #
 def find_line_with_variable_name(gpt_input_text, name):
 
-    if (len(name.strip()) == 0):
+    if len(name.strip()) == 0:
         raise ValueError("GPT PHASING ERROR: attempting to find variable with name = empty string.")
 
     gpt_input_text_new = gpt_input_text
@@ -428,7 +428,7 @@ def get_variable_by_name(gpt_input_text, name):
 
     index = find_line_with_variable_name(gpt_input_text, name)
 
-    if (index < 0):
+    if index < 0:
         return 0
 
     gpt_input_text_new = gpt_input_text

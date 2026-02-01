@@ -124,8 +124,9 @@ def phase_gpt_with_distgen(settings=None,
 
     distgen_params['output'] = {'type':'gpt','file':particle_file}
 
-    if(verbose):
+    if verbose:
         print('\nDistgen >------\n')
+        
     # Configure distgen
     gen.parse_input(distgen_params)   
      
@@ -135,7 +136,7 @@ def phase_gpt_with_distgen(settings=None,
     #beam = gen.beam()
     beam = gen.run(max_workers=n_cpu_distgen)
 
-    if(verbose):
+    if verbose:
         print('------< Distgen\n')
 
     if(os.path.exists(particle_file)):
@@ -147,12 +148,12 @@ def phase_gpt_with_distgen(settings=None,
 
     write_gpt(beam, particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
 
-    if(verbose):
+    if verbose:
         print('\nAuto Phasing >------\n')
     t1 = time.time()
 
     # Create the distribution used for phasing
-    if(verbose):
+    if verbose:
         print('****> Creating initial distribution for phasing...')
         
     centroid_particle = centroid_wrapper(beam)
@@ -161,7 +162,7 @@ def phase_gpt_with_distgen(settings=None,
     #phasing_beam = get_distgen_beam_for_phasing(beam, n_particle=10, verbose=verbose)
     write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
-    if(verbose):
+    if verbose:
         print('<**** Created initial distribution for phasing.\n')    
 
     G.write_input_file()   # Write the unphased input file
@@ -274,12 +275,12 @@ def run_gpt_with_distgen(settings=None,
     #beam = gen.beam()
     beam = gen.run()
     
-    if(verbose):
+    if verbose:
         print('------< Distgen\n')
 
-    if(os.path.exists(particle_file)):
+    if os.path.exists(particle_file):
         
-        if(os.path.islink(particle_file)):
+        if os.path.islink(particle_file):
             os.unlink(particle_file)
         else:
             os.remove(particle_file)
@@ -294,14 +295,14 @@ def run_gpt_with_distgen(settings=None,
     #print(beam['pz'].mean())
     #print(beam['t'].mean())
 
-    if(auto_phase): 
+    if auto_phase: 
 
-        if(verbose):
+        if verbose:
             print('\nAuto Phasing >------\n')
         t1 = time.time()
 
         # Create the distribution used for phasing
-        if(verbose):
+        if verbose:
             print('****> Creating initial distribution for phasing...')
                    
         centroid_particle = centroid_wrapper(beam)
@@ -323,7 +324,7 @@ def run_gpt_with_distgen(settings=None,
         G.set_variables(phased_settings)
         t2 = time.time()
 
-        if(verbose):
+        if verbose:
             print(f'Time Ellapsed: {t2-t1} sec.')
             print('------< Auto Phasing\n')
 

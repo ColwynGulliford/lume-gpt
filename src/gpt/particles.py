@@ -86,9 +86,15 @@ def raw_data_to_particle_data(gpt_output_dict, verbose=False):
 
     mc = mass_of(species)  # Returns rest energy in eV, which corresponds to same numeric value of mc [eV/c] 
 
-    data['px'] = gpt_output_dict['G']*gpt_output_dict['Bx']*mc
-    data['py'] = gpt_output_dict['G']*gpt_output_dict['By']*mc
-    data['pz'] = gpt_output_dict['G']*gpt_output_dict['Bz']*mc
+    for v in ['x', 'y', 'z']:
+        if f'GB{v}' not in gpt_output_dict:
+            data[f'p{v}'] = gpt_output_dict['G']*gpt_output_dict[f'B{v}']*mc
+        else: 
+            data[f'p{v}'] = gpt_output_dict[f'GB{v}']*mc
+    
+    #data['px'] = gpt_output_dict['G']*gpt_output_dict['Bx']*mc
+    #data['py'] = gpt_output_dict['G']*gpt_output_dict['By']*mc
+    #data['pz'] = gpt_output_dict['G']*gpt_output_dict['Bz']*mc
 
     data['t'] = gpt_output_dict['t']
         
@@ -149,16 +155,17 @@ def gdf_to_particle_groups(gdffile, verbose=False, load_fields=False, spin_track
 
     return (touts, screens)
 
-def initial_beam_to_particle_group(gdffile, verbose=0, extra_screen_keys=['q','nmacro','ID', 'm'], missing_data=None):
+def initial_beam_to_particle_group(gdffile, verbose=0): #, extra_screen_keys=['q','nmacro','ID', 'm'], missing_data=None):
 
-    screen  = read_particle_gdf_file(gdffile, verbose=verbose, extra_screen_keys=extra_screen_keys)
+    screen  = read_particle_gdf_file(gdffile, verbose=verbose)# , extra_screen_keys=extra_screen_keys)
 
-    if(missing_data is not None):
+    #print(screen)
+    #if missing_data is not None:
 
-        for mdatum in missing_data:
+    #    for mdatum in missing_data:
 
-            if(mdatum not in screen.keys() and len(missing_data[mdatum])==len(screen['x'])):
-                screen[mdatum] = missing_data[mdatum]
+    #        if mdatum not in screen.keys() and len(missing_data[mdatum])==len(screen['x']):
+    #            screen[mdatum] = missing_data[mdatum]
 
     return ParticleGroup(data=raw_data_to_particle_data(screen))
 
