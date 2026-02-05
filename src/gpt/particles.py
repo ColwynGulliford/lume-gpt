@@ -137,16 +137,14 @@ def raw_data_to_particle_groups(touts, screens, verbose=False, ref_ccs=False):
         return [ ParticleGroup(data=raw_data_to_particle_data(datum))  for datum in touts+screens ] 
 
 
-def gdf_to_particle_groups(gdffile, verbose=False, load_fields=False, spin_tracking=False):
+def gdf_to_particle_groups(gdffile, verbose=False):
 
     """
     Read an output gdf file from GPT into a lists of tout and screen particle groups
     """
 
     (tdata, pdata) = read_gdf_file(gdffile, 
-                                   verbose=verbose, 
-                                   load_fields=load_fields,
-                                   spin_tracking=spin_tracking)
+                                   verbose=verbose)
 
     all_pgs = raw_data_to_particle_groups(tdata, pdata, verbose=verbose)
 
