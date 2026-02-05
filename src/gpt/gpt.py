@@ -284,6 +284,10 @@ class GPT:
             return [transform_to_centroid_coordinates(tout) for tout in self.tout]
 
     @property
+    def fields(self):
+        return [{k:self.output['tout_data'][0][k] for k in ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz'] for ii in range(self.n_tout)}]
+
+    @property
     def s_ccs(self):
 
         
