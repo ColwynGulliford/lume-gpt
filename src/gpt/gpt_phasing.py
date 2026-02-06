@@ -168,7 +168,6 @@ def gpt_phasing(path_to_input_file,
     # phase the cavities
 
     phase_step = 20
-    phase_test = numpy.arange(0, 360, phase_step)
 
     if verbose:
         print(" ")
@@ -179,15 +178,17 @@ def gpt_phasing(path_to_input_file,
 
         if desired_amplitude[cav_ii] > 0:
 
+            phase_test = numpy.arange(0, 360, phase_step)
+
             # Tell script which cavity we are phasing
             phase_input_text = set_variable_by_name(phase_input_text, 'cavity_phasing_index', cav_ii, False)
             
-            # turn on the cavity
+            # Turn on the cavity
             phase_input_text = set_variable_on_line(phase_input_text, amplitude_indices[cav_ii], desired_amplitude[cav_ii])
 
-            gamma_test = []
-            for phase in phase_test:
-
+            gamma_test = numpy.zeros(len(phase_test))
+            
+            for jj, phase in enumerate(phase_test):
 
                 gamma = run_gpt_phase(phase, 
                                       gpt_bin, 
@@ -198,11 +199,16 @@ def gpt_phasing(path_to_input_file,
                                       debug_flag,
                                       workdir)
 
-                #print(gamma, phase)
+                gamma_test[jj] = gamma
 
-                gamma_test.append(gamma)
+                #print(cav_ii, gamma, phase)
 
-  
+            if numpy.sum(numpy.isnan(gamma_test))==len(gamma_test):
+                raise ValueError("GPT PHASING ERROR: No particles reached a screen for any attempted phase.")
+
+            not_nan = ~numpy.isnan(gamma_test)
+            phase_test = phase_test[not_nan]
+            gamma_test = gamma_test[not_nan]
 
             gamma_test_indices = numpy.argsort(gamma_test)
 
@@ -322,7 +328,10 @@ def run_gpt(gpt_bin,
     gpt(filename, output_filename, verbose=False, workdir=workdir, gpt_bin=gpt_bin)
     _, pdata = read_gdf_file(output_filename)
 
-    gamma = pdata[-1]['G'].mean()
+    if len(pdata)>0:
+        gamma = pdata[-1]['G'].mean()
+    else:
+        gamma = numpy.nan
 
     #print(gamma, numpy.round(gamma2, 10), pdata[-1]['z'].mean())
 

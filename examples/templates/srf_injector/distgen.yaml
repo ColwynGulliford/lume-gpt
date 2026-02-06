@@ -24,3 +24,11 @@ t_dist:
 total_charge:
   units: pC
   value: 100
+#transforms:
+#  t1:
+#    avg_pz: 1 keV/c
+#    type: set_avg pz
+
+    
+      
+      

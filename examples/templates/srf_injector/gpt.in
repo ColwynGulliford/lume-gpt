@@ -39,8 +39,7 @@ if (space_charge == 1) {
 Ntout=50.0;
 tmax=10e-9;
 ZSTART=-0.005;
-ZSTOP=3;
-zminmax("wcs", "I", ZSTART, ZSTOP);
+ZSTOP=20;
 
 if(Ntout>0) {
     tout(time, tmax, tmax/Ntout);
@@ -48,6 +47,7 @@ if(Ntout>0) {
 
 
 # beg
+cavity_phasing_index = 0;
 
 # swifel
 swifel_x = 0.0;
@@ -194,7 +194,20 @@ c99_frequency = 1300000000.0;
 Map25D_TM("wcs", c99_x, c99_y, c99_z, 1, 0, 0, 0, 1, 0, "fields/tesla_9cell_cavity.gdf", "R", "Z", "Er", "Ez", "Bphi", c99_scale, c99_k, c99_phase, 2*pi*c99_frequency);
 
 # scr1
-screen("wcs", 0, 0, 0.0, 1, 0, 0, 0, 1, 0, 16.5);
+if(auto_phase==1) { 
+    if(cavity_phasing_index == 0){
+        screen("wcs", 0, 0, 0.0, 1, 0, 0, 0, 1, 0, 0.3);
+        ZSTOP = 0.3;
+    } else {
+        screen("wcs", 0, 0, 0.0, 1, 0, 0, 0, 1, 0, 16.5);
+        ZSTOP = 20;
+    }
+}
+
+zminmax("wcs", "I", ZSTART, ZSTOP);
+
+
+
 
 #Legacy Phasing Lines
 phasing_amplitude_0 = swifel_scale;
