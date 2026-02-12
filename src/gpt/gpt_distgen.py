@@ -71,6 +71,7 @@ def phase_gpt_with_distgen(settings=None,
                            gpt_verbose=False,
                            asci2gdf_bin='$ASCI2GDF_BIN',
                            kill_msgs=DEFAULT_KILL_MSGS,
+                           load_fields=False,
                            load_all_gdf_data=False,
                            parse_layout=True):
 
@@ -84,6 +85,7 @@ def phase_gpt_with_distgen(settings=None,
                        timeout=timeout, 
                        verbose=verbose,
                        kill_msgs=kill_msgs,
+                       load_fields=load_fields,
                        load_all_gdf_data=load_all_gdf_data)
     
     if(verbose):
@@ -95,6 +97,7 @@ def phase_gpt_with_distgen(settings=None,
             workdir=workdir, 
             use_tempdir=use_tempdir,
             kill_msgs=kill_msgs,
+            load_fields=load_fields,
             load_all_gdf_data=load_all_gdf_data,
             parse_layout=parse_layout)
 
@@ -197,6 +200,7 @@ def run_gpt_with_distgen(settings=None,
                          gpt_verbose=False,
                          asci2gdf_bin='$ASCI2GDF_BIN',
                          kill_msgs=DEFAULT_KILL_MSGS,
+                         load_fields=False,
                          load_all_gdf_data=False,
                          parse_layout=True
                         ):
@@ -225,9 +229,10 @@ def run_gpt_with_distgen(settings=None,
                        timeout=timeout, 
                        verbose=verbose,
                        kill_msgs=kill_msgs,
+                       load_fields=load_fields,
                        load_all_gdf_data=load_all_gdf_data)
     
-    if(verbose):
+    if verbose:
         print('Run GPT with Distgen:') 
 
     # Make gpt and generator objects
@@ -236,6 +241,7 @@ def run_gpt_with_distgen(settings=None,
         workdir=workdir, 
         use_tempdir=use_tempdir,
         kill_msgs=kill_msgs,
+        load_fields=load_fields,
         load_all_gdf_data=load_all_gdf_data,
         parse_layout=parse_layout)
 
@@ -256,17 +262,17 @@ def run_gpt_with_distgen(settings=None,
     particle_file = tools.full_path(os.path.join(G.path, os.path.basename(G.get_dist_file())))
     phasing_particle_file = particle_file.replace('.gdf', '.phasing.gdf')
 
-    if(verbose):
+    if verbose:
         print('Linking particle files, distgen output will point to -> "'+os.path.basename(particle_file)+'" in working directory.')
 
     G.set_dist_file(os.path.basename(particle_file))
 
-    if('output' in distgen_params and verbose):
+    if 'output' in distgen_params and verbose:
         print('Replacing Distgen output params')
 
     distgen_params['output'] = {'type':'gpt','file':particle_file}
 
-    if(verbose):
+    if verbose:
         print('\nDistgen >------\n')
     # Configure distgen
     gen.parse_input(distgen_params)   
