@@ -1,9 +1,11 @@
 from .gpt import run_gpt
 from .tools import full_path
 from .merit import default_gpt_merit
+from .executables import expand_gpt_env_vars
 
 import os
 
+@expand_gpt_env_vars
 def evaluate_gpt(settings=None, 
             initial_particles=None,
             gpt_input_file=None, 

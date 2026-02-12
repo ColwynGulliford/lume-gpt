@@ -10,6 +10,7 @@ from distgen import Generator
 from distgen.tools import update_nested_dict, is_key_in_nested_dict
 
 from gpt.gpt_phasing import gpt_phasing
+from gpt.executables import expand_gpt_env_vars
 
 from pmd_beamphysics.interfaces.gpt import write_gpt
 from pmd_beamphysics.particles import centroid, join_particle_groups
@@ -56,7 +57,7 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
 #    data['status'] = 1
 #    return ParticleGroup(data=data)
 
-
+@expand_gpt_env_vars
 def phase_gpt_with_distgen(settings=None,
                            gpt_input_file=None,
                            distgen_input_file=None,
@@ -181,7 +182,8 @@ def phase_gpt_with_distgen(settings=None,
 
     return G, phased_settings
 
-    
+
+@expand_gpt_env_vars    
 def run_gpt_with_distgen(settings=None,
                          gpt_input_file=None,
                          distgen_input_file=None,
@@ -334,6 +336,8 @@ def run_gpt_with_distgen(settings=None,
     
     return G
 
+
+@expand_gpt_env_vars
 def evaluate_gpt_with_distgen(settings, 
              archive_path=None, 
              merit_f=None, 

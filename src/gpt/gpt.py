@@ -30,6 +30,9 @@ c = 299792458
 
 from gpt.tools import DEFAULT_KILL_MSGS 
 
+from gpt.executables import expand_gpt_env_vars
+
+
 class GPT:
     """ 
     GPT simulation object. Essential methods:
@@ -47,11 +50,12 @@ class GPT:
     
     
     """
-    
+
+    @expand_gpt_env_vars
     def __init__(self,
                  input_file=None,
                  initial_particles = None,
-                 gpt_bin=os.path.expandvars('$GPT_BIN'),      
+                 gpt_bin='$GPT_BIN',      
                  use_tempdir=True,
                  workdir=None,
                  timeout=None,
@@ -595,6 +599,7 @@ class GPT:
         """ Write the initial particle data to file for use with GPT """
         if not fname:
             fname = os.path.join(self.path, 'gpt.particles.gdf')
+        
         self.initial_particles.write_gpt(fname, asci2gdf_bin=os.path.expandvars('$ASCI2GDF_BIN'), verbose=False)
         self.vprint(f'   Initial {len(self.initial_particles["x"])} particles written to "{fname}"')
         return fname 
