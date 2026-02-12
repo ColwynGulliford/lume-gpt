@@ -495,7 +495,7 @@ class GPT:
                                                  workdir=full_path(self.path))
 
                 
-        if(exception is not None):
+        if exception is not None:
             self.error=True
             run_info["error"]=True
             run_info['why_error']=exception.strip()
@@ -911,10 +911,10 @@ def run_gpt(settings=None,
     if verbose:
         print('run_gpt') 
 
-    if(initial_particles is None and auto_phase):
+    if initial_particles is None and auto_phase:
         raise ValueError('User must specify the initial particles (either particle group or distgen file) when auto phasing.')
 
-    if( isinstance(initial_particles, str) ):
+    if isinstance(initial_particles, str):
         raise ValueError('Intial particles must be particle group or None when using run_gpt method.')
 
     # Make GPT object
