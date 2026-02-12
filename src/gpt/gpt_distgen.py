@@ -71,7 +71,7 @@ def phase_gpt_with_distgen(settings=None,
                            gpt_verbose=False,
                            asci2gdf_bin='$ASCI2GDF_BIN',
                            kill_msgs=DEFAULT_KILL_MSGS,
-                           load_fields=False,
+                           load_all_gdf_data=False,
                            parse_layout=True):
 
     # Call simpler evaluation if there is no generator:
@@ -84,7 +84,7 @@ def phase_gpt_with_distgen(settings=None,
                        timeout=timeout, 
                        verbose=verbose,
                        kill_msgs=kill_msgs,
-                       load_fields=load_fields)
+                       load_all_gdf_data=load_all_gdf_data)
     
     if(verbose):
         print('Run GPT with Distgen:') 
@@ -95,7 +95,7 @@ def phase_gpt_with_distgen(settings=None,
             workdir=workdir, 
             use_tempdir=use_tempdir,
             kill_msgs=kill_msgs,
-            load_fields=load_fields,
+            load_all_gdf_data=load_all_gdf_data,
             parse_layout=parse_layout)
 
     
@@ -197,7 +197,7 @@ def run_gpt_with_distgen(settings=None,
                          gpt_verbose=False,
                          asci2gdf_bin='$ASCI2GDF_BIN',
                          kill_msgs=DEFAULT_KILL_MSGS,
-                         load_fields=False,
+                         load_all_gdf_data=False,
                          parse_layout=True
                         ):
     """
@@ -225,7 +225,7 @@ def run_gpt_with_distgen(settings=None,
                        timeout=timeout, 
                        verbose=verbose,
                        kill_msgs=kill_msgs,
-                       load_fields=load_fields)
+                       load_all_gdf_data=load_all_gdf_data)
     
     if(verbose):
         print('Run GPT with Distgen:') 
@@ -236,7 +236,7 @@ def run_gpt_with_distgen(settings=None,
         workdir=workdir, 
         use_tempdir=use_tempdir,
         kill_msgs=kill_msgs,
-        load_fields=load_fields,
+        load_all_gdf_data=load_all_gdf_data,
         parse_layout=parse_layout)
 
     
