@@ -63,6 +63,7 @@ class GPT:
                  ccs_beg='wcs',
                  ref_ccs=False,
                  kill_msgs=DEFAULT_KILL_MSGS,
+                 load_all_gdf_data=False,
                  load_fields=False,
                  spin_tracking=False,
                  parse_layout=True,
@@ -99,6 +100,7 @@ class GPT:
         self.ccs_beg = ccs_beg
         self.ref_ccs = ref_ccs
         self.kill_msgs=kill_msgs
+        self.load_all_gdf_data=load_all_gdf_data
         self.load_fields=load_fields
         self.spin_tracking=spin_tracking
         
@@ -249,21 +251,39 @@ class GPT:
         self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
         
         touts, screens = parsers.read_gdf_file(file, self.verbose)  # Raw GPT data
-
-        spins = ['spinx', 'spiny', 'spinz']
-        
-        if self.load_fields:
-            fields = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
-        else:
-            fields = []
-
-        # Defines all data not stored in ParticleGroup        
-        self.output['tout_data'] = [{k:tout[k] for k in spins + fields if k in tout} for tout in touts]
-        self.output['screen_data'] = [{k:screen[k] for k in spins if k in screen} for screen in screens]
                 
         self.output['particles'] = raw_data_to_particle_groups(touts, screens, verbose=self.verbose, ref_ccs=self.ref_ccs) 
         self.output['n_tout'] = len(touts)
         self.output['n_screen'] = len(screens)
+
+        if self.load_all_gdf_data:
+            
+            particle_group_vars = ['x', 'y', 'z', 't', 'Bx', 'By', 'Bz', 'ID', 'G', 'm', 'q', 'nmacro']
+        
+            # Defines all data not stored in ParticleGroup        
+            self.output['tout_data'] = [{k:tout[k] for k in tout if k not in particle_group_vars} for tout in touts]
+            self.output['screen_data'] = [{k:screen[k] for k in screen if k not in particle_group_vars} for screen in screens]
+
+        else: 
+
+            if self.spin_tracking:
+                spin_vars = ['spinx', 'spiny', 'spinz']
+            else:
+                spin_vars = []
+
+            if self.load_fields:
+                field_vars = ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']
+            else:
+                field_vars = []
+
+            tout_vars = spin_vars + field_vars
+            screen_vars = spin_vars
+
+            # Defines all data not stored in ParticleGroup        
+            self.output['tout_data'] = [{k:tout[k] for k in tout_vars} for tout in touts]
+            self.output['screen_data'] = [{k:screen[k] for k in screen_vars} for screen in screens]
+
+            
 
     @property
     def n_tout(self):

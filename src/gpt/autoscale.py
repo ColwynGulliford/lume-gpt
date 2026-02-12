@@ -470,7 +470,7 @@ def phase_gpt(settings,
               gpt_verbose=False,
               asci2gdf_bin='$ASCI2GDF_BIN',
               kill_msgs=DEFAULT_KILL_MSGS,
-              load_fields=False,
+              load_all_gdf_data=False,
               parse_layout=False):
 
     """ FUNCTION FOR PHASING A GPT CLASS OBJECT """
@@ -483,7 +483,7 @@ def phase_gpt(settings,
             workdir=workdir, 
             use_tempdir=use_tempdir,
             kill_msgs=kill_msgs,
-            load_fields=load_fields,
+            load_all_gdf_data=load_all_gdf_data,
             parse_layout=parse_layout)
 
     G.set_variables(settings)
