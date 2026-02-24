@@ -1,8 +1,8 @@
-from pmd_beamphysics import ParticleGroup
-from pmd_beamphysics.units import c_light, e_charge, mec2
-from pmd_beamphysics.species import mass_of, MASS_OF
-from pmd_beamphysics.species import charge_of, CHARGE_OF
-from pmd_beamphysics.species import mH2pc2
+from beamphysics import ParticleGroup
+from beamphysics.units import c_light, e_charge, mec2
+from beamphysics.species import mass_of, MASS_OF
+from beamphysics.species import charge_of, CHARGE_OF
+from beamphysics.species import mH2pc2
 
 from scipy.constants import physical_constants
 

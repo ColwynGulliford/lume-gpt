@@ -11,7 +11,7 @@ from distgen.physical_constants import c, MC2
 MC2=MC2.magnitude
 c = c.magnitude
 
-from pmd_beamphysics import single_particle
+from beamphysics import single_particle
 
 from gpt.tools import DEFAULT_KILL_MSGS 
 from . import tools

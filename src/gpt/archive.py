@@ -1,7 +1,7 @@
 """
 Archiving functions
 """
-from pmd_beamphysics import ParticleGroup
+from beamphysics import ParticleGroup
 
 import numpy as np
 

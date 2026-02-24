@@ -12,8 +12,8 @@ from distgen.tools import update_nested_dict, is_key_in_nested_dict
 from gpt.gpt_phasing import gpt_phasing
 from gpt.executables import expand_gpt_env_vars
 
-from pmd_beamphysics.interfaces.gpt import write_gpt
-from pmd_beamphysics.particles import centroid, join_particle_groups
+from beamphysics.interfaces.gpt import write_gpt
+from beamphysics.particles import centroid, join_particle_groups
 
 from h5py import File
 import yaml
