@@ -9,7 +9,7 @@ dependencies:
   - matplotlib
   - h5py
   - distgen
-  - openpmd-beamphysics
+  - openpmd-beamphysics>=0.14.0
   - easygdf
 # Developer
   - pip
