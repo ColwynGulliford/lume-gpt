@@ -17,7 +17,7 @@ from gpt.template import ztrack1_template
 
 from matplotlib import pyplot as plt
 
-from pmd_beamphysics import FieldMesh
+from beamphysics import FieldMesh
 
 from scipy.optimize import brent
 import scipy.constants

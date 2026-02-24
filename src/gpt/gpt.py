@@ -9,10 +9,10 @@ from gpt.gpt_phasing import gpt_phasing
 
 import gpt.archive 
 
-from pmd_beamphysics.units import pg_units
-from pmd_beamphysics.particles import single_particle
-from pmd_beamphysics import ParticleGroup
-#from pmd_beamphysics.interfaces import write_gpt
+from beamphysics.units import pg_units
+from beamphysics.particles import single_particle
+from beamphysics import ParticleGroup
+#from beamphysics.interfaces import write_gpt
 
 from gpt.gpt_tao import gpt_from_tao
 

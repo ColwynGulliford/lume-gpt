@@ -15,7 +15,7 @@ import math
 
 from gpt.watcher import Watcher
 
-from pmd_beamphysics import ParticleGroup
+from beamphysics import ParticleGroup
 
 from scipy.constants import c
 

@@ -1,9 +1,9 @@
-from pmd_beamphysics.units import nice_array, nice_scale_prefix
+from beamphysics.units import nice_array, nice_scale_prefix
 
 import matplotlib.pyplot as plt
 import numpy as np 
 
-from pmd_beamphysics.labels import mathlabel
+from beamphysics.labels import mathlabel
 
 #from .lattice import Lattice
 

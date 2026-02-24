@@ -1,7 +1,7 @@
 from collections import Counter
 
-from pmd_beamphysics import FieldMesh
-from pmd_beamphysics.fields.analysis import accelerating_voltage_and_phase
+from beamphysics import FieldMesh
+from beamphysics.fields.analysis import accelerating_voltage_and_phase
 
 #from . import GPT
 from .element import Screen
