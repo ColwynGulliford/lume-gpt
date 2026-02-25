@@ -245,10 +245,13 @@ class GPT:
         parsers.set_support_files(self.input['lines'], self.original_path, target=self.path, copy_files=self.copy_support_files)            
         
     
-    def load_output(self, file='gpt.out.gdf'):
+    def load_output(self, file=None):
         """ loads the GPT raw data and puts it into particle groups """
 
-        self.vprint(f'   Loading GPT data from {self.get_gpt_output_file()}')
+        if file is None:
+            file = self.get_gpt_output_file()
+            
+        self.vprint(f'   Loading GPT data from {file}')
         
         touts, screens = parsers.read_gdf_file(file, self.verbose)  # Raw GPT data
                 
