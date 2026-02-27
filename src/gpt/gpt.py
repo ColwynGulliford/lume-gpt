@@ -396,8 +396,6 @@ class GPT:
         else:
             raise ValueError(f'GPT.trajectory got an unsupported data type = {data_type}.')
 
-        #for pg in particle_groups:
-        #    print(pg, pid in pg['id'])
         pgs_with_pid = [pg for pg in particle_groups if pid in pg['id']]
 
         if len(pgs_with_pid)==0:
@@ -453,12 +451,15 @@ class GPT:
 
     def get_gpt_output_file(self):
         """ get the name of the GPT output file """
+        
         path, infile = os.path.split(self.input_file)
         tokens = infile.split('.')
-        if(len(tokens)>1):
+        
+        if len(tokens)>1:
             outfile = '.'.join(tokens[:-1])+'.out.gdf'
         else:
             outfile = tokens[0]+'.out.gdf'
+            
         return os.path.join(path, outfile)
 
     def run_gpt(self, 
@@ -557,16 +558,16 @@ class GPT:
         """
         Calculates any statistic that the ParticleGroup class can calculate, on all particle groups, or just touts, or screens
         """
-        if(data_type=='all'):
+        if data_type=='all':
             particle_groups = self.output['particles']
 
-        elif(data_type=='tout'):
+        elif data_type=='tout':
             particle_groups = self.tout
 
-        elif(data_type=='tout_ccs'):
+        elif data_type=='tout_ccs':
             particle_groups = self.tout_ccs
 
-        elif(data_type=='screen'):
+        elif data_type=='screen':
             particle_groups = self.screen
 
         else:
@@ -732,7 +733,7 @@ class GPT:
         outstr = outstr+"\n\nRun Control"
         outstr = outstr+f"\n   Run configured: {self.configured}"
 
-        if(self.configured):
+        if self.configured:
             outstr = outstr+f"\n   Work location: {self.path}"
             outstr = outstr+f"\n   Timeout: {self.timeout} (sec)"
 
@@ -760,7 +761,7 @@ class GPT:
     def get_syntax_error_line(self,error_msg):
 
         s=error_msg.strip().replace('\n','')
-        if(s.endswith('Error: syntax error')):
+        if s.endswith('Error: syntax error'):
             error_line_index = int(s[s.find("(")+1:s.find(")")])
             return self.input['lines'][error_line_index]
         else:
@@ -846,7 +847,7 @@ class GPT:
 
 def phase_gpt(G):
 
-    if(G.verbose):
+    if G.verbose:
         print('\nAuto Phasing >------\n')
     t1 = time()
         
