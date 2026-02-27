@@ -83,12 +83,14 @@ class Lattice():
 
     def __getitem__(self, identity):
 
-        if(isinstance(identity,int)):
+        if isinstance(identity,int):
             return self._elements[identity]
-        elif(isinstance(identity, str)):
+            
+        elif isinstance(identity, str):
             for ele in self._elements:
-                if(identity==ele.name):
+                if identity==ele.name:
                     return ele
+                    
             raise ValueError(f'No element in lattice with identity {identity}!')
 
         return self._elements[identity]
@@ -125,7 +127,7 @@ class Lattice():
     def s_ccs(self):
         s = []
         for ele in self._elements:
-            if(ele.type in ['Sectormagnet']):
+            if ele.type in ['Sectormagnet']:
                 s = np.concatenate( (s, ele.s_screen))
 
         return s
@@ -168,7 +170,7 @@ class Lattice():
         ax.set_xlabel('z (m)')
         ax.set_ylabel('x (m)')
 
-        if(screen_alpha is None):
+        if screen_alpha is None:
             screen_alpha=1.0
 
         for ele in self._elements:
@@ -230,7 +232,7 @@ class Lattice():
         new_lattice = copy.deepcopy(self)
         new_lattice._name = new_lattice._name + '_and_' + lattice._name
 
-        if(len(lattice._elements)<=1):
+        if len(lattice._elements)<=1:
             return
 
         elements = lattice._elements[1:]
@@ -240,7 +242,7 @@ class Lattice():
 
         for ii, element in enumerate(elements):
 
-            if(ii>0):
+            if ii>0:
                 ds = s_offset + element.s_beg - ref_element.s_end
             else:
                 ds = element.s_beg + ds
@@ -266,7 +268,7 @@ class Lattice():
         file_lines = []
         element_lines = []
 
-        if(slices is None):
+        if slices is None:
             elements = self._elements
         else:
             elements = self._elements[slices]
@@ -274,14 +276,14 @@ class Lattice():
         # Write all the bend elements first
         for element in elements:
             
-            if(is_bend(element)):
+            if is_bend(element):
 
                 element_lines.append(f'\n# {element.name}\n')
                 for line in element.gpt_lines():
                     element_lines.append(line+'\n')
 
         for element in elements:
-            if(not is_bend(element)):
+            if not is_bend(element):
              
                 element_lines.append(f'\n# {element.name}\n')
                 
