@@ -327,12 +327,12 @@ class Lattice():
                     
                     count=count+1
 
-        if(output_file is not None):
+        if output_file is not None:
             
             with open(os.path.expandvars(output_file),'w') as fid:
                 for line in lines:
                     #print(line)
-                    if(not line.endswith('\n')):
+                    if not line.endswith('\n'):
                         #print(line, 'fixing line')
                         line = line + '\n'
                     
@@ -722,7 +722,7 @@ class Lattice():
             self.template_dir = template_dir
             template_dir_str = template_dir
                 
-        if(output_file is None):
+        if output_file is None:
             output_file = f'{template_dir_str}/gpt.in'
             
         for ele in self._elements:
