@@ -39,7 +39,8 @@ def set_gpt_and_distgen(gpt, distgen_input, settings, verbose=False):
         if not found:
             
             if(is_key_in_nested_dict(distgen_input, k, sep=':', prefix='')):
-                print(k, 'is in distgen')
+                if verbose:
+                    print(k, 'is in distgen')
                 distgen_input = update_nested_dict(distgen_input, {k:v}, verbose=bool(verbose))
             else:
                 raise ValueError(f'Input setting {k} not found in gpt or distgen input files.' )
