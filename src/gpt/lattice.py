@@ -537,7 +537,7 @@ class Lattice():
             self.add(ele, ds=ele_info['z0'], ref_element='beg', element_origin='center')
 
     def parse_field_map(self, ele_info, gpt_file_dir, style=None):
-        
+        print('werd')
         name = ele_info['name']
         params = ele_info['params']
         
@@ -577,7 +577,7 @@ class Lattice():
                           yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
 
         elif ele_info['type']=='Map2D_E':
-
+            print(ele_info)
             ele = Map2D_E(name, gdf_file, style=style, scale=scale,
                           x0 = ele_info['x0'], y0 = ele_info['y0'], z0 = ele_info['z0'], 
                           yaw = ele_info['yaw'], pitch = ele_info['pitch'], roll = ele_info['roll'])
@@ -618,14 +618,21 @@ class Lattice():
             print('Unknown element.')
 
         #print(ele._ecs)
-        if(ele.z0[0]==0):
-            ele_origin = 'beg'
-            ds = ele._ecs['z0']
-        else:
-            ele_origin = 'center'
-            ds = ele._ecs['z0'] + ele.length/2
+        #if ele.z0[0]==0:
+        #    ele_origin = 'beg'
+        #    ds = ele._ecs['z0']
 
-        self.add(ele, ds=ele._ecs['z0'], ref_element='beg', element_origin=ele_origin)
+        #else:
+
+        ele_origin = 'beg'
+        ds = ele.z0[0] + ele._ecs['z0']
+            
+        
+        #else:
+        #    ele_origin = 'center'
+        #    ds = ele._ecs['z0'] + ele.length/2
+
+        self.add(ele, ds=ds, ref_element='beg', element_origin=ele_origin)
 
         #fmap_token = [token for token in tokens if('.gdf' in token)][0]
         #fmap_token_index = tokens.index(fmap_token)
