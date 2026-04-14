@@ -570,7 +570,7 @@ class GPT:
         elif data_type=='screen':
             particle_groups = self.screen
 
-            if key is 's_ccs':
+            if key == 's_ccs':
                 
                 s0, t0 = self.s_ccs, self.tout_stat('mean_t')
                 t = np.array([scr['mean_t'] for scr in particle_groups])
