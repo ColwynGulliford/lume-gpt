@@ -570,8 +570,17 @@ class GPT:
         elif data_type=='screen':
             particle_groups = self.screen
 
+            if key is 's_ccs':
+                
+                s0, t0 = self.s_ccs, self.tout_stat('mean_t')
+                t = np.array([scr['mean_t'] for scr in particle_groups])
+
+                return np.interp(t, t0, s0)
+
         else:
             raise ValueError(f'Unsupported GPT data type: {data_type}')
+
+
 
         base_key = key.replace('mean_', '').replace('sigma_', '').replace('twiss_', '')
 
