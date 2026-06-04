@@ -480,10 +480,10 @@ def centroid_wrapper(particle_group):
     the average of all coordinates. Only considers live particles.
     
     """
-    #print(particle_group)
-    particle_group.status = np.full(len(particle_group), 1)
+    pg = particle_group.copy()
+    pg.status = np.full(len(pg), 1)
     
-    centroid_particle = centroid(particle_group)
+    centroid_particle = centroid(pg)
     centroid_particle.status = [0]
     
     return centroid_particle
