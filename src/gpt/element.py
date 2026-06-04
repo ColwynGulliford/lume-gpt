@@ -373,11 +373,25 @@ class Element:
 
 class Screen(Element):
 
-    def __init__(self, name, color='k', width=0.2, n_screen=1, fix_s_position=True, s_range=0):
+    def __init__(self, name, color='k', width=0.2, n_screen=1, fix_s_position=True, s_range=0, x0=0, 
+                 y0=0, 
+                 z0=0,
+                 yaw=0, 
+                 pitch=0,
+                 roll=0):
+    #global_element=False):
 
         assert n_screen>0, 'Number of screens must be > 0.'
 
-        super().__init__(name, length=0, width=width, height=0, color=color)
+        super().__init__(name, length=0, width=width, height=0, color=color,
+                         x0=x0, 
+                         y0=y0, 
+                         z0=z0,
+                         yaw=yaw, 
+                         pitch=pitch,
+                         roll=roll)
+                         #global_element=False)
+        
         self._n_screen=n_screen
         self._s_range=s_range
         self._fix_s_position=fix_s_position
@@ -395,9 +409,10 @@ class Screen(Element):
 
         ds = np.linalg.norm( 0.5*(self.p_end + self.p_beg) - self._ccs_beg_origin) 
 
-        if(self._n_screen == 1):
+        if self._n_screen == 1:
 
-            lines.append(f'screen("{self._ccs_beg}", 0, 0, {ds-s}, 1, 0, 0, 0, 1, 0, {s});')
+            #lines.append(f'screen("{self._ccs_beg}", 0, 0, {ds-s}, 1, 0, 0, 0, 1, 0, {s});')
+            lines.append(f'screen("{self._ccs_beg}", "GxyzXYZ", {self._ecs["x0"]}, {self._ecs["y0"]}, {ds-s+self._ecs["z0"]}, {self._ecs["yaw"]}, {self._ecs["pitch"]}, {self._ecs["roll"]}, {s});')
 
         else:
 
