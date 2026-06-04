@@ -501,7 +501,7 @@ def phase_gpt(settings,
 
     # Create the distribution used for phasing
     if(verbose):
-        print('****> Creating intiial distribution for phasing...')
+        print('****> Creating initial distribution for phasing...')
 
     P1 = single_particle(t=initial_particles['t'].mean(),
                          x=initial_particles['x'].mean(),
@@ -525,7 +525,7 @@ def phase_gpt(settings,
     t2 = time.time()
 
     if(verbose):
-        print(f'Time Ellapsed: {t2-t1} sec.')
+        print(f'Time Elapsed: {t2-t1} sec.')
         print('------< Auto Phasing\n')
 
     return G, phased_settings
