@@ -36,26 +36,6 @@ def identify_species(mass, charge):
 
     raise ValueError(f'Cannot identify species with mass {mass} and charge {charge}')
 
-
-    """
-    qelem = physical_constants['elementary charge'][0]
-
-    if np.isclose(mass, mH2pc2, atol=0) and np.isclose(charge, qelem, atol=0, rtol=1e-04):
-        return 'H2+'
-
-    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0, rtol=1e-04) and np.isclose(charge, -qelem, atol=0, rtol=1e-04):
-        return 'electron'
-
-    elif np.isclose(mass,  physical_constants['electron mass'][0], atol=0, rtol=1e-04) and np.isclose(charge, +qelem, atol=0, rtol=1e-04):
-        return 'positron'
-
-    elif np.isclose(mass,  physical_constants['proton mass'][0], atol=0, rtol=1e-04) and np.isclose(charge, +qelem, atol=0, rtol=1e-04):
-        return 'proton'
-        
-    else:
-        raise ValueError(f'Cannot identify species with mass {mass} and charge {charge}')
-    """
-
 def raw_data_to_particle_data(gpt_output_dict, verbose=False):
 
     """
