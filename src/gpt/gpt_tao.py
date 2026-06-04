@@ -207,7 +207,7 @@ def pack_bend(ele_id, tao):
     theta = -(180/np.pi)*np.sign(gen_attrs['G'])*L/R
     e1 = -(180/np.pi)*gen_attrs['E1']
     e2 = +(180/np.pi)*gen_attrs['E2']
-    p = np.sqrt(gen_attrs['E_TOT']**2 - MC2)
+    p = np.sqrt(gen_attrs['E_TOT']**2 - MC2**2)
     
     s_beg = edat['s_begin']
     s_end = edat['s']
