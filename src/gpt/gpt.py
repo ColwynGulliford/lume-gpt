@@ -153,7 +153,7 @@ class GPT:
 
         self.input_file = os.path.join(self.path, self.original_input_file) 
         
-        if(self.parse_layout):
+        if self.parse_layout:
             self.lattice = Lattice('lattice')
             self.lattice.parse(os.path.join(self.original_path, self.original_input_file), style='tao')
 
@@ -187,7 +187,7 @@ class GPT:
                 return parse_gpt_string(line)[1]
      
     def set_dist_file(self, dist_file):
-        """ Set the input distirbution file name in a GPT file """
+        """ Set the input distribution file name in a GPT file """
         dist_file_set = False
         for ii, line in enumerate(self.input['lines']):
             if('setfile' in line):
@@ -280,13 +280,15 @@ class GPT:
                 field_vars = []
 
             tout_vars = spin_vars + field_vars
-            screen_vars = spin_vars
+            screen_vars = spin_vars + ['position']
 
             # Defines all data not stored in ParticleGroup        
             self.output['tout_data'] = [{k:tout[k] for k in tout_vars} for tout in touts]
             self.output['screen_data'] = [{k:screen[k] for k in screen_vars} for screen in screens]
 
-            
+    @property
+    def screen_position(self):
+        return np.array([scr['position'] for scr in self.output['screen_data']])
 
     @property
     def n_tout(self):
@@ -514,7 +516,7 @@ class GPT:
 
         run_info['run_time'] = time() - t1
         run_info['run_error'] = self.error
-        self.vprint(f'   Run finished, total time ellapsed: {run_info["run_time"]:G} (sec)')
+        self.vprint(f'   Run finished, total time elapsed: {run_info["run_time"]:G} (sec)')
 
             
         # Add run_info
@@ -864,7 +866,7 @@ def phase_gpt(G):
 
         # Create the distribution used for phasing
         if(G.verbose):
-            print('****> Creating intiial distribution for phasing...')
+            print('****> Creating initial distribution for phasing...')
 
 
         centroid = single_particle(x=G.initial_particles['mean_x'], 
@@ -889,7 +891,7 @@ def phase_gpt(G):
     #write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
     if G.verbose:
-        print('<**** Created intiial distribution for phasing.\n')    
+        print('<**** Created initial distribution for phasing.\n')    
 
     G.write_input_file()   # Write the unphased input file
 
@@ -901,7 +903,7 @@ def phase_gpt(G):
     t2 = time()
 
     if G.verbose:
-        print(f'Time Ellapsed: {t2-t1} sec.')
+        print(f'Time Elapsed: {t2-t1} sec.')
         print('------< Auto Phasing\n')
 
 def run_gpt(settings=None, 
@@ -955,7 +957,7 @@ def run_gpt(settings=None,
 
         # Create the distribution used for phasing
         if verbose:
-            print('****> Creating intiial distribution for phasing...')
+            print('****> Creating initial distribution for phasing...')
 
         if initial_particles:
 
@@ -976,7 +978,7 @@ def run_gpt(settings=None,
         #write_gpt(phasing_beam, phasing_particle_file, verbose=verbose, asci2gdf_bin=asci2gdf_bin)
     
         if verbose:
-            print('<**** Created intiial distribution for phasing.\n')    
+            print('<**** Created initial distribution for phasing.\n')    
 
         G.write_input_file()   # Write the unphased input file
 
@@ -985,7 +987,7 @@ def run_gpt(settings=None,
         t2 = time()
 
         if verbose :
-            print(f'Time Ellapsed: {t2-t1} sec.')
+            print(f'Time Elapsed: {t2-t1} sec.')
             print('------< Auto Phasing\n')
 
 
