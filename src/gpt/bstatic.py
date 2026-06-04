@@ -35,12 +35,13 @@ class Sectormagnet(SectorBend):
         name, 
         R, 
         angle, 
-        p,
+        p=None,
         width=0.2, 
         height=0, 
         phi_in=0, 
         phi_out=0, 
         gap=None,
+        Bfield=None,
         b1=0,
         b2=0,
         dl=0,
@@ -69,9 +70,15 @@ class Sectormagnet(SectorBend):
             raise ValueError(f'Unknown particle type: {species}')
 
         self._species = species
-
-        self._B = p/R/c
-        self._p = p
+        
+        if Bfield is None:
+            self._B = p/R/c
+            self._p = p
+        elif p is None:
+            self._B = Bfield
+            self._p = c * self._B / R
+        else:
+            raise ValueError('User must specify either total momentum "p" for bend or B-field "Bfield" kwarg.')
 
         self._gap=gap
 
@@ -219,15 +226,15 @@ class Sectormagnet(SectorBend):
         lines = lines + [f'#               Sectormagnet: {self.name}         ']
         lines = lines + ['#***********************************************']
 
-        exit_ccs_line = f'\nccs("{self.ccs_beg}", {self.name}_end_x, {bname}_end_y, {bname}_end_z'
+        exit_ccs_line = f'\nccs("{self.ccs_beg}", {self.name}_ccs_end_x, {bname}_ccs_end_y, {bname}_ccs_end_z'
 
-        if(self.ccs_beg=='wcs'):
+        if self.ccs_beg=='wcs':
 
             M = np.linalg.inv(self.M_end)
 
-            lines = lines + [f'{bname}_end_x = {self.p_end[0][0]};']    
-            lines = lines + [f'{bname}_end_y = {self.p_end[1][0]};']  
-            lines = lines + [f'{bname}_end_z = {self.p_end[2][0]};']     
+            lines = lines + [f'{bname}_ccs_end_x = {self.p_end[0][0]};']    
+            lines = lines + [f'{bname}_ccs_end_y = {self.p_end[1][0]};']  
+            lines = lines + [f'{bname}_ccs_end_z = {self.p_end[2][0]};']     
 
             exit_ccs_line = exit_ccs_line + f', {M[0,0]}, {M[0,1]}, {M[0,2]}, 0, 1, 0, "{self.ccs_end}");' 
 
@@ -243,9 +250,9 @@ class Sectormagnet(SectorBend):
 
             p_end_ccs = p_beg_ccs + np.sign(self._theta)*self.R*(ccs_beg_e1-np.matmul(dM, ccs_beg_e1))
 
-            lines = lines + [f'{bname}_end_x = {p_end_ccs[0][0]};']    
-            lines = lines + [f'{bname}_end_y = {p_end_ccs[1][0]};']  
-            lines = lines + [f'{bname}_end_z = {p_end_ccs[2][0]};'] 
+            lines = lines + [f'{bname}_ccs_end_x = {p_end_ccs[0][0]};']    
+            lines = lines + [f'{bname}_ccs_end_y = {p_end_ccs[1][0]};']  
+            lines = lines + [f'{bname}_ccs_end_z = {p_end_ccs[2][0]};'] 
 
             dM_inv = np.linalg.inv(dM)
 
@@ -255,6 +262,7 @@ class Sectormagnet(SectorBend):
         
         lines = lines + [f'{bname}_radius = {self._R};']
         lines = lines + [f'{bname}_Bfield = {self._B};']
+        lines = lines + [f'{bname}_angle = {self.angle};']
         lines = lines + [f'{bname}_phi_in = {self.phi_in};']    
         lines = lines + [f'{bname}_phi_out = {self.phi_out};'] 
         lines = lines + [f'{bname}_fringe_dl = {self.dl};'] 
