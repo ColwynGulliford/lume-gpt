@@ -85,4 +85,4 @@ if __name__ == '__main__':
     w = Watcher(cmd='python fake_gpt.py', timeout=10, kill_msgs=['Error'])
     w.run()
     t2 = time.time()
-    print('Time Ellapsed:', t2-t1)
+    print('Time Elapsed:', t2-t1)

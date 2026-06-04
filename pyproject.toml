@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gpt"
-description = "Your package description here"
+description = "Python wrapper for General Particle Tracer (GPT)"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
