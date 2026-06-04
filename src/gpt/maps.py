@@ -39,11 +39,11 @@ def beta_to_gamma(beta):
 
 def KE_to_gamma(KE):
     """ Converts kinetic energy to relativistic gamma """
-    return 1 + KE/mc2
+    return 1 + KE/MC2
 
 def gamma_to_KE(gamma):
     """ Converts relativistic gamma to kinetic energy """
-    return mc2*(gamma-1)
+    return MC2*(gamma-1)
 
 def KE_to_beta(KE):
     """ Converts kinetic energy to relativists beta """
