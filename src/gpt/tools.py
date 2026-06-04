@@ -120,7 +120,7 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
 
     tstop = time.time()
     if(verbose>0):
-        print(f'done. Time ellapsed: {tstop-tstart} sec.')
+        print(f'done. Time elapsed: {tstop-tstart} sec.')
   
     run_time=tstop-tstart
 
@@ -240,8 +240,7 @@ def cvector(rvector):
     elif(rvector.shape==(3,)):
         return np.array([np.array(rvector)]).T
 
-    print(rvector.shape)
-    print('wooooooops')
+    raise ValueError(f'cvector: unexpected shape {rvector.shape}')
 
 def rotation_matrix(theta=0, phi=0, psi=0, units='deg'):
 
