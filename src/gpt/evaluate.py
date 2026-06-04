@@ -46,7 +46,7 @@ def evaluate_gpt(settings=None,
         output = default_gpt_merit(G)
 
     if output['error']:
-        raise 
+        raise RuntimeError("GPT evaluation failed")
     
     fingerprint = G.fingerprint()
     
