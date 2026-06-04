@@ -116,7 +116,7 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
         rc = process.poll()
 
     except Exception as ex:
-        exectption=str(ex)
+        exception=str(ex)
 
     tstop = time.time()
     if(verbose>0):
