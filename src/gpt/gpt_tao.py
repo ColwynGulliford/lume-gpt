@@ -231,7 +231,7 @@ def is_grid_field(ele_id, tao):
     try:
         tao.ele_grid_field(ele_id, 1, 'base')
         return True
-    except:
+    except Exception:
         return False
     
     
