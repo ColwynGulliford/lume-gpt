@@ -22,9 +22,11 @@ from scipy.constants import c
 
 DEFAULT_KILL_MSGS = ["gpt: Spacecharge3Dmesh:", 'Error:', 'gpt: No valid GPT license', 'malloc', 'Segmentation fault']
 
-def execute(cmd, kill_msgs=[], verbose=False, timeout=1e6, workdir=''):
+def execute(cmd, kill_msgs=None, verbose=False, timeout=1e6, workdir=''):
 
     """ Function for execution of GPT """
+    if kill_msgs is None:
+        kill_msgs = []
     w = Watcher(cmd=cmd, timeout=timeout, verbose=verbose, kill_msgs=kill_msgs, workdir=workdir)
     w.run()
 
@@ -67,15 +69,17 @@ def execute2(cmd, timeout=None):
     except subprocess.TimeoutExpired as ex:
         output['log'] = ex.stdout+'\n'+str(ex)
         output['why_error'] = 'timeout'
-    except:
+    except Exception:
         output['log'] = 'unknown run error'
         output['why_error'] = 'unknown'
     return output
 
-def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
+def execute3(cmd, kill_msgs=None, verbose=False, timeout=1e6):
 
     tstart = time.time()
    
+    if kill_msgs is None:
+        kill_msgs = []
     exception = None
     run_time = 0 
     log = []
@@ -125,11 +129,6 @@ def execute3(cmd, kill_msgs=[], verbose=False, timeout=1e6):
     run_time=tstop-tstart
 
     return run_time, exception, log
-
-def execute4(cmd, kill_msgs=[], verbose=False, timeout=1e6):
-    pass
-
-
 
 
 
@@ -217,7 +216,7 @@ def is_floatable(value):
     try:
         float(value)
         return True
-    except:
+    except Exception:
         return False
 
 
