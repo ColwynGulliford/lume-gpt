@@ -215,7 +215,7 @@ def read_gdf_file(gdffile, verbose=False):
 
     t2 = time.time()
     if(verbose):
-        print(f'   GDF data loaded, time ellapsed: {t2-t1:G} (sec).')
+        print(f'   GDF data loaded, time elapsed: {t2-t1:G} (sec).')
             
     #self.vprint("Saving wcs tout and ccs screen data structures...",1,False)
 
