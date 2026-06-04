@@ -314,7 +314,7 @@ class GPT:
 
     @property
     def fields(self):
-        return [{k:self.output['tout_data'][0][k] for k in ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz'] for ii in range(self.n_tout)}]
+        return [{k:self.output['tout_data'][ii][k] for k in ['fEx', 'fEy', 'fEz', 'fBx', 'fBy', 'fBz']} for ii in range(self.n_tout)]
 
     @property
     def s_ccs(self):
