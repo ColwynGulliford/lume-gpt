@@ -181,7 +181,7 @@ def phase_gpt_with_distgen(settings=None,
     t2 = time.time()
 
     if(verbose):
-        print(f'Time Ellapsed: {t2-t1} sec.')
+        print(f'Time Elapsed: {t2-t1} sec.')
         print('------< Auto Phasing\n')
 
     return G, phased_settings
@@ -334,7 +334,7 @@ def run_gpt_with_distgen(settings=None,
         t2 = time.time()
 
         if verbose:
-            print(f'Time Ellapsed: {t2-t1} sec.')
+            print(f'Time Elapsed: {t2-t1} sec.')
             print('------< Auto Phasing\n')
 
 
